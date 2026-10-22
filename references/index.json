@@ -1,0 +1,880 @@
+{
+  "archived_on": "2026-10-22",
+  "items": [
+    {
+      "file": "01-challenges-3-4.jpg",
+      "description": "题册：Challenge 3 和 Challenge 4",
+      "original_name": "image-1792674787322.jpg",
+      "source_chat_id": "6ada0a4c-6860-83e8-b740-0733c5971e2a",
+      "source_chat_title": "手机游戏还需什么",
+      "sha256": "42931942f613326d419b27ee89a86f199ffb8617d72c8fe4a7cd8b66afda4f14",
+      "bytes": 244390
+    },
+    {
+      "file": "02-obstacle-pieces.jpg",
+      "description": "多块带编号、彩色障碍的拼板实物",
+      "original_name": "image-1792675598169.jpg",
+      "source_chat_id": "6ada0a4c-6860-83e8-b740-0733c5971e2a",
+      "source_chat_title": "手机游戏还需什么",
+      "sha256": "f7763845728a271cf8bee61f26631603822bf8f66786c96f457181f13032323e",
+      "bytes": 349714
+    },
+    {
+      "file": "03-obstacle-pieces.jpg",
+      "description": "编号 6、7、9、10 等拼板实物",
+      "original_name": "image-1792675611018.jpg",
+      "source_chat_id": "6ada0a4c-6860-83e8-b740-0733c5971e2a",
+      "source_chat_title": "手机游戏还需什么",
+      "sha256": "d238d171dd54579bc8f48fd3540aad3583ffec8aa05e302afdffd7242b698bbb",
+      "bytes": 353678
+    },
+    {
+      "file": "04-piece-8.jpg",
+      "description": "编号 8 的紫色障碍拼板",
+      "original_name": "image-1792675625741.jpg",
+      "source_chat_id": "6ada0a4c-6860-83e8-b740-0733c5971e2a",
+      "source_chat_title": "手机游戏还需什么",
+      "sha256": "96aa265de59ae72f98b80f751ae4fc3c1dc4fe3c6b3ce22752e75ee6df20634a",
+      "bytes": 324967
+    },
+    {
+      "file": "05-solutions-3-4.jpg",
+      "description": "题册解答页：标有 3 和 4 的棋盘路线图",
+      "original_name": "image-1792675672265.jpg",
+      "source_chat_id": "6ada0a4c-6860-83e8-b740-0733c5971e2a",
+      "source_chat_title": "手机游戏还需什么",
+      "sha256": "f76fd48829305ddffca3ac6e27da7e461797dcfa3856ee06ce5b3496cfdb4f04",
+      "bytes": 218113
+    },
+    {
+      "file": "06-game-rules.jpg",
+      "description": "总体规则页：起终点、障碍顺序、允许重复跨越同一障碍、题册参考解答",
+      "original_name": "1000019631.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "58c1d3e8394147a22c76ea8418e04e7662c814214c330babc2dec7d47085db14",
+      "bytes": 117070
+    },
+    {
+      "file": "07-obstacle-pieces-full.jpg",
+      "description": "拼卡实物：1、2、3、4、5、9、10 等编号和道路刻线",
+      "original_name": "1000019633.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "6acc200c345fcf6714f84bcd658f2fbe92add3f022c160f2db44ce2bb1a77fcf",
+      "bytes": 143389
+    },
+    {
+      "file": "08-obstacle-pieces-full.jpg",
+      "description": "拼卡实物：6、7、9、10 等编号和道路刻线",
+      "original_name": "1000019634.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "914f243c7548cc65608ecf8c0a7d9079cbc2ffeb2bc38af6f1a65b6fc6f16bf6",
+      "bytes": 145604
+    },
+    {
+      "file": "09-piece-8-full.jpg",
+      "description": "8 号紫色障碍拼卡实物及道路刻线",
+      "original_name": "1000019635.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "8a33221b1c24e87bbb48a2062b1ab8065ed71e4ded01aca752b1096cadf96486",
+      "bytes": 135771
+    },
+    {
+      "file": "10-empty-board.jpg",
+      "description": "空棋盘实物：格位与边界字母",
+      "original_name": "1000019629.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "f04ac00c7b37a3dca6983a4fa2a78fe8719293fe9bca97bd1416ae3cbb6298b2",
+      "bytes": 128283
+    },
+    {
+      "file": "11-solutions-1-4.jpg",
+      "description": "关卡 1–4 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681154019.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "ebc2806130d7fd39ceeb562b9ad4f462fa9156215db3321783602188fcd1963d",
+      "bytes": 136366
+    },
+    {
+      "file": "12-solutions-5-8.jpg",
+      "description": "关卡 5–8 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681340006.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "0024a4b1205dd7ad6ab0f5d846cb3738848c5369f62847c6f6949ee503d6d589",
+      "bytes": 115078,
+      "level_ids": [
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "file": "13-solutions-9-12.jpg",
+      "description": "关卡 9–12 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681353209.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "f5ee2bfeac7383b130a4422698bd3422015c6fa079bcc7e9b127ef237b7c71fb",
+      "bytes": 118770,
+      "level_ids": [
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "file": "14-solutions-13-16.jpg",
+      "description": "关卡 13–16 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681360945.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "eb093d8178ede4e9c8566ed55e2182d9f8718e3c2d8bf1e9486e52062fdaf261",
+      "bytes": 111422,
+      "level_ids": [
+        13,
+        14,
+        15,
+        16
+      ]
+    },
+    {
+      "file": "15-solutions-17-20.jpg",
+      "description": "关卡 17–20 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681381426.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "99040718cf619def32de46a701f4ec3b07eea4a376cfeaf6434a59b3238ca401",
+      "bytes": 114530,
+      "level_ids": [
+        17,
+        18,
+        19,
+        20
+      ]
+    },
+    {
+      "file": "16-solutions-21-24.jpg",
+      "description": "关卡 21–24 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681392145.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "1b1a0fefd4312e54b27811d3d00c26bf0b91f6b1e0a3fbf630b304ccb1985575",
+      "bytes": 109837,
+      "level_ids": [
+        21,
+        22,
+        23,
+        24
+      ]
+    },
+    {
+      "file": "17-solutions-25-28.jpg",
+      "description": "关卡 25–28 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681417937.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "6dc5519fb4d9c22bcd1d574163ce511202116060fb65edffd992c8ff5a6bfade",
+      "bytes": 126395,
+      "level_ids": [
+        25,
+        26,
+        27,
+        28
+      ]
+    },
+    {
+      "file": "18-solutions-29-32.jpg",
+      "description": "关卡 29–32 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681428166.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "4a37f99c9f67034921b8a07cb69bbdf8de6c995917bf05758350f11b5f0f5e33",
+      "bytes": 114026,
+      "level_ids": [
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    {
+      "file": "19-solutions-33-36.jpg",
+      "description": "关卡 33–36 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681574120.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "f4106c342ab606eeda9620c5d5aaa47404a5163e6db894a5dda534509dc56157",
+      "bytes": 105719,
+      "level_ids": [
+        33,
+        34,
+        35,
+        36
+      ],
+      "rotationToUprightDegreesCCW": 90
+    },
+    {
+      "file": "20-solutions-37-40.jpg",
+      "description": "关卡 37–40 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681585555.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "021d2aa6e1c00a88b344c1b4d812aceb02843851b0c6fcce9e95fcddfd32f7a2",
+      "bytes": 116655,
+      "level_ids": [
+        37,
+        38,
+        39,
+        40
+      ],
+      "rotationToUprightDegreesCCW": 0
+    },
+    {
+      "file": "21-solutions-41-44.jpg",
+      "description": "关卡 41–44 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681598829.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "eb437523bfd71c8755463a82fca2fc70682f388ce0cedd86b01e904a86971f47",
+      "bytes": 112545,
+      "level_ids": [
+        41,
+        42,
+        43,
+        44
+      ],
+      "rotationToUprightDegreesCCW": 0
+    },
+    {
+      "file": "22-solutions-45-48.jpg",
+      "description": "关卡 45–48 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681606886.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "e2fc2b227450995c69803687ee9faa1daad955755fc269570637adbff3fc8b55",
+      "bytes": 113870,
+      "level_ids": [
+        45,
+        46,
+        47,
+        48
+      ],
+      "rotationToUprightDegreesCCW": 0
+    },
+    {
+      "file": "23-solutions-49-52.jpg",
+      "description": "关卡 49–52 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681622063.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "d223f42fea756984361c1fabc362f455301b75e86d4af5151731736894bd295f",
+      "bytes": 110834,
+      "level_ids": [
+        49,
+        50,
+        51,
+        52
+      ],
+      "rotationToUprightDegreesCCW": 0
+    },
+    {
+      "file": "24-solutions-53-56.jpg",
+      "description": "关卡 53–56 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681629914.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "f1f864669ebdf26204cb226978d332c80ddda3e9fba268cfb58cf996e5bec8c0",
+      "bytes": 100503,
+      "level_ids": [
+        53,
+        54,
+        55,
+        56
+      ],
+      "rotationToUprightDegreesCCW": 0
+    },
+    {
+      "file": "25-solutions-57-60.jpg",
+      "description": "关卡 57–60 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681641588.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "780bfa38f0c26710f3867a5fb089c342333bade23c155cb88300d0cb8f938579",
+      "bytes": 115395,
+      "level_ids": [
+        57,
+        58,
+        59,
+        60
+      ],
+      "rotationToUprightDegreesCCW": 0
+    },
+    {
+      "file": "26-solutions-61-64.jpg",
+      "description": "关卡 61–64 解答页：完成路线和拼卡摆放参考；并非初始状态",
+      "original_name": "image-1792681649376.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "6e0598f6ba849908ed28eae2b7e746b7b603a12cc90900f5321e13ac69b0427c",
+      "bytes": 110145,
+      "level_ids": [
+        61,
+        62,
+        63,
+        64
+      ],
+      "rotationToUprightDegreesCCW": 0
+    },
+    {
+      "file": "27-solutions-65-68.jpg",
+      "description": "关卡 65–68 解答页：完成路线和拼卡摆放参考，起终点是解答结果",
+      "original_name": "image-1792681661742.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "db5ae20f86e5c0e4f10b2718a8679dd6e702b4014eb885027de43183b1bfa146",
+      "bytes": 119601,
+      "level_ids": [
+        65,
+        66,
+        67,
+        68
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "solution_photo"
+    },
+    {
+      "file": "28-solutions-69-72.jpg",
+      "description": "关卡 69–72 解答页：完成路线和拼卡摆放参考，起终点是解答结果",
+      "original_name": "image-1792681670338.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "5a8e5ac2bc8ca8d64deb3aba7bfa0b14db6956fcb1dc772ad5220d1ae26ca8bc",
+      "bytes": 124689,
+      "level_ids": [
+        69,
+        70,
+        71,
+        72
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "solution_photo"
+    },
+    {
+      "file": "29-solutions-73-76.jpg",
+      "description": "关卡 73–76 解答页：完成路线和拼卡摆放参考，起终点是解答结果",
+      "original_name": "image-1792681685371.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "37531dcf4738878bbd354490dc698e2a392341c229630e8c6532739509152f83",
+      "bytes": 126107,
+      "level_ids": [
+        73,
+        74,
+        75,
+        76
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "solution_photo"
+    },
+    {
+      "file": "30-challenges-77-78.jpg",
+      "description": "关卡 77–78 题目页：完整有序障碍指令，起终点均为问号、由玩家推导",
+      "original_name": "image-1792681700309.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "bed58c2118bcee196dfddffed30f78aea2d281cdac0fbedff2d9655f4ac0f11d",
+      "bytes": 113597,
+      "level_ids": [
+        77,
+        78
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo"
+    },
+    {
+      "file": "31-challenges-79-80.jpg",
+      "description": "关卡 79–80 题目页：完整有序障碍指令，起终点均为问号、由玩家推导",
+      "original_name": "image-1792681706684.jpg",
+      "source_chat_id": "01a1641d-ace6-7c63-a7ff-6f6fb9defa62",
+      "source_chat_title": "补充各关卡设计",
+      "sha256": "698f251098900f97f0028a79362c0378cbca8cddb0eb22c00adcda657e29ca77",
+      "bytes": 117660,
+      "level_ids": [
+        79,
+        80
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo"
+    },
+    {
+      "file": "32-challenges-17-18.jpg",
+      "description": "题册：Challenge 17 和 Challenge 18",
+      "original_name": "image-1792684886113.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "69244c8e336cc3d9347f9d54a45795cef1d3088099686a40545317dc0917a18e",
+      "bytes": 131821,
+      "level_ids": [
+        17,
+        18
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "33-challenges-19-20.jpg",
+      "description": "题册：Challenge 19 和 Challenge 20",
+      "original_name": "image-1792684898920.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "02562832b0b262fe7ec2119abe2dd6e161e142707e146c3b3f6813587e8ddd12",
+      "bytes": 119354,
+      "level_ids": [
+        19,
+        20
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "34-challenges-21-22.jpg",
+      "description": "题册：Challenge 21 和 Challenge 22",
+      "original_name": "image-1792684910430.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "6b0cf9d9189a970c383f7c72d9248785d317443f22a09c54224d93cb6f807fae",
+      "bytes": 127688,
+      "level_ids": [
+        21,
+        22
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "35-challenges-23-24.jpg",
+      "description": "题册：Challenge 23 和 Challenge 24",
+      "original_name": "image-1792684917362.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "0d662a1b0a8003ab3a84638fd2cd812e6d0400e168ffe51a4c9b3f710d8eede8",
+      "bytes": 138655,
+      "level_ids": [
+        23,
+        24
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "36-challenges-25-26.jpg",
+      "description": "题册：Challenge 25 和 Challenge 26",
+      "original_name": "1000019663.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "35e2bd3094b5a37ca60b565679a48fdc25c5a6935c624c35d7000e100a02f3f7",
+      "bytes": 136012,
+      "level_ids": [
+        25,
+        26
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "37-challenges-27-28.jpg",
+      "description": "题册：Challenge 27 和 Challenge 28",
+      "original_name": "1000019664.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "d44ef7b3c26077896425a1876bed16220a5637879ffbc4d788b29955101d16ad",
+      "bytes": 129991,
+      "level_ids": [
+        27,
+        28
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "38-challenges-29-30.jpg",
+      "description": "题册：Challenge 29 和 Challenge 30",
+      "original_name": "1000019665.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "742bae7980670da44c648f97d4452a4a897b1a94f1e84c65b6e59755c1edc80a",
+      "bytes": 81676,
+      "level_ids": [
+        29,
+        30
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "39-challenges-31-32.jpg",
+      "description": "题册：Challenge 31 和 Challenge 32",
+      "original_name": "1000019666.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "36ec69de4cd3db35e11d0494ba29cae89737d86fb84e1205657d5577f762b19b",
+      "bytes": 97848,
+      "level_ids": [
+        31,
+        32
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "40-challenges-33-34.jpg",
+      "description": "题册：Challenge 33 和 Challenge 34",
+      "original_name": "1000019668.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "ebe18a4d1317931e548f03516e83afa71a57b5494a41cf289a60fe9427579fa9",
+      "bytes": 99399,
+      "level_ids": [
+        33,
+        34
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "41-challenges-35-36.jpg",
+      "description": "题册：Challenge 35 和 Challenge 36",
+      "original_name": "1000019669.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "e35a0f54ec8cfa515a650d989faf46bc2b1dcdf2278ae9f928004e66b2b1a8e4",
+      "bytes": 101943,
+      "level_ids": [
+        35,
+        36
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "42-challenges-37-38.jpg",
+      "description": "题册：Challenge 37 和 Challenge 38",
+      "original_name": "1000019670.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "aff88a27cd4623abf8b69f7e70b465942ef796d1cf9a93c23c0fd1cb78799a71",
+      "bytes": 99906,
+      "level_ids": [
+        37,
+        38
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "43-challenges-39-40.jpg",
+      "description": "题册：Challenge 39 和 Challenge 40",
+      "original_name": "1000019671.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "9edeb3d88123dcdd9947d1f586fe5d7deaf4e7aded1a272dfb2d4733dffb1b42",
+      "bytes": 114950,
+      "level_ids": [
+        39,
+        40
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "44-challenges-41-42.jpg",
+      "description": "题册：Challenge 41 和 Challenge 42",
+      "original_name": "1000019672.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "d6b491e5e53c558ead1a0054178e40a8fbf1f86adb694a16840925e8ff2505ff",
+      "bytes": 91305,
+      "level_ids": [
+        41,
+        42
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "45-challenges-43-44.jpg",
+      "description": "题册：Challenge 43 和 Challenge 44",
+      "original_name": "1000019673.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "96c9a9f32264ba10fba8b29a3510ec2cd79dc17323ad379ff4fd769c9133907b",
+      "bytes": 110029,
+      "level_ids": [
+        43,
+        44
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "46-challenges-45-46.jpg",
+      "description": "题册：Challenge 45 和 Challenge 46",
+      "original_name": "1000019674.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "49ef75ed618ad34d1a890e7c54178ebcdfc6ca21418fe91dbd4d9b987a2c7b21",
+      "bytes": 111064,
+      "level_ids": [
+        45,
+        46
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "47-challenges-47-48.jpg",
+      "description": "题册：Challenge 47 和 Challenge 48",
+      "original_name": "1000019675.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "2c3b00367f85f6837dcae917273b4e75845789ee10e62acf88bc0ed4cf5528ce",
+      "bytes": 104395,
+      "level_ids": [
+        47,
+        48
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "48-challenges-49-50.jpg",
+      "description": "题册：Challenge 49 和 Challenge 50",
+      "original_name": "1000019676.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "895a149c25f8d2c0dc9090aac778353024562eead7c36db2dd30d059789e78e2",
+      "bytes": 111744,
+      "level_ids": [
+        49,
+        50
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "49-challenges-51-52.jpg",
+      "description": "题册：Challenge 51 和 Challenge 52",
+      "original_name": "1000019677.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "005c1f33bfecc4bf896c8e6e161dc3a2eea04097232ecc07cd91cde21cc4d9a7",
+      "bytes": 102059,
+      "level_ids": [
+        51,
+        52
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "50-challenges-53-54.jpg",
+      "description": "题册：Challenge 53 和 Challenge 54",
+      "original_name": "1000019678.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "ac9858eba07bae66476042d9a20e285bebd328fee486ae940d966c2fb92d4bf4",
+      "bytes": 110676,
+      "level_ids": [
+        53,
+        54
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "51-challenges-55-56.jpg",
+      "description": "题册：Challenge 55 和 Challenge 56",
+      "original_name": "1000019679.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "d568c44493b2dfc1df71b20bdccd8284ba7f9f67d62d4fe44a068d45225b9ea3",
+      "bytes": 113084,
+      "level_ids": [
+        55,
+        56
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "52-challenges-57-58.jpg",
+      "description": "题册：Challenge 57 和 Challenge 58",
+      "original_name": "1000019680.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "aa2ee3cce82cb3be4d39413db7c7f6a90f7892ea7ba443fe362e2ab845626ae4",
+      "bytes": 111199,
+      "level_ids": [
+        57,
+        58
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "53-challenges-59-60.jpg",
+      "description": "题册：Challenge 59 和 Challenge 60",
+      "original_name": "1000019681.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "c9e420d5710f4c5ae11666986842361cf66403b79e7877a378ecb1f674498099",
+      "bytes": 111118,
+      "level_ids": [
+        59,
+        60
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "54-challenges-61-62.jpg",
+      "description": "题册：Challenge 61 和 Challenge 62",
+      "original_name": "1000019682.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "50aedf3ac01fd88dce86f0c12b75099d12537869681689cb4a112ee0b512da22",
+      "bytes": 107669,
+      "level_ids": [
+        61,
+        62
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "55-challenges-63-64.jpg",
+      "description": "题册：Challenge 63 和 Challenge 64",
+      "original_name": "1000019683.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "61f8c32ea1c7e07e074739fb3762c21d580b09464188e1fd615af0acf4370fa9",
+      "bytes": 121765,
+      "level_ids": [
+        63,
+        64
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "56-challenges-65-66.jpg",
+      "description": "题册：Challenge 65 和 Challenge 66",
+      "original_name": "1000019684.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "4eea3b8283cae8ad92fc8985a48053424bdd295894693637fa030cd85507791b",
+      "bytes": 96787,
+      "level_ids": [
+        65,
+        66
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "57-challenges-67-68.jpg",
+      "description": "题册：Challenge 67 和 Challenge 68",
+      "original_name": "1000019685.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "a544bd5178984c42532328b7f276e0d3a5d868df0c6e8cd6f0eebf485cce9209",
+      "bytes": 100113,
+      "level_ids": [
+        67,
+        68
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "58-challenges-69-70.jpg",
+      "description": "题册：Challenge 69 和 Challenge 70",
+      "original_name": "1000019686.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "fb466235d6a60eb8ee9c4c2875b2aa7b6806b969b6a2098d82739e68844aeb52",
+      "bytes": 106546,
+      "level_ids": [
+        69,
+        70
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "59-challenges-71-72.jpg",
+      "description": "题册：Challenge 71 和 Challenge 72",
+      "original_name": "1000019687.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "020518d0a6f9b31f5b6f22071ab02887ea5efa01fa48b8cc82c6e304713551db",
+      "bytes": 107275,
+      "level_ids": [
+        71,
+        72
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "60-challenges-73-74.jpg",
+      "description": "题册：Challenge 73 和 Challenge 74",
+      "original_name": "1000019688.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "2ee5cccba034ba420ecffd180629f4e9e4ebec451fbfcf8f70fd9097588c1cb1",
+      "bytes": 99787,
+      "level_ids": [
+        73,
+        74
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    },
+    {
+      "file": "61-challenges-75-76.jpg",
+      "description": "题册：Challenge 75 和 Challenge 76",
+      "original_name": "1000019689.jpg",
+      "source_chat_id": "01a16448-9788-7903-ac55-69a94797e967",
+      "sha256": "e4e3706ab2647b6873b795010f4f27cd4e9efe86214d8627c32a586bb4a80b5d",
+      "bytes": 109409,
+      "level_ids": [
+        75,
+        76
+      ],
+      "rotationToUprightDegreesCCW": 0,
+      "type": "challenge_photo",
+      "archived_on": "2026-10-23"
+    }
+  ],
+  "derivedAssets": {
+    "levelCropsManifest": "levels/index.json",
+    "levelCropCount": 80,
+    "solutionCropCount": 76,
+    "challengeCropCount": 4,
+    "numberedOverview": "levels/overview-001-080.jpg",
+    "supplementalChallengeCropCount": 60,
+    "totalCropCount": 140,
+    "supplementalChallengeOverview": "levels/challenges-overview-017-076.jpg",
+    "totalChallengeCropCount": 64
+  },
+  "updated_on": "2026-10-23"
+}

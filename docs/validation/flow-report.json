@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "events": [
+    {
+      "name": "challenge-3-animation",
+      "value": {
+        "timer": "00:08.55",
+        "horseBounds": [
+          "162 753 300 881",
+          "309 746 447 874",
+          "401 661 539 789"
+        ],
+        "headings": [
+          "朝向东",
+          "朝向东",
+          "朝向北"
+        ]
+      }
+    },
+    {
+      "name": "challenge-4-animation",
+      "value": {
+        "timer": "00:01.39",
+        "horseBounds": [
+          "971 424 1109 552",
+          "894 499 1032 627",
+          "815 584 953 712"
+        ],
+        "headings": [
+          "朝向西",
+          "朝向南",
+          "朝向西"
+        ]
+      }
+    }
+  ]
+}

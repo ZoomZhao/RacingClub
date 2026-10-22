@@ -1,0 +1,21 @@
+Generation tool: built-in image_gen.imagegen (no CLI/API fallback).
+All generated assets were copied into this workspace. Approved visual direction: warm ivory, forest green, sandy wooden board, terracotta details, illustrated equestrian arena.
+
+Final hero prompt:
+Use case: illustration-story.
+Asset type: original landscape hero illustration for the RacingClub mobile horse puzzle game, reusable as a full bleed top header.
+Primary request: a beautifully illustrated chestnut horse with warm expressive eyes, neat dark brown bridle and saddle, green saddle pad, standing in a peaceful equestrian jumping arena with simple ivory fence, small colored show-jump bars, wildflowers and distant trees in soft morning light. No rider needed. Warm hand-painted gouache/storybook illustration with refined natural proportions, inviting and calm, tactile brush texture, sophisticated warm ivory, forest green, sand and terracotta palette.
+Composition: wide landscape approximately 3:2. Horse in the right half in medium shot, body and head both visible, head facing viewer-left; left upper half is softly painted pale warm cream sky with ample quiet space where real UI heading will be placed. Fence and a few daisies frame bottom. Polished illustration, fits a tasteful mobile board game for families.
+Text: none. No letters, logos, words, numbers, badges, UI, frames or watermarks.
+Saved: /Users/zoomzhao/Workspace/RacingClub/public/assets/horse-arena.png
+
+Final pawn prompt:
+Use case: stylized-concept. Asset type: transparent game pawn sprite for a horse-jumping route puzzle.
+Primary request: ONE charming small chestnut horse with a tiny rider in a forest green helmet and cream riding pants, shown in clean side profile facing right. Entire horse, ears, legs, hooves and rider fully visible and centered. High quality soft hand-painted game illustration, warm saddle-brown, green saddlecloth, tiny saddle and bridle, natural correct horse anatomy, simple clear readable silhouette at 48 pixels, friendly refined family board game aesthetic. Horse is in a gentle cantering pose, feet lifted slightly, as a small physical game token. Transparent background, no ground, no shadow, no scene, no text, no border, no extra objects, no duplicate horse.
+transparent_background: true
+Saved: /Users/zoomzhao/Workspace/RacingClub/public/assets/horse-pawn.png
+
+Page design set:
+/Users/zoomzhao/Workspace/RacingClub/design/mobile-pages-v1.png: three concrete screens, selection, Challenge 03 gameplay, completion. Reference photos used for rules only, original UI graphics and warm equestrian style.
+/Users/zoomzhao/Workspace/RacingClub/design/landscape-play-v1.png: landscape gameplay with board on the left, numbered tile toolbox and selected-tile controls on the right, extending the approved first design.
+These early page images predate the subsequent requested compact icon row, automatic completion, timer and leaderboard. The current implementation and browser-play-verified.png reflect those changes.

@@ -1,0 +1,39 @@
+{
+  "tool": "image_gen.imagegen",
+  "reference": "design/approved-landscape.png",
+  "prompts": [
+    {
+      "key": "arena-backdrop-v2",
+      "prompt": "Use case: precise-object-edit. Asset type: production landscape background asset for a native Android horse board game.\nThe attached image is the user's approved visual design. Faithfully retain its ORIGINAL illustrated environment style, palette and brushwork; do not redesign.\nCreate ONLY the environment/background from this reference. Remove the complete game board, all cards/panels, all letters and numbers, all icons, all logo/branding, all UI text and all buttons. Fill their removed areas with the same warm ivory paper atmosphere as the reference.\nComposition: wide landscape approximately 2.16:1. Preserve richly painted green and golden leaves at the far left and top left, a rustic wooden fence and small white daisies along the bottom left, soft distant arena and pale sky near the left edge. Preserve the chestnut horse head peeking in from the FAR RIGHT edge at lower-mid height, green trees and fence in the bottom right, similar size and position as in reference. Concentrate all detailed illustration in the outer 8–10 percent side margins and outer 4 percent top/bottom corners. The central 82 percent area must be very calm warm ivory cream, nearly blank, to receive the actual native UI. No objects or faces in center.\nMatch the reference's refined hand-painted equestrian storybook illustration exactly. No text, no grid, no board, no circles, no UI shapes, no watermarks. Opaque background."
+    },
+    {
+      "key": "sand-grain-v2",
+      "prompt": "Use case: product-mockup. Asset type: seamless square sand texture material for the empty cells of a native game board.\nInput image is a material reference only. Match exactly the warm ochre sandy surface visible in the empty board cells in the approved horse game design. Generate one square, straight-on orthographic close-up of this finely granular tan sand/rubber board surface, even diffuse illumination, rich tiny natural grains and softly mottled ochre color, average color approximately #c6a16d. Seamless fine texture, not a scene, no boundaries, no large stones, no shadows from objects, no frame, no road, no numbers, no text, no markings, no tile separators. Texture must have visible delicate physical grain, avoid smooth flat vector colors. Fill the whole square."
+    },
+    {
+      "key": "wood-grain-v2",
+      "prompt": "Use case: product-mockup. Asset type: seamless square honey wood texture material for the wooden board frame and tactile path pieces in a native game.\nInput image is a material reference only. Match the fine honey-colored beech/birch wood visible in the frame and light wooden path tiles of the approved horse game design. Generate one square straight-on orthographic macro view of smooth lacquered pale honey wood, delicate HORIZONTAL natural wood grain lines, occasional gentle organic curves, warm blond golden color approximately #dfbb83. Fine subtle handcrafted material, evenly lit, soft satin finish. Seamless quiet texture, no planks, no panel divisions, no knots that resemble faces, no borders, no 3D blocks, no roads, no numbers, no text, no objects, no watermark. Whole image filled with wood grain, detailed but not noisy."
+    }
+  ],
+  "transparent_background": false,
+  "outputs": [
+    {
+      "key": "arena-backdrop-v2",
+      "source": "public/assets/native-v2/arena-backdrop.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/arena_backdrop.png",
+      "sha256": "8c6fd63c71bcedd517643b493cc36a54bf72658308d8faabb8e8b063535821c2"
+    },
+    {
+      "key": "sand-grain-v2",
+      "source": "public/assets/native-v2/sand-grain.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/sand_grain.png",
+      "sha256": "02cc0e239e9678672ec2720ec8c8232deb42bd6e90c92d09b80dcfbc8714713f"
+    },
+    {
+      "key": "wood-grain-v2",
+      "source": "public/assets/native-v2/wood-grain.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/wood_grain.png",
+      "sha256": "a9b22b29771c7a9ed2428f588a59d17b7b290f14be55b107c1ae5c4924aa73b3"
+    }
+  ]
+}

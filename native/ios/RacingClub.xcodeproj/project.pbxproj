@@ -1,0 +1,26 @@
+// !$*UTF8*$!
+{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+000000000000000000000068 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingClub/GameCore.swift; sourceTree = "<group>"; };
+0000000000000000000000CC = {isa = PBXBuildFile; fileRef = 000000000000000000000068; };
+000000000000000000000064 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RacingClub/RacingClubApp.swift"; sourceTree = "<group>"; };
+0000000000000000000000C8 = {isa = PBXBuildFile; fileRef = 000000000000000000000064; };
+000000000000000000000065 = {isa = PBXFileReference; lastKnownFileType = text.json; path = "RacingClub/Resources/game-data.json"; sourceTree = "<group>"; };
+0000000000000000000000C9 = {isa = PBXBuildFile; fileRef = 000000000000000000000065; };
+000000000000000000000066 = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RacingClub/Resources/horse-arena.png"; sourceTree = "<group>"; };
+0000000000000000000000CA = {isa = PBXBuildFile; fileRef = 000000000000000000000066; };
+000000000000000000000067 = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RacingClub/Resources/horse-pawn.png"; sourceTree = "<group>"; };
+0000000000000000000000CB = {isa = PBXBuildFile; fileRef = 000000000000000000000067; };
+000000000000000000000001 = {isa = PBXProject; attributes = { LastUpgradeCheck = 2600; }; buildConfigurationList = 000000000000000000000008; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en,Base); mainGroup = 000000000000000000000003; productRefGroup = 000000000000000000000004; projectDirPath = ""; targets = (000000000000000000000002); };
+000000000000000000000002 = {isa = PBXNativeTarget; buildConfigurationList = 000000000000000000000009; buildPhases = (000000000000000000000006,000000000000000000000007); buildRules = (); dependencies = (); name = RacingClub; productName = RacingClub; productReference = 000000000000000000000005; productType = "com.apple.product-type.application"; };
+000000000000000000000003 = {isa = PBXGroup; children = (000000000000000000000064,000000000000000000000065,000000000000000000000066,000000000000000000000067,000000000000000000000068,000000000000000000000004); sourceTree = "<group>"; };
+000000000000000000000004 = {isa = PBXGroup; children = (000000000000000000000005); name = Products; sourceTree = "<group>"; };
+000000000000000000000005 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = RacingClub.app; sourceTree = BUILT_PRODUCTS_DIR; };
+000000000000000000000006 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (0000000000000000000000C8,0000000000000000000000CC); runOnlyForDeploymentPostprocessing = 0; };
+000000000000000000000007 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (0000000000000000000000C9,0000000000000000000000CA,0000000000000000000000CB); runOnlyForDeploymentPostprocessing = 0; };
+000000000000000000000008 = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000000A,00000000000000000000000B); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+000000000000000000000009 = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000000C,00000000000000000000000D); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+00000000000000000000000A = {isa = XCBuildConfiguration; buildSettings = { SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; }; name = Debug; };
+00000000000000000000000B = {isa = XCBuildConfiguration; buildSettings = { SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; }; name = Release; };
+00000000000000000000000C = {isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = com.zoomzhao.racingclub; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; INFOPLIST_KEY_UILaunchScreen_Generation = YES; INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"; TARGETED_DEVICE_FAMILY = "1,2"; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.1.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+00000000000000000000000D = {isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = com.zoomzhao.racingclub; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; INFOPLIST_KEY_UILaunchScreen_Generation = YES; INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"; TARGETED_DEVICE_FAMILY = "1,2"; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 0.1.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Release; };
+}; rootObject = 000000000000000000000001; }

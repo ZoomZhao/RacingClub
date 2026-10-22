@@ -1,0 +1,14 @@
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, copyFileSync, readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+const root=resolve(import.meta.dirname,'..');
+const env={...process.env,DEVELOPER_DIR:process.env.DEVELOPER_DIR||'/Applications/Xcode.app/Contents/Developer'};
+delete env.SDKROOT;
+const sdk=execFileSync('/usr/bin/xcrun',['--sdk','iphoneos','--show-sdk-path'],{env,encoding:'utf8'}).trim();
+if(!sdk.includes('iPhoneOS'))throw new Error(`Expected iPhoneOS SDK, received: ${sdk}`);
+env.SDKROOT=sdk;
+const app=resolve(root,'native/ios/build/unsigned/RacingClub.app');mkdirSync(app,{recursive:true});
+execFileSync('/usr/bin/xcrun',['swiftc','-parse-as-library','-sdk',sdk,'-target','arm64-apple-ios17.0',resolve(root,'native/ios/RacingClub/GameCore.swift'),resolve(root,'native/ios/RacingClub/RacingClubApp.swift'),'-o',resolve(app,'RacingClub')],{env,stdio:'inherit'});
+for(const file of readdirSync(resolve(root,'native/ios/RacingClub/Resources')))copyFileSync(resolve(root,'native/ios/RacingClub/Resources',file),resolve(app,file));
+copyFileSync(resolve(root,'native/ios/Unsigned-Info.plist'),resolve(app,'Info.plist'));
+console.log(`Compiled native iOS arm64 app, unsigned: ${app}`);

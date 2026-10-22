@@ -1,0 +1,138 @@
+{
+  "date": "2026-10-23",
+  "android": {
+    "build": "assembleDebug passed",
+    "unit_tests": 6,
+    "failures": 0,
+    "device_validation": true,
+    "validation_date": "2026-10-23",
+    "emulator": {
+      "avd": "RacingClub_API35",
+      "os": "Android 15",
+      "api": 35,
+      "architecture": "arm64-v8a",
+      "display": "1920x1080 landscape",
+      "density_dpi": 420,
+      "renderer": "Apple M1 host GPU, OpenGL ES 3; Vulkan disabled"
+    },
+    "native_ui_tests": {
+      "tests": 6,
+      "failures": 0,
+      "runtime_seconds": 100.769,
+      "framework": "Android UI Automator, real input and wall-clock animation",
+      "checks": [
+        "landscape board and single-row compact toolbar",
+        "numeric tray order and all 10 inventory IDs",
+        "select a placed piece, rotate, undo and keep angle label synchronized",
+        "reject out-of-bounds rotation without moving the piece",
+        "move, remove and replace pieces",
+        "challenges 03 and 04 automatically run and finish",
+        "three distinct horse positions per level; timer frozen",
+        "independent and assisted local leaderboard entries",
+        "eight separate horse views rendered; route turning changes heading in native accessibility snapshots",
+        "four gate-edge views rendered at A, B, C and F",
+        "north-edge sprites clear the heading; end posts and letter badges visually reviewed",
+        "all 80 levels replay complete obstacle sequences in Kotlin, with real path-specific animation endpoints",
+        "all 80 chapter cards reachable, level80 nine unique tiles in uniform two rows",
+        "unknown endpoints stay unset, explicit A/B wrong finish cannot win, A/A loop finishes automatically",
+        "level80 full wall-clock animation and win recorded",
+        "level65 placements and endpoint choices survive Activity recreation",
+        "ten best entries per level survive completing every other level"
+      ],
+      "reports": [
+        "output/level-integration/flows-emulator.log",
+        "output/level-integration/directions-emulator.log",
+        "output/level-integration/catalog-emulator.log"
+      ]
+    },
+    "visual_review": "Native 80-level chapter list, uniform two-row tray, unknown endpoint selection, and level80 running screenshots inspected; v3 horse/gate assets preserved",
+    "runtime_crashes": 0,
+    "directional_animation_samples": [
+      {
+        "name": "challenge-3-animation",
+        "value": {
+          "timer": "00:08.46",
+          "horseBounds": [
+            "161 753 299 881",
+            "293 746 431 874",
+            "401 677 539 805"
+          ],
+          "headings": [
+            "朝向东",
+            "朝向东",
+            "朝向北"
+          ]
+        }
+      },
+      {
+        "name": "challenge-4-animation",
+        "value": {
+          "timer": "00:01.28",
+          "horseBounds": [
+            "966 425 1104 553",
+            "893 493 1031 621",
+            "812 585 950 713"
+          ],
+          "headings": [
+            "朝向西",
+            "朝向南",
+            "朝向西"
+          ]
+        }
+      }
+    ],
+    "assets": "design/native-v3-imagegen-prompts.json",
+    "runtime_levels": 80,
+    "runtime_pieces": 10,
+    "rules_schema": 2,
+    "level_report": "output/android-emulator-80/validation/catalog-rules-report.json"
+  },
+  "ios": {
+    "native_platform": "IOS",
+    "architecture": "arm64",
+    "minimum_os": "17.0",
+    "compile_and_link": "passed, schema v2 and native branching/endpoint UI",
+    "signed": false,
+    "device_validation": false,
+    "runtime_levels": 80,
+    "runtime_pieces": 10
+  },
+  "javascript": {
+    "tests": 21,
+    "failures": 0,
+    "scope": "legacy browser rules plus reference integrity and full native data independent replay"
+  },
+  "swift_core": "80 native levels, loops, branches, unknown endpoints, invalid layouts and path-specific animation endpoints passed",
+  "browser": "Historical 03/04 verification only; no 80-level browser migration was performed",
+  "reference_hashes": "61 original photos and 140 crops verified against archived SHA-256 manifests",
+  "shared_native_data": "schema v2; Android and iOS copies byte-identical; APK asset equals shared/game-data.json",
+  "remote_backend": "contract only, not deployed",
+  "artifacts": [
+    {
+      "path": "output/RacingClub-Android-debug.apk",
+      "bytes": 44630179,
+      "sha256": "6a82362024cec645c7054f2eee28710fbda6c2f4b05cc813b0567b27d07a657b"
+    },
+    {
+      "path": "native/ios/build/unsigned/RacingClub.app/RacingClub",
+      "bytes": 1251848,
+      "sha256": "e358189f249ddd86c00ae24a1deb53dbc2fe3a2766f3f316cb55342cace66469"
+    },
+    {
+      "path": "design/android-native-home-80.png",
+      "bytes": 1578764,
+      "sha256": "5d5cd3dd687df48aeac5b42430a8dc569da5fb5a67e0612cfaebe0a11eea67bf"
+    },
+    {
+      "path": "design/android-native-play-80.png",
+      "bytes": 1831300,
+      "sha256": "a1d12a8775ab8f22fad0a8145a7dfeab32ef43d79fb0ec905b4f64234f48ef94"
+    },
+    {
+      "path": "output/android-emulator-80/validation/challenge-80.mp4",
+      "bytes": 14187811,
+      "sha256": "a19b9911d6f3d01604682417a7c5920d953f24fd0f19514a1e95cbf63ca50d5e"
+    }
+  ],
+  "last_four_hints": "Computed offline from verified topology and instructions; independent reference replay passed. No solution photos claimed; original referenceLayout remains null."
+}

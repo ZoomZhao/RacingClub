@@ -1,0 +1,74 @@
+RacingClub 接续说明（更新至 2026-10-23）
+
+本任务已进入原生 App 原型开发，不能再按“只有迁移资料”处理。
+用户明确排除 Web 渲染容器，取消 Capacitor 方向。
+Android：Kotlin + Jetpack Compose + Canvas，native/android/。
+iOS：Swift + SwiftUI + Canvas，native/ios/RacingClub.xcodeproj。
+浏览器验证工具：根目录 index.html、src/，npm start。
+
+完整功能、构建步骤、已知限制见 README.md。
+共用数据：shared/game-data.json；从 src/game.js 导出，运行 node tools/export-game.mjs。
+接口约定：shared/service-contract.json；两端 LeaderboardRepository 目前为本机存储。
+不能称为已接入线上排行榜；Android 已完成下述模拟器验收，iOS 尚未完成设备验收。
+
+当前原生运行时：01–80 全部关卡，10 块完整道路。浏览器仍保留 03/04 早期验证页面。
+关卡设计资料已连续收录第 1–80 关：1–76 为解答照片，77–80 为题目照片；索引见 docs/关卡索引.txt，结构化转录见 references/level-catalog.json，总体规则见 docs/游戏规则.txt。
+用户明确第 65 关起，起点与终点都由玩家推导；已统一修正 65–80 的题目字段。解答红门仅保存为参考解答终点，不是预设目标。
+第 77–80 关的完整有序指令已转录；第 80 关为 14 次跨越，重复编号保留。起终点“?”是解题要求，不是资料缺失。
+按用户要求，80 张单关裁切图按 level-001.png 至 level-080.png 保存到 references/levels/，另有 overview-001-080.jpg 编号总览及记录来源、裁切位置和校验值的 index.json。
+参考资料逐关保留起点、障碍顺序、终点及确认状态；原生 80 关由资料导出，仍保留题面事实与参考解答的区别。原始图片来源、校验值和横拍方向见 references/index.json。
+运行时仅启用五种道路；全套十块的资料拓扑已经复核，其余多路径与岔路尚待接入运行时。
+ImageGen 已生成设计图、hero 与透明棋子。最新 UI 按用户后续要求收紧工具栏并自动通关。
+早期设计图中仍有试跑按钮，不能再以它作为交互规范。
+
+下步：补 Android 实体手机与其他屏宽适配，以及 iOS 设备验收；再扩展复杂拼板与关卡。
+旧迁移说明保留在 references/原迁移记录-*。当前聊天和新目录项目已关联，旧聊天未强行迁移。
+
+关卡资料统一收尾（2026-10-23，当前状态）：
+- 80 关均有明确顺序：66 关由原题确认（3、4、17–80），14 关由解答图唯一推导（1、2、5–16）；没有待定顺序。
+- 1–16 已再次逐图确认，原记录一致。6、12–16 的 7 号无障碍支路不额外计跨障。
+- 17–76 共 30 张题目原图全部归档，补充题目裁切 60 张；总计 61 张原图、140 张单关图片。
+- 76 份参考布局的端点、朝向及完整跨障序列通过端口回放；原有 58 关静态图歧义由题面消除，分析证据继续保留。
+- 57、59、72 的参考两端仍分别为 E→E、C→C、E→E；65–80 的题目两端始终由玩家推导，不能写入参考字母。
+- 77–80 的题面已确认，尚无解答照片，referenceLayout 保持 null。原生运行时已启用 01–80；77–80 提示独立计算，不冒充照片解答。
+- 正式来源与校验值：references/index.json；裁切索引：references/levels/index.json；关卡目录：references/level-catalog.json。
+- 分批转录已归入 references/transcriptions/；pending 暂存已完成整合。题目总览：references/levels/challenges-overview-017-076.jpg。
+- docs/游戏规则.txt、docs/关卡索引.txt、docs/关卡核对报告.txt 已同步；node tools/render-reference-docs.mjs 可重建后两份。
+- npm test 共 19 项通过，覆盖图片校验、76 份完整路线、1–16、长回环、重复障碍及第 65 关起的问号端点。
+
+2026-10-23 最新 Android 状态：
+- 已按 approved-landscape.png 还原主要视觉素材，原生绘制在 BoardMaterials.kt；右侧保持用户后续要求的小标题和单行图标。
+- 用户更正：A–F 有门的字母位置不能出现围栏；六处横杆和立柱已留开口。
+- API 35 专用模拟器 RacingClub_API35 可用，ADB emulator-5554；Android SDK 在 ~/Library/Android/sdk，构建使用 Homebrew JDK 21（不要使用 Android Studio 的 JDK 25）。
+- 2 项 Android UI Automator 测试及 4 项 Kotlin 规则测试通过。测试使用实际墙钟动画，读取刷新后的原生节点并录屏，避免自动化等待静止而错过动画。
+- 验证脚本 tools/verify-android-emulator.sh；日志、截图、两关录屏、位置和计时采样在 output/android-emulator/validation/；新版 debug APK 已复制到 output/。
+- 视觉素材的完整 ImageGen 提示词、路径与校验值见 design/native-v2-imagegen-prompts.json。浏览器与 iOS 尚未同步本轮 Android 视觉细节。
+
+原生视觉细节与多方向素材 v3（2026-10-23）：
+- ImageGen 新增 14 张透明素材：八向无骑手马儿、四向门、绿色起点和赭红终点标牌；完整原件在 public/assets/native-v3/，提示词与校验值在 design/native-v3-imagegen-prompts.json。
+- 马儿按实际路径切线换向，门按 A–F 所属边缘选图。围栏六个开口两端增加收尾柱，字母徽标避开柱帽；棋盘上方预留门与马儿的安全空间。
+- 中文改为自然行高和零附加字距，调整挑战列表、排行榜行列、标牌和固定尺寸矢量箭头。
+- 3 项原生 UI 测试与 6 项 Kotlin 测试通过。两关均录屏并采样朝向：03 出现东→北，04 出现西→南→西；验证时间冻结与自动通关。
+- 模拟器原先 gpu.enabled=no 导致软件渲染变慢，已为专用 AVD 启用 host GPU；本次用 -gpu host -feature -Vulkan 运行，日志确认为 Apple M1 硬件图形。
+- 最新截图：design/android-native-home-v3.png、android-native-play-v3.png、android-native-directions-v3.png。验证证据：output/android-emulator-v3/validation/。APK 已更新。
+
+
+2026-10-23 全 80 关接入原生 App：
+- tools/export-game.mjs 从 references/level-catalog.json 和 piece-topology.json 导出 schemaVersion=2 的 shared/game-data.json，两端资源字节一致；src/game.js 不再是原生关卡来源，浏览器仍是旧两关工具。
+- Android Rules 使用 RoadPath(from,to,jump,samples,jumpAt,length)，按进入端口 + 障碍序列进度搜索合法路线；支持无障碍路、重复跨障、同位起终点；position 使用实际选中的支路样本。
+- GameState 对 65+ 不预填端点，chosenStart/chosenFinish 保存、撤销、重置、恢复；选择两端后才自动通关。提示在摆完所有拼板后还可补全两端，但计为提示。
+- 关卡页 5×16，全部可选，显示完成/进行中/最佳时间；右托盘实体编号去重，>5 用固定等宽两排 84dp 卡片，长序列横向滑动并随真实跨障进度滚动。
+- 77–80 的计算提示在 shared/generated-hints.json；tools/generate-hints.mjs 编译 tools/solve-levels.cpp，按真实拓扑搜索，再由 tests/runtime-data.test.mjs 的独立参考回放验证。原 referenceLayout=null 保留。没有声称计算摆法唯一。
+- LocalLeaderboard 改为每关 10 个最佳记录，不再全局只留 200 条；完成标记持久化。服务端契约 v2 补充起终点选择动作和提交字段，服务端仍未部署。
+- Swift 核心与原生视图同步数据/支路/端点；全 80 关 Swift 主机回放通过，未签名 iOS arm64 编译通过，仍无 iPhone/iOS 模拟器运行验证。
+- 新增 CatalogIntegrationTest 3 项：80 关规则及动画端点、80 关列表及第80关真实自动跑动与恢复、80关每关10条记录保留。保留旧2项流程、1项方向预览、6项Kotlin单元测试。
+- 产物：output/RacingClub-Android-debug.apk；截图/录屏/回放报告在 output/android-emulator-80/validation/，构建/测试日志在 output/level-integration/。旧v3文件保留历史。
+- 最终验收：Node 21/21、Kotlin 6/6、Android instrumentation 6/6；三类日志为 flows-emulator.log（35.603s）、directions-emulator.log（3.734s）、catalog-emulator.log（61.432s）。catalog-rules-report.json 含80关成功回放统计，最长18次跨障、22段道路。crash-log.txt 为空。
+- 原生截图：design/android-native-home-80.png、design/android-native-play-80.png；第80关完整视频 output/android-emulator-80/validation/challenge-80.mp4。安装包与资源资产一致性已校验。
+- DirectionalVisualTest 也加了 API35 accessibility clearCache 的轮询，与其他 UI 流程一致，防止旧端点标签缓存造成误报。
+
+2026-10-23 GitHub 归档：
+- 用户要求80关完成后推送GitHub；目标为已登录 ZoomZhao 账号下的私有仓库 https://github.com/ZoomZhao/RacingClub，主分支 main。
+- 代码、原始照片/裁切、关卡资料、设计素材、全关测试与构建工具纳入Git；output/、构建缓存、APK、录屏、机器日志和签名配置忽略但本地保留。
+- 关键验证报告另存 docs/validation/，README 增加仓库与报告入口。.gitattributes 保留原始图片二进制字节，统一脚本行尾，Windows Gradle wrapper 使用 CRLF。
+- Git作者仅在本仓库配置为 ZoomZhao，邮箱采用 GitHub noreply。

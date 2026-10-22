@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "updatedOn": "2026-10-22",
+  "purpose": "照片核对用道路拓扑；独立于运行时。坐标以未旋转的 2×1 拼卡左上角为原点。",
+  "sources": ["02-obstacle-pieces.jpg", "03-obstacle-pieces.jpg", "04-piece-8.jpg", "07-obstacle-pieces-full.jpg", "08-obstacle-pieces-full.jpg", "09-piece-8-full.jpg"],
+  "ruleCrossCheck": "https://www.smartgamesandpuzzles.com/horse-academy.html",
+  "conventions": {
+    "rotation": "r=0,1,2,3 表示顺时针旋转 0,90,180,270 度；1、2、3 号的 180 度旋转拓扑相同。",
+    "paths": "每项 from/to 是 ports 数组索引，双向可走；jump 为实际跨越的障碍号，null 表示无障碍支路。只允许列出的端口对，不可把岔口所有端口两两连通。",
+    "forks": "8、9、10 号的 0 号端口为共同干路；可以 0↔1 或 0↔2，禁止 1↔2 的锐角转弯。",
+    "scope": "实物照片确认支路和短刻线，解答照片交叉检查各朝向；未把该模型接入 App。"
+  },
+  "pieces": [
+    {"id": 1, "kind": "straight", "ports": [[0,0.5],[2,0.5]], "paths": [{"from":0,"to":1,"jump":1}]},
+    {"id": 2, "kind": "s_curve", "ports": [[0.5,0],[1.5,1]], "paths": [{"from":0,"to":1,"jump":2}]},
+    {"id": 3, "kind": "reverse_s_curve", "ports": [[0.5,1],[1.5,0]], "paths": [{"from":0,"to":1,"jump":3}]},
+    {"id": 4, "kind": "u_curve", "ports": [[0.5,0],[1.5,0]], "paths": [{"from":0,"to":1,"jump":4}]},
+    {"id": 5, "kind": "left_curve", "ports": [[0,0.5],[1.5,0]], "paths": [{"from":0,"to":1,"jump":5}]},
+    {"id": 6, "kind": "right_curve", "ports": [[0,0.5],[1.5,1]], "paths": [{"from":0,"to":1,"jump":6}]},
+    {"id": 7, "kind": "two_disconnected_paths", "ports": [[0,0.5],[0.5,0],[1.5,0],[1.5,1]], "paths": [{"from":0,"to":1,"jump":null},{"from":2,"to":3,"jump":7}]},
+    {"id": 8, "kind": "fork", "ports": [[0.5,0],[0.5,1],[2,0.5]], "paths": [{"from":0,"to":1,"jump":8},{"from":0,"to":2,"jump":null}]},
+    {"id": 9, "kind": "fork", "ports": [[0.5,1],[0.5,0],[1.5,0]], "paths": [{"from":0,"to":1,"jump":null},{"from":0,"to":2,"jump":9}]},
+    {"id": 10, "kind": "fork", "ports": [[0.5,0],[0.5,1],[1.5,1]], "paths": [{"from":0,"to":1,"jump":null},{"from":0,"to":2,"jump":10}]}
+  ]
+}

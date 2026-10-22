@@ -1,0 +1,195 @@
+RacingClub 规则、图片与逐关资料复核
+更新日期：2026-10-23
+
+一、结果
+原始图片 61 张；原有编号裁切 80 张，补充题目裁切 60 张。
+66 关经原题确认，14 关可从图示路线唯一推导；共 80 关具有明确序列，待定顺序 0 关。
+76 份解答图的端点、朝向和完整序列已复核，其中 40 份两端同位；1–16 再次核对，与原有路线一致。
+唯一参考推导而未独立见原题的关卡：1、2、5、6、7、8、9、10、11、12、13、14、15、16。77–80 题面已确认，尚无解答照片。
+57、59、72 的旧参考起点 B 更正为 E、C、E；三处均曾将 8 号横杆误作边界出口。
+第 65 关起题目两端由玩家推导；参考解答的字母不是题面预设。
+静态图本身的分析：18 份唯一序列，41 份有限多候选，17 份可重复跨障。
+17–76 共 60 关题面均已确认，消除 58 关原有的顺序或圈数歧义；66、68 的题面与先前唯一推导一致。
+全部 80 关已有明确序列；14 关的唯一参考推导继续与题面直接确认分开标注。
+
+二、规则与图片的核对顺序
+先读 06-game-rules.jpg 和用户约定；再读 02–04、07–09 拼卡刻线及 10 空棋盘；最后查看题目、解答整页和 levels/ 单关裁切图。
+33–36 的解答整页需逆时针转正 90°。单关裁切已转正。新增题目沿箭头逐项转录，并与已有解答路线交叉检查。
+完整规则交叉核对来源：https://www.smartgamesandpuzzles.com/horse-academy.html（设计者 Raf Peeters，2022）。本项目使用实物编号 1–10、边界 A–F。
+起终点可同位；马沿道路走，不能在普通路段原地掉头，岔口不能跨过短刻线锐转。经其他拼卡构成的回环可以重复走同一路。
+7 号有两条不连通的路；8、9、10 号各有三个端口，但只允许共同干路与分支平顺相接；无障碍支路不记编号。
+辨认白色道路是否真正穿出棋盘，不能仅凭边缘附近有彩色横杆判定出口。题面多行折线是阅读顺序，不是棋盘路径形状。
+题册“唯一解”以完整题目序列为条件。解答图能走出多个顺序，不代表原题有多个解。
+
+三、第 1–16 关重新确认（＊为唯一参考推导）
+01：E → 6 → D。＊图中道路唯一。
+02：B → 1 → 5 → A。＊图中道路唯一。
+03：E → 5 → 1 → 6 → F。题面与解答双重确认。
+04：B → 2 → 1 → 5 → 3 → A。题面与解答双重确认。
+05：A → 6 → 5 → 1 → C。＊图中道路唯一。
+06：C → 7 → 4 → 5 → D。＊图中道路唯一。经过 7 号无障碍支路时不计跨障。
+07：C → 2 → 6 → 3 → 4 → 5 → A。＊图中道路唯一。
+08：F → 3 → 5 → 4 → 6 → 1 → B。＊图中道路唯一。
+09：F → 3 → 5 → 4 → 6 → 2 → 1 → E。＊图中道路唯一。
+10：A → 6 → 4 → 3 → 2 → 5 → C。＊图中道路唯一。
+11：D → 5 → 4 → 2 → 1 → 3 → B。＊图中道路唯一。
+12：C → 7 → 4 → 6 → 5 → 3 → F。＊图中道路唯一。经过 7 号无障碍支路时不计跨障。
+13：D → 4 → 7 → 3 → 5 → 6 → B。＊图中道路唯一。经过 7 号无障碍支路时不计跨障。
+14：E → 2 → 6 → 1 → 4 → 5 → 7 → 3 → D。＊图中道路唯一。经过 7 号无障碍支路时不计跨障。
+15：A → 6 → 4 → 5 → 7 → 1 → 2 → B。＊图中道路唯一。经过 7 号无障碍支路时不计跨障。
+16：A → 5 → 4 → 7 → 6 → 3 → 1 → 2 → E。＊图中道路唯一。经过 7 号无障碍支路时不计跨障。
+
+四、第 17–76 关题面确认（问号表示玩家推导端点）
+17：A → 5 → 10 → 4 → 5 → A。4 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-017.png；解答：references/levels/level-017.png。
+18：E → 1 → 5 → 6 → 3 → 2 → 10 → E。6 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-018.png；解答：references/levels/level-018.png。
+19：A → 5 → 4 → 1 → 3 → 6 → 2 → 10 → A。7 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-019.png；解答：references/levels/level-019.png。
+20：B → 3 → 2 → 10 → 6 → 5 → 2 → 3 → B。7 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-020.png；解答：references/levels/level-020.png。
+21：B → 3 → 1 → 4 → 6 → 8 → 1 → 3 → B。7 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-021.png；解答：references/levels/level-021.png。
+22：F → 9 → 6 → 2 → 4 → 1 → 7 → F。6 次跨越，匹配参考 F→F。
+    题目：references/levels/challenge-022.png；解答：references/levels/level-022.png。
+23：C → 5 → 7 → 3 → 2 → 4 → 1 → 10 → C。7 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-023.png；解答：references/levels/level-023.png。
+24：E → 2 → 4 → 5 → 7 → 10 → 2 → E。6 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-024.png；解答：references/levels/level-024.png。
+25：B → 3 → 2 → 9 → 5 → 1 → 4 → 6 → 2 → 3 → B。9 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-025.png；解答：references/levels/level-025.png。
+26：A → 3 → 8 → 5 → 1 → 6 → 7 → 4 → 3 → A。8 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-026.png；解答：references/levels/level-026.png。
+27：F → 1 → 6 → 7 → 5 → 4 → 9 → 6 → 1 → F。8 次跨越，匹配参考 F→F。
+    题目：references/levels/challenge-027.png；解答：references/levels/level-027.png。
+28：D → 4 → 7 → 3 → 6 → 5 → 2 → 10 → 7 → 4 → D。9 次跨越，匹配参考 D→D。
+    题目：references/levels/challenge-028.png；解答：references/levels/level-028.png。
+29：A → 9 → 4 → 3 → 5 → 2 → 7 → A。6 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-029.png；解答：references/levels/level-029.png。
+30：A → 5 → 6 → 4 → 10 → 6 → 5 → A。6 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-030.png；解答：references/levels/level-030.png。
+31：E → 2 → 8 → 4 → 9 → D。4 次跨越，匹配参考 E→D。
+    题目：references/levels/challenge-031.png；解答：references/levels/level-031.png。
+32：A → 6 → 5 → 7 → 4 → 10 → 7 → 5 → 6 → A。8 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-032.png；解答：references/levels/level-032.png。
+33：C → 7 → 10 → 9 → 4 → 5 → 1 → A。6 次跨越，匹配参考 C→A。
+    题目：references/levels/challenge-033.png；解答：references/levels/level-033.png。
+34：B → 10 → 2 → 8 → 4 → 9 → 6 → 5 → 7 → 3 → B。9 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-034.png；解答：references/levels/level-034.png。
+35：A → 9 → 10 → 5 → 8 → 6 → 4 → 5 → A。7 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-035.png；解答：references/levels/level-035.png。
+36：A → 1 → 9 → 4 → 8 → 6 → 5 → B。6 次跨越，匹配参考 A→B。
+    题目：references/levels/challenge-036.png；解答：references/levels/level-036.png。
+37：D → 9 → 5 → 6 → 8 → 4 → 2 → 3 → 1 → B。8 次跨越，匹配参考 D→B。
+    题目：references/levels/challenge-037.png；解答：references/levels/level-037.png。
+38：E → 2 → 4 → 5 → 7 → 10 → 9 → 3 → F。7 次跨越，匹配参考 E→F。
+    题目：references/levels/challenge-038.png；解答：references/levels/level-038.png。
+39：D → 2 → 8 → 5 → 9 → 4 → 10 → 5 → 4 → 9 → 5 → 8 → 2 → D。12 次跨越，匹配参考 D→D。
+    题目：references/levels/challenge-039.png；解答：references/levels/level-039.png。
+40：E → 1 → 6 → 5 → 7 → 3 → 4 → 2 → 8 → 1 → E。9 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-040.png；解答：references/levels/level-040.png。
+41：A → 9 → 4 → 8 → 6 → 10 → A。5 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-041.png；解答：references/levels/level-041.png。
+42：B → 8 → 2 → 4 → 5 → 10 → 9 → B。6 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-042.png；解答：references/levels/level-042.png。
+43：C → 2 → 7 → 5 → 4 → 6 → 8 → 2 → C。7 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-043.png；解答：references/levels/level-043.png。
+44：C → 2 → 3 → 5 → 8 → 6 → 4 → 9 → 10 → 5 → 3 → 2 → C。11 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-044.png；解答：references/levels/level-044.png。
+45：B → 8 → 7 → 3 → 5 → 1 → 6 → 2 → 4 → B。8 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-045.png；解答：references/levels/level-045.png。
+46：B → 4 → 5 → 6 → 8 → 4 → 9 → 3 → 2 → D。8 次跨越，匹配参考 B→D。
+    题目：references/levels/challenge-046.png；解答：references/levels/level-046.png。
+47：A → 8 → 6 → 9 → 4 → 6 → 2 → E。6 次跨越，匹配参考 A→E。
+    题目：references/levels/challenge-047.png；解答：references/levels/level-047.png。
+48：F → 8 → 6 → 5 → 9 → 7 → 4 → 1 → 2 → B。8 次跨越，匹配参考 F→B。
+    题目：references/levels/challenge-048.png；解答：references/levels/level-048.png。
+49：C → 7 → 10 → 3 → 6 → 5 → 1 → 8 → 2 → A。8 次跨越，匹配参考 C→A。
+    题目：references/levels/challenge-049.png；解答：references/levels/level-049.png。
+50：D → 2 → 4 → 1 → 5 → 9 → 2 → 4 → 1 → 5 → 8 → 7 → 10 → D。12 次跨越，匹配参考 D→D。
+    题目：references/levels/challenge-050.png；解答：references/levels/level-050.png。
+51：E → 7 → 10 → 5 → 4 → 2 → 8 → 3 → 6 → F。8 次跨越，匹配参考 E→F。
+    题目：references/levels/challenge-051.png；解答：references/levels/level-051.png。
+52：C → 7 → 8 → 6 → 1 → 4 → 3 → 2 → 9 → 5 → D。9 次跨越，匹配参考 C→D。
+    题目：references/levels/challenge-052.png；解答：references/levels/level-052.png。
+53：F → 8 → 3 → 4 → 7 → 2 → 5 → 9 → 6 → 3 → 4 → 7 → 2 → 5 → 1 → E。14 次跨越，匹配参考 F→E。
+    题目：references/levels/challenge-053.png；解答：references/levels/level-053.png。
+54：E → 7 → 1 → 6 → 4 → 10 → 6 → 1 → 9 → 5 → F。9 次跨越，匹配参考 E→F。
+    题目：references/levels/challenge-054.png；解答：references/levels/level-054.png。
+55：E → 1 → 2 → 4 → 3 → 5 → 8 → 6 → 9 → 2 → 4 → 3 → 10 → 5 → 3 → 4 → 2 → 1 → E。17 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-055.png；解答：references/levels/level-055.png。
+56：E → 7 → 10 → 8 → 5 → 2 → 4 → 3 → 6 → F。8 次跨越，匹配参考 E→F。
+    题目：references/levels/challenge-056.png；解答：references/levels/level-056.png。
+57：E → 2 → 7 → 10 → 9 → 4 → 5 → 6 → 8 → 9 → 4 → 10 → 7 → 2 → E。13 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-057.png；解答：references/levels/level-057.png。
+58：C → 7 → 10 → 5 → 6 → 3 → 8 → 2 → A。7 次跨越，匹配参考 C→A。
+    题目：references/levels/challenge-058.png；解答：references/levels/level-058.png。
+59：C → 10 → 9 → 2 → 4 → 7 → 3 → 5 → 6 → 8 → C。9 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-059.png；解答：references/levels/level-059.png。
+60：B → 1 → 3 → 9 → 10 → 4 → 7 → 5 → 6 → 8 → 3 → 1 → B。11 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-060.png；解答：references/levels/level-060.png。
+61：B → 4 → 10 → 5 → 6 → 3 → 9 → 4 → 8 → 5 → 6 → 3 → 9 → 4 → B。13 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-061.png；解答：references/levels/level-061.png。
+62：E → 7 → 10 → 4 → 6 → 8 → 5 → 9 → 8 → 6 → 4 → 10 → 7 → E。12 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-062.png；解答：references/levels/level-062.png。
+63：C → 2 → 8 → 6 → 4 → 10 → 7 → 5 → 9 → 2 → C。9 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-063.png；解答：references/levels/level-063.png。
+64：B → 3 → 1 → 10 → 4 → 5 → 9 → 4 → 6 → 8 → 5 → 9 → 4 → 10 → 1 → 3 → B。15 次跨越，匹配参考 B→B。
+    题目：references/levels/challenge-064.png；解答：references/levels/level-064.png。
+65：? → 6 → 5 → 7 → 4 → 9 → 7 → 5 → 6 → ?。8 次跨越，匹配参考 A→A。
+    题目：references/levels/challenge-065.png；解答：references/levels/level-065.png。
+66：? → 1 → 3 → 4 → 7 → 5 → 6 → ?。6 次跨越，匹配参考 D→B。
+    题目：references/levels/challenge-066.png；解答：references/levels/level-066.png。
+67：? → 3 → 6 → 5 → 4 → 7 → 2 → 8 → ?。7 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-067.png；解答：references/levels/level-067.png。
+68：? → 6 → 7 → 5 → 4 → 2 → 3 → ?。6 次跨越，匹配参考 E→D。
+    题目：references/levels/challenge-068.png；解答：references/levels/level-068.png。
+69：? → 9 → 5 → 3 → 4 → 6 → 5 → 3 → 4 → 10 → 1 → 8 → ?。11 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-069.png；解答：references/levels/level-069.png。
+70：? → 3 → 2 → 8 → 4 → 6 → 5 → 9 → 4 → ?。8 次跨越，匹配参考 B→A。
+    题目：references/levels/challenge-070.png；解答：references/levels/level-070.png。
+71：? → 1 → 7 → 4 → 5 → 6 → 9 → 7 → 4 → 8 → 2 → ?。10 次跨越，匹配参考 E→A。
+    题目：references/levels/challenge-071.png；解答：references/levels/level-071.png。
+72：? → 2 → 5 → 10 → 9 → 4 → 1 → 6 → 8 → 5 → 2 → ?。10 次跨越，匹配参考 E→E。
+    题目：references/levels/challenge-072.png；解答：references/levels/level-072.png。
+73：? → 9 → 4 → 5 → 7 → 8 → 6 → 10 → ?。7 次跨越，匹配参考 D→D。
+    题目：references/levels/challenge-073.png；解答：references/levels/level-073.png。
+74：? → 3 → 6 → 9 → 5 → 4 → 10 → 6 → 2 → ?。8 次跨越，匹配参考 F→C。
+    题目：references/levels/challenge-074.png；解答：references/levels/level-074.png。
+75：? → 10 → 9 → 8 → 6 → 4 → 7 → 5 → ?。7 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-075.png；解答：references/levels/level-075.png。
+76：? → 1 → 10 → 6 → 2 → 4 → 5 → 9 → 4 → 2 → 6 → 8 → 5 → 9 → 4 → 2 → 6 → 10 → 1 → ?。18 次跨越，匹配参考 C→C。
+    题目：references/levels/challenge-076.png；解答：references/levels/level-076.png。
+长序列复核：39、50 各 12 次，53 为 14 次，55 为 17 次，64 为 15 次，76 为 18 次；均沿题面箭头完整保留。
+
+五、起点修正与唯一参考路线补充
+57：旧 B 更正为 E；参考 E→E。59：旧 B 更正为 C；参考 C→C。72：旧参考 B 更正为 E；参考 E→E。
+这三关 8 号均位于 (3,1)、r=2：端口 (4.5,1)、(4.5,2)、(3,1.5)，均在棋盘内部，B=(5,1.5) 没有道路开口。
+依据：references/levels/level-057.png、level-059.png、level-072.png。r 表示相对 piece-topology.json 标准姿态的顺时针 90° 次数。
+31：补出 E→D，左下 2 号道路连接 E；70：补出参考 B→A，右上 3 号道路连接 B。
+66：D → 1 → 3 → 4 → 7 → 5 → 6 → B；68：E → 6 → 7 → 5 → 4 → 2 → 3 → D。均为图中唯一参考序列。
+66、68 的两端仍由玩家推导，上述字母不预填为题目要求。
+参考起终点同位的关卡：17、18、19、20、21、22、23、24、25、26、27、28、29、30、32、34、35、39、40、41、42、43、44、45、50、55、57、59、60、61、62、63、64、65、67、69、72、73、75、76。
+
+六、静态解答图的歧义与原题确认
+58 张静态解答图本身仍有多种顺序，但相应题面已全部补齐。referenceAnalysis 保留原图的歧义证据，resolution 记录原题已确认，referenceTrace 保存匹配完整指令的端口步骤。
+回环路线按“进入端口 + 序列进度”回放，不能只看路径样例里是否包含该序列，也不能删除重复障碍来匹配。
+route-audit.json 中的候选示例遵守图示道路、岔路转向并跨越全部图示障碍后到红门。没有假设必须选择最短路线。
+有限候选数仅针对照片中的固定布局；回环示例并非完整枚举。完整端口步骤见 references/route-audit.json。
+每关图片为 references/levels/level-NNN.png（NNN 为三位关卡号）。
+
+七、第 77–80 关题面复核
+77：? → 3 → 9 → 8 → 6 → 4 → 7 → 2 → ?。
+78：? → 8 → 9 → 4 → 2 → 5 → 6 → 1 → 3 → ?。
+79：? → 7 → 4 → 6 → 8 → 9 → 3 → 5 → 2 → ?。
+80：? → 2 → 10 → 5 → 6 → 3 → 9 → 8 → 4 → 1 → 5 → 6 → 3 → 9 → 2 → ?。
+80 为 14 次跨越、9 块实体；2、3、5、6、9 各两次。两端问号不是缺失资料；目前无这四关的解答照片。
+
+八、可复算资料与边界
+references/level-catalog.json 保存题面、参考端点、朝向、完整参考步骤与证据类型；14 关唯一参考推导未冒充已见原题。
+references/transcriptions/ 保留第 25–76 关的分批转录、原图校验值及归档路径；暂存资料已全部并入正式目录。
+references/levels/challenges-overview-017-076.jpg 为新增题目裁切总览；原来的解答总览与 80 张 level-NNN.png 保留。
+node tools/analyze-reference-routes.mjs /tmp/racingclub-route-audit.json 可重算固定布局路线；npm test 检查关键路线、目录与图片校验值。
+node tools/render-reference-docs.mjs 从目录与分析结果重新生成本报告及关卡索引。
+只在这些参考图中使用“画出的道路端口相接或接边界门”的约束选朝向；它不是新加的通用游戏规则。
+资料复核与 App 验收分开，运行时仍仅启用 03、04。

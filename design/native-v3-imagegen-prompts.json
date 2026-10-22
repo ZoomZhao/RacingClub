@@ -1,0 +1,175 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "key": "horse-token-v3",
+      "filename": "horse_e.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: production transparent horse pawn sprite for the native RacingClub board game.\nInput image 1 is ONLY the approved art-style reference; do not copy its UI. Create ONE refined chestnut horse miniature, full body, clean side profile facing RIGHT, gently cantering with two lifted legs. No rider. A simple forest-green saddlecloth, small warm ivory saddle edge and fine gold bridle. Dark flowing mane and tail. Attractive natural horse proportions, friendly expressive eye, rounded sculpted forms and soft hand-painted shading, sophisticated tactile board-game figurine matching the reference's honey wood and ivory equestrian storybook style. Clear unified silhouette, medium simple forms that remain legible when rendered only 50 pixels high; avoid tiny photographic detail. The four legs should be anatomically correct and visually separated. Horse fills 85–90 percent of a landscape 4:3 frame, entire ears, tail and hooves inside safe margins. Transparent background; no scene, no base, no ground, no cast shadow outside the horse, no circle, no text, no numerals, no extra characters. This is a polished functional game token, not a realistic cutout.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-4b0aee96-4571-4c23-b8cc-3d59b946d7b2.png",
+      "project": "public/assets/native-v3/horse_e.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_e_v3.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/design/approved-landscape.png"
+      ],
+      "sha256": "f25c6cfb8c285922607991827148efd0bd4be84399ae7fc796a654aecc56a19e"
+    },
+    {
+      "key": "finish-gate-v3",
+      "filename": "gate_n.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: production transparent finish gate sprite for the native RacingClub miniature horse board game.\nInput image 1 is the approved palette and hand-painted materials reference only. Create ONE elegant miniature equestrian finish gate, front view with a slight elevated view showing the post caps. Two slim warm-ivory painted wooden pillars with beveled square feet and small sculpted golden finials. A soft TERRACOTTA ribbon arches between their tops, a little brass horseshoe at its center, and two very small cream/terracotta checkered pennants at the upper corners. Large completely OPEN transparent central passage, no lower crossbar, no obstacle rail, no door panel. Refined tactile wooden toy with subtle natural grain and hand-painted storybook shading, cream/honey/terracotta/brass colors matching reference. No thick dark outlines, no excessive decoration. Both pillars equal height and symmetrical, arch wide and low, overall frame ratio 4:3, object occupies 88 percent of frame with full feet visible. Transparent background and transparent opening. No floor, no scenery, no cast shadow outside object, no text, letters, numerals or words. Must remain recognizable at 60 pixels wide.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-666cae74-f41d-4583-8b04-9ce3542af79e.png",
+      "project": "public/assets/native-v3/gate_n.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/gate_n_v3.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/design/approved-landscape.png"
+      ],
+      "sha256": "d568407f784e4741fb45cfc6d3d4298de3f02a22f2e160aaa7617c60eac4bcde"
+    },
+    {
+      "key": "start-marker-v3",
+      "filename": "start_marker.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: production transparent starting-point marker plaque for the native RacingClub horse board game.\nInput image 1 is only the warm refined hand-painted equestrian style reference. Create ONE compact horizontal softly beveled ivory wooden plaque, aspect ratio about 3.2:1, with a thin honey-gold raised rim. On the LEFT 22 percent is a small sculpted forest-green swallowtail pennant attached to a short brass pole, neatly contained within the plaque. The remaining RIGHT 70 percent is perfectly clean empty warm ivory, ready for real native text to be drawn over it. A tiny restrained green enamel detail at the right edge; no leaf clusters, no extra objects. Subtle beautiful tactile shading and painted wood grain, readable and crisp at 70 pixels wide, match reference game materials. Whole plaque including shadowless edges centered with 4 percent transparent safe margin. Genuinely transparent background. No text, no letters, no numbers, no arrow, no watermark. This pairs with a terracotta checkered finish plaque, same proportions and material.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-3e054df2-3314-477b-81db-b8f0e5fd51c0.png",
+      "project": "public/assets/native-v3/start_marker.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/start_marker_v3.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/design/approved-landscape.png"
+      ],
+      "sha256": "255c06a623746182349064fbbc68dde050424dd3544746d02c30cfcd9bf43daa"
+    },
+    {
+      "key": "finish-marker-v3",
+      "filename": "finish_marker.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: production transparent finish-point marker plaque for the native RacingClub horse board game.\nInput image 1 is only the warm refined hand-painted equestrian style reference. Create ONE compact horizontal softly beveled ivory wooden plaque, aspect ratio about 3.2:1, with a thin honey-gold raised rim. On the LEFT 22 percent is a small sculpted terracotta-and-cream checkered racing pennant attached to a short brass pole, neatly contained within the plaque. The remaining RIGHT 70 percent is perfectly clean empty warm ivory, ready for real native text to be drawn over it. A tiny restrained terracotta enamel detail at the right edge; no leaf clusters, no extra objects. Subtle beautiful tactile shading and painted wood grain, readable and crisp at 70 pixels wide, match reference game materials. Whole plaque including shadowless edges centered with 4 percent transparent safe margin. Genuinely transparent background. No text, no letters, no numbers, no arrow, no watermark. This pairs with a forest-green start plaque, same proportions and material.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-f45de780-6b41-4538-bea5-354e0cab6c5b.png",
+      "project": "public/assets/native-v3/finish_marker.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/finish_marker_v3.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/design/approved-landscape.png"
+      ],
+      "sha256": "ce8ff9b047b58cdb41a376ea64a7a7a5caefcc7854b31da83250b303ca755f06"
+    },
+    {
+      "key": "horse-ne-v3",
+      "filename": "horse_ne.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/horse_e.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: one directional animation sprite for an eight-direction native board-game horse.\nInput image 1 is the exact identity/style reference. Create ONE view of the SAME chestnut horse, same white facial blaze and stockings, dark mane/tail, forest-green quilted saddlecloth with ivory/gold trim, brown saddle and gold bridle, same refined hand-painted rounded miniature style. No rider.\nRequired travel direction: NORTH-EAST, away from the viewer towards the UPPER-RIGHT corner. Show the horse's rear-right three-quarter view, hindquarters nearest camera and head pointing upper-right, clearly moving away.\nKeep a fixed slightly elevated camera looking down 25–30 degrees so its back/saddle and four legs are readable on a flat game board. Anatomically correct, softly cantering, four full legs, all ears/hooves/tail inside frame. This is a true new camera-angle view of the horse, NOT a sideways-rotated or tilted copy of the reference. Match scale and material rendering. Center it in a roughly square transparent frame, occupy 85–90 percent of frame. All four hooves belong to one horse and meet the same ground plane. No base, no ground, no outside drop shadow, no scenery, no UI, no extra animal, no text or letters. Genuinely transparent background.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-1caacc4b-5abc-4df3-b2ad-0ff4aaba4164.png",
+      "project": "public/assets/native-v3/horse_ne.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_ne_v3.png",
+      "sha256": "dfbe7d1890e5f61384bad3e472d5387d1edaf0e35d6dfaf4194e7772a2d9b760"
+    },
+    {
+      "key": "horse-n-v3",
+      "filename": "horse_n.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/horse_e.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: one directional animation sprite for an eight-direction native board-game horse.\nInput image 1 is the exact identity/style reference. Create ONE view of the SAME chestnut horse, same white facial blaze and stockings, dark mane/tail, forest-green quilted saddlecloth with ivory/gold trim, brown saddle and gold bridle, same refined hand-painted rounded miniature style. No rider.\nRequired travel direction: NORTH, straight AWAY from the viewer towards the TOP of the image. Show its centered REAR view: hindquarters and tail nearest the viewer, back, saddle and back of its ears visible, head farther away at the top. Do NOT show its front face or chest.\nKeep a fixed slightly elevated camera looking down 25–30 degrees so its back/saddle and four legs are readable on a flat game board. Anatomically correct, softly cantering, four full legs, all ears/hooves/tail inside frame. This is a true new camera-angle view of the horse, NOT a sideways-rotated or tilted copy of the reference. Match scale and material rendering. Center it in a roughly square transparent frame, occupy 85–90 percent of frame. All four hooves belong to one horse and meet the same ground plane. No base, no ground, no outside drop shadow, no scenery, no UI, no extra animal, no text or letters. Genuinely transparent background.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-bd162545-c252-4fb1-b7c1-83cac78dd305.png",
+      "project": "public/assets/native-v3/horse_n.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_n_v3.png",
+      "sha256": "ee9f0b49ef580d0f7c8e54ffa11dd164f5bc4c80a30663a79d4c3a13179e81b3"
+    },
+    {
+      "key": "horse-nw-v3",
+      "filename": "horse_nw.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/horse_e.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: one directional animation sprite for an eight-direction native board-game horse.\nInput image 1 is the exact identity/style reference. Create ONE view of the SAME chestnut horse, same white facial blaze and stockings, dark mane/tail, forest-green quilted saddlecloth with ivory/gold trim, brown saddle and gold bridle, same refined hand-painted rounded miniature style. No rider.\nRequired travel direction: NORTH-WEST, away from the viewer towards the UPPER-LEFT corner. Show the horse's rear-left three-quarter view, hindquarters nearest camera and head pointing upper-left, clearly moving away.\nKeep a fixed slightly elevated camera looking down 25–30 degrees so its back/saddle and four legs are readable on a flat game board. Anatomically correct, softly cantering, four full legs, all ears/hooves/tail inside frame. This is a true new camera-angle view of the horse, NOT a sideways-rotated or tilted copy of the reference. Match scale and material rendering. Center it in a roughly square transparent frame, occupy 85–90 percent of frame. All four hooves belong to one horse and meet the same ground plane. No base, no ground, no outside drop shadow, no scenery, no UI, no extra animal, no text or letters. Genuinely transparent background.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-368465e3-0800-4f6d-9e7b-4448e5ac1852.png",
+      "project": "public/assets/native-v3/horse_nw.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_nw_v3.png",
+      "sha256": "8ee1068ea76b19795d01f7227ccf1d86143633552d5de1dc317e06742879be39"
+    },
+    {
+      "key": "horse-w-v3",
+      "filename": "horse_w.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/horse_e.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: one directional animation sprite for an eight-direction native board-game horse.\nInput image 1 is the exact identity/style reference. Create ONE view of the SAME chestnut horse, same white facial blaze and stockings, dark mane/tail, forest-green quilted saddlecloth with ivory/gold trim, brown saddle and gold bridle, same refined hand-painted rounded miniature style. No rider.\nRequired travel direction: WEST, towards the LEFT edge. Show the opposite full LEFT-facing side view, head at image left and tail at right, matching the reference horse exactly.\nKeep a fixed slightly elevated camera looking down 25–30 degrees so its back/saddle and four legs are readable on a flat game board. Anatomically correct, softly cantering, four full legs, all ears/hooves/tail inside frame. This is a true new camera-angle view of the horse, NOT a sideways-rotated or tilted copy of the reference. Match scale and material rendering. Center it in a roughly square transparent frame, occupy 85–90 percent of frame. All four hooves belong to one horse and meet the same ground plane. No base, no ground, no outside drop shadow, no scenery, no UI, no extra animal, no text or letters. Genuinely transparent background.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-4f78227d-ffbb-4674-8ef8-834626126502.png",
+      "project": "public/assets/native-v3/horse_w.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_w_v3.png",
+      "sha256": "dcc258798ca4f1792d962a9672522b328b12f7baed1be75eb426d4f0ed2b0ee7"
+    },
+    {
+      "key": "horse-sw-v3",
+      "filename": "horse_sw.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/horse_e.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: one directional animation sprite for an eight-direction native board-game horse.\nInput image 1 is the exact identity/style reference. Create ONE view of the SAME chestnut horse, same white facial blaze and stockings, dark mane/tail, forest-green quilted saddlecloth with ivory/gold trim, brown saddle and gold bridle, same refined hand-painted rounded miniature style. No rider.\nRequired travel direction: SOUTH-WEST, towards the viewer and the LOWER-LEFT corner. Show its front-left three-quarter view, face and chest nearest camera, hindquarters receding to upper-right.\nKeep a fixed slightly elevated camera looking down 25–30 degrees so its back/saddle and four legs are readable on a flat game board. Anatomically correct, softly cantering, four full legs, all ears/hooves/tail inside frame. This is a true new camera-angle view of the horse, NOT a sideways-rotated or tilted copy of the reference. Match scale and material rendering. Center it in a roughly square transparent frame, occupy 85–90 percent of frame. All four hooves belong to one horse and meet the same ground plane. No base, no ground, no outside drop shadow, no scenery, no UI, no extra animal, no text or letters. Genuinely transparent background.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-549174fd-dd2f-490d-ba9a-f1e6571619da.png",
+      "project": "public/assets/native-v3/horse_sw.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_sw_v3.png",
+      "sha256": "c4a1f5cade2e690446f38925f533407b4dc109629ce157f2b79c37f530290cd1"
+    },
+    {
+      "key": "horse-s-v3",
+      "filename": "horse_s.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/horse_e.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: one directional animation sprite for an eight-direction native board-game horse.\nInput image 1 is the exact identity/style reference. Create ONE view of the SAME chestnut horse, same white facial blaze and stockings, dark mane/tail, forest-green quilted saddlecloth with ivory/gold trim, brown saddle and gold bridle, same refined hand-painted rounded miniature style. No rider.\nRequired travel direction: SOUTH, straight TOWARDS the viewer, head pointing to the BOTTOM of the image. Show the centered FRONT view: expressive face, white blaze and chest nearest camera, forelegs in front, rump and tail receding behind. Clearly the front, not its rear.\nKeep a fixed slightly elevated camera looking down 25–30 degrees so its back/saddle and four legs are readable on a flat game board. Anatomically correct, softly cantering, four full legs, all ears/hooves/tail inside frame. This is a true new camera-angle view of the horse, NOT a sideways-rotated or tilted copy of the reference. Match scale and material rendering. Center it in a roughly square transparent frame, occupy 85–90 percent of frame. All four hooves belong to one horse and meet the same ground plane. No base, no ground, no outside drop shadow, no scenery, no UI, no extra animal, no text or letters. Genuinely transparent background.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-d7bbfa61-fdde-4c43-803a-974416bc29a0.png",
+      "project": "public/assets/native-v3/horse_s.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_s_v3.png",
+      "sha256": "b058b3742e67fb84107f2f56caa0892464e64945a58c95a5cc709b67415c674c"
+    },
+    {
+      "key": "horse-se-v3",
+      "filename": "horse_se.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/horse_e.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: one directional animation sprite for an eight-direction native board-game horse.\nInput image 1 is the exact identity/style reference. Create ONE view of the SAME chestnut horse, same white facial blaze and stockings, dark mane/tail, forest-green quilted saddlecloth with ivory/gold trim, brown saddle and gold bridle, same refined hand-painted rounded miniature style. No rider.\nRequired travel direction: SOUTH-EAST, towards the viewer and the LOWER-RIGHT corner. Show its front-right three-quarter view, face and chest nearest camera, hindquarters receding to upper-left.\nKeep a fixed slightly elevated camera looking down 25–30 degrees so its back/saddle and four legs are readable on a flat game board. Anatomically correct, softly cantering, four full legs, all ears/hooves/tail inside frame. This is a true new camera-angle view of the horse, NOT a sideways-rotated or tilted copy of the reference. Match scale and material rendering. Center it in a roughly square transparent frame, occupy 85–90 percent of frame. All four hooves belong to one horse and meet the same ground plane. No base, no ground, no outside drop shadow, no scenery, no UI, no extra animal, no text or letters. Genuinely transparent background.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-574ce356-ba2d-4d79-9c0d-14d7f611ed30.png",
+      "project": "public/assets/native-v3/horse_se.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/horse_se_v3.png",
+      "sha256": "fc21f28bf9c114838e9386388c52974b704b8dea3b7d5af07841fd3027bf8f51"
+    },
+    {
+      "key": "gate-w-v3",
+      "filename": "gate_w.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/gate_n.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: transparent directional finish-gate sprite for a native wooden horse board game.\nInput image 1 is the EXACT gate identity and material reference: two ivory wooden pillars, honey-gold caps and feet, small gold finials, terracotta curved arch ribbon with cream trim, small horseshoe medallion and terracotta/cream checkered pennants. Same gate, no new decoration.\nRequired orientation: WEST / LEFT board edge. The two pillar FOOT centers must line up on the VERTICAL screen axis, one farther UP and one farther DOWN, with a clear passage LEFT-to-RIGHT between them. View the gate from its RIGHT-hand side, looking diagonally toward the LEFT, at a high elevated angle. Show visible top caps and the depth of the arch. The ribbon recedes diagonally upward between the two pillars; this is a natural side view, not a 90-degree-rotated front image.\nThe camera stays above the flat board looking down about 50 degrees. Create this true 3D angle using the same refined tactile hand-painted shading. Passage completely open and transparent, no obstacle bars, no door leaves. Fit the entire gate in a transparent square canvas with 6 percent safe margin, including both feet and finials. No floor, no scenery, no external shadow, no text, no letters, no numbers. Do NOT rotate the raster reference sideways. The posts remain vertically upright on screen even in side views.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-a7143201-9c5e-4d65-8c83-6701ca5470ed.png",
+      "project": "public/assets/native-v3/gate_w.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/gate_w_v3.png",
+      "sha256": "0dfbcb0b9d3ee313cddf0582590b85b1aba00049e4b4d42c0edb016150d15a57"
+    },
+    {
+      "key": "gate-e-v3",
+      "filename": "gate_e.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/gate_n.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: transparent directional finish-gate sprite for a native wooden horse board game.\nInput image 1 is the EXACT gate identity and material reference: two ivory wooden pillars, honey-gold caps and feet, small gold finials, terracotta curved arch ribbon with cream trim, small horseshoe medallion and terracotta/cream checkered pennants. Same gate, no new decoration.\nRequired orientation: EAST / RIGHT board edge. The two pillar FOOT centers must line up on the VERTICAL screen axis, one farther UP and one farther DOWN, with a clear passage RIGHT-to-LEFT between them. View the gate from its LEFT-hand side, looking diagonally toward the RIGHT, at a high elevated angle. Show visible top caps and the depth of the arch. The ribbon recedes diagonally upward between the two pillars; this is a natural opposite-side view, not a 90-degree-rotated front image.\nThe camera stays above the flat board looking down about 50 degrees. Create this true 3D angle using the same refined tactile hand-painted shading. Passage completely open and transparent, no obstacle bars, no door leaves. Fit the entire gate in a transparent square canvas with 6 percent safe margin, including both feet and finials. No floor, no scenery, no external shadow, no text, no letters, no numbers. Do NOT rotate the raster reference sideways. The posts remain vertically upright on screen even in side views.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-6d10e7f6-446e-4c5d-99f2-4b6b9dbebbdb.png",
+      "project": "public/assets/native-v3/gate_e.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/gate_e_v3.png",
+      "sha256": "8c3d79eb44297e4e0b1c006fbe293e766363a1110b3faf1b3555779ef8761647"
+    },
+    {
+      "key": "gate-s-v3",
+      "filename": "gate_s.png",
+      "refs": [
+        "/Users/zoomzhao/Workspace/RacingClub/public/assets/native-v3/gate_n.png"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: transparent directional finish-gate sprite for a native wooden horse board game.\nInput image 1 is the EXACT gate identity and material reference: two ivory wooden pillars, honey-gold caps and feet, small gold finials, terracotta curved arch ribbon with cream trim, small horseshoe medallion and terracotta/cream checkered pennants. Same gate, no new decoration.\nRequired orientation: SOUTH / BOTTOM board edge. Show the gate's BACK, at an elevated angle: two pillar feet on a HORIZONTAL screen line, empty passage down the screen. The back of the terracotta arch ribbon and opposite faces of the ivory posts are visible. Keep both posts upright on the screen, not upside down. Match the front gate's proportions and size.\nThe camera stays above the flat board looking down about 50 degrees. Create this true 3D angle using the same refined tactile hand-painted shading. Passage completely open and transparent, no obstacle bars, no door leaves. Fit the entire gate in a transparent square canvas with 6 percent safe margin, including both feet and finials. No floor, no scenery, no external shadow, no text, no letters, no numbers. Do NOT rotate the raster reference sideways. The posts remain vertically upright on screen even in side views.",
+      "generated": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-6435e879-8d59-4b8f-929a-c4909abf390c.png",
+      "project": "public/assets/native-v3/gate_s.png",
+      "android": "native/android/app/src/main/res/drawable-nodpi/gate_s_v3.png",
+      "sha256": "5e2c802f8750d7e74c38df4436f21dbac530317e977fff1bc283c0b7b30c62ec"
+    }
+  ],
+  "date": "2026-10-23"
+}

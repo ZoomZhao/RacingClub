@@ -1,0 +1,254 @@
+RacingClub 关卡资料索引（第 1–80 关）
+更新日期：2026-10-23
+
+一、覆盖与确认状态
+原始图片 61 张；原有编号裁切 80 张，补充题目裁切 60 张。
+66 关经原题确认，14 关可从图示路线唯一推导；共 80 关具有明确序列，待定顺序 0 关。
+76 份解答图的端点、朝向和完整序列已复核，其中 40 份两端同位；1–16 再次核对，与原有路线一致。
+唯一参考推导而未独立见原题的关卡：1、2、5、6、7、8、9、10、11、12、13、14、15、16。77–80 题面已确认，尚无解答照片。
+57、59、72 的旧参考起点 B 更正为 E、C、E；三处均曾将 8 号横杆误作边界出口。
+第 65 关起题目两端由玩家推导；参考解答的字母不是题面预设。
+＊为经过照片与道路模型复核的参考推导，尚未独立核对原题；无＊的完整序列来自题目照片。
+“玩家推导”是已确认的题目要求，不是资料缺失。
+题目/参考字段、来源与朝向：references/level-catalog.json。
+道路模型与证据：references/piece-topology.json、references/route-audit.json。详细结论：docs/关卡核对报告.txt。
+
+二、逐关起终点要求与障碍顺序
+关卡  起点要求  终点要求  障碍顺序 / 核对结果
+01    E＊      D＊      6＊
+02    B＊      A＊      1 → 5＊
+03    E       F       5 → 1 → 6
+04    B       A       2 → 1 → 5 → 3
+05    A＊      C＊      6 → 5 → 1＊
+06    C＊      D＊      7 → 4 → 5＊
+07    C＊      A＊      2 → 6 → 3 → 4 → 5＊
+08    F＊      B＊      3 → 5 → 4 → 6 → 1＊
+09    F＊      E＊      3 → 5 → 4 → 6 → 2 → 1＊
+10    A＊      C＊      6 → 4 → 3 → 2 → 5＊
+11    D＊      B＊      5 → 4 → 2 → 1 → 3＊
+12    C＊      F＊      7 → 4 → 6 → 5 → 3＊
+13    D＊      B＊      4 → 7 → 3 → 5 → 6＊
+14    E＊      D＊      2 → 6 → 1 → 4 → 5 → 7 → 3＊
+15    A＊      B＊      6 → 4 → 5 → 7 → 1 → 2＊
+16    A＊      E＊      5 → 4 → 7 → 6 → 3 → 1 → 2＊
+17    A       A       5 → 10 → 4 → 5
+18    E       E       1 → 5 → 6 → 3 → 2 → 10
+19    A       A       5 → 4 → 1 → 3 → 6 → 2 → 10
+20    B       B       3 → 2 → 10 → 6 → 5 → 2 → 3
+21    B       B       3 → 1 → 4 → 6 → 8 → 1 → 3
+22    F       F       9 → 6 → 2 → 4 → 1 → 7
+23    C       C       5 → 7 → 3 → 2 → 4 → 1 → 10
+24    E       E       2 → 4 → 5 → 7 → 10 → 2
+25    B       B       3 → 2 → 9 → 5 → 1 → 4 → 6 → 2 → 3
+26    A       A       3 → 8 → 5 → 1 → 6 → 7 → 4 → 3
+27    F       F       1 → 6 → 7 → 5 → 4 → 9 → 6 → 1
+28    D       D       4 → 7 → 3 → 6 → 5 → 2 → 10 → 7 → 4
+29    A       A       9 → 4 → 3 → 5 → 2 → 7
+30    A       A       5 → 6 → 4 → 10 → 6 → 5
+31    E       D       2 → 8 → 4 → 9
+32    A       A       6 → 5 → 7 → 4 → 10 → 7 → 5 → 6
+33    C       A       7 → 10 → 9 → 4 → 5 → 1
+34    B       B       10 → 2 → 8 → 4 → 9 → 6 → 5 → 7 → 3
+35    A       A       9 → 10 → 5 → 8 → 6 → 4 → 5
+36    A       B       1 → 9 → 4 → 8 → 6 → 5
+37    D       B       9 → 5 → 6 → 8 → 4 → 2 → 3 → 1
+38    E       F       2 → 4 → 5 → 7 → 10 → 9 → 3
+39    D       D       2 → 8 → 5 → 9 → 4 → 10 → 5 → 4 → 9 → 5 → 8 → 2
+40    E       E       1 → 6 → 5 → 7 → 3 → 4 → 2 → 8 → 1
+41    A       A       9 → 4 → 8 → 6 → 10
+42    B       B       8 → 2 → 4 → 5 → 10 → 9
+43    C       C       2 → 7 → 5 → 4 → 6 → 8 → 2
+44    C       C       2 → 3 → 5 → 8 → 6 → 4 → 9 → 10 → 5 → 3 → 2
+45    B       B       8 → 7 → 3 → 5 → 1 → 6 → 2 → 4
+46    B       D       4 → 5 → 6 → 8 → 4 → 9 → 3 → 2
+47    A       E       8 → 6 → 9 → 4 → 6 → 2
+48    F       B       8 → 6 → 5 → 9 → 7 → 4 → 1 → 2
+49    C       A       7 → 10 → 3 → 6 → 5 → 1 → 8 → 2
+50    D       D       2 → 4 → 1 → 5 → 9 → 2 → 4 → 1 → 5 → 8 → 7 → 10
+51    E       F       7 → 10 → 5 → 4 → 2 → 8 → 3 → 6
+52    C       D       7 → 8 → 6 → 1 → 4 → 3 → 2 → 9 → 5
+53    F       E       8 → 3 → 4 → 7 → 2 → 5 → 9 → 6 → 3 → 4 → 7 → 2 → 5 → 1
+54    E       F       7 → 1 → 6 → 4 → 10 → 6 → 1 → 9 → 5
+55    E       E       1 → 2 → 4 → 3 → 5 → 8 → 6 → 9 → 2 → 4 → 3 → 10 → 5 → 3 → 4 → 2 → 1
+56    E       F       7 → 10 → 8 → 5 → 2 → 4 → 3 → 6
+57    E       E       2 → 7 → 10 → 9 → 4 → 5 → 6 → 8 → 9 → 4 → 10 → 7 → 2
+58    C       A       7 → 10 → 5 → 6 → 3 → 8 → 2
+59    C       C       10 → 9 → 2 → 4 → 7 → 3 → 5 → 6 → 8
+60    B       B       1 → 3 → 9 → 10 → 4 → 7 → 5 → 6 → 8 → 3 → 1
+61    B       B       4 → 10 → 5 → 6 → 3 → 9 → 4 → 8 → 5 → 6 → 3 → 9 → 4
+62    E       E       7 → 10 → 4 → 6 → 8 → 5 → 9 → 8 → 6 → 4 → 10 → 7
+63    C       C       2 → 8 → 6 → 4 → 10 → 7 → 5 → 9 → 2
+64    B       B       3 → 1 → 10 → 4 → 5 → 9 → 4 → 6 → 8 → 5 → 9 → 4 → 10 → 1 → 3
+65    玩家推导    玩家推导    6 → 5 → 7 → 4 → 9 → 7 → 5 → 6
+66    玩家推导    玩家推导    1 → 3 → 4 → 7 → 5 → 6
+67    玩家推导    玩家推导    3 → 6 → 5 → 4 → 7 → 2 → 8
+68    玩家推导    玩家推导    6 → 7 → 5 → 4 → 2 → 3
+69    玩家推导    玩家推导    9 → 5 → 3 → 4 → 6 → 5 → 3 → 4 → 10 → 1 → 8
+70    玩家推导    玩家推导    3 → 2 → 8 → 4 → 6 → 5 → 9 → 4
+71    玩家推导    玩家推导    1 → 7 → 4 → 5 → 6 → 9 → 7 → 4 → 8 → 2
+72    玩家推导    玩家推导    2 → 5 → 10 → 9 → 4 → 1 → 6 → 8 → 5 → 2
+73    玩家推导    玩家推导    9 → 4 → 5 → 7 → 8 → 6 → 10
+74    玩家推导    玩家推导    3 → 6 → 9 → 5 → 4 → 10 → 6 → 2
+75    玩家推导    玩家推导    10 → 9 → 8 → 6 → 4 → 7 → 5
+76    玩家推导    玩家推导    1 → 10 → 6 → 2 → 4 → 5 → 9 → 4 → 2 → 6 → 8 → 5 → 9 → 4 → 2 → 6 → 10 → 1
+77    玩家推导    玩家推导    3 → 9 → 8 → 6 → 4 → 7 → 2
+78    玩家推导    玩家推导    8 → 9 → 4 → 2 → 5 → 6 → 1 → 3
+79    玩家推导    玩家推导    7 → 4 → 6 → 8 → 9 → 3 → 5 → 2
+80    玩家推导    玩家推导    2 → 10 → 5 → 6 → 3 → 9 → 8 → 4 → 1 → 5 → 6 → 3 → 9 → 2
+
+三、参考端点、实体拼卡与来源
+第 65 关起本表端点仅为解答结果。拼卡集合不是跨障顺序；77–80 无解答摆法。
+图片路径相对于 references/；补充题目图保留为 challenge-NNN.png，不覆盖 level-NNN.png 解答图。
+关卡  参考起终点  实体拼卡编号  原图 / 编号裁切图
+01    E→D     6                      11-solutions-1-4.jpg / levels/level-001.png
+02    B→A     1,5                    11-solutions-1-4.jpg / levels/level-002.png
+03    E→F     1,5,6                  11-solutions-1-4.jpg / levels/level-003.png
+04    B→A     1,2,3,5                11-solutions-1-4.jpg / levels/level-004.png
+05    A→C     1,5,6                  12-solutions-5-8.jpg / levels/level-005.png
+06    C→D     4,5,7                  12-solutions-5-8.jpg / levels/level-006.png
+07    C→A     2,3,4,5,6              12-solutions-5-8.jpg / levels/level-007.png
+08    F→B     1,3,4,5,6              12-solutions-5-8.jpg / levels/level-008.png
+09    F→E     1,2,3,4,5,6            13-solutions-9-12.jpg / levels/level-009.png
+10    A→C     2,3,4,5,6              13-solutions-9-12.jpg / levels/level-010.png
+11    D→B     1,2,3,4,5              13-solutions-9-12.jpg / levels/level-011.png
+12    C→F     3,4,5,6,7              13-solutions-9-12.jpg / levels/level-012.png
+13    D→B     3,4,5,6,7              14-solutions-13-16.jpg / levels/level-013.png
+14    E→D     1,2,3,4,5,6,7          14-solutions-13-16.jpg / levels/level-014.png
+15    A→B     1,2,4,5,6,7            14-solutions-13-16.jpg / levels/level-015.png
+16    A→E     1,2,3,4,5,6,7          14-solutions-13-16.jpg / levels/level-016.png
+17    A→A     4,5,10                 15-solutions-17-20.jpg / levels/level-017.png
+      补充题目：32-challenges-17-18.jpg / levels/challenge-017.png
+18    E→E     1,2,3,5,6,10           15-solutions-17-20.jpg / levels/level-018.png
+      补充题目：32-challenges-17-18.jpg / levels/challenge-018.png
+19    A→A     1,2,3,4,5,6,10         15-solutions-17-20.jpg / levels/level-019.png
+      补充题目：33-challenges-19-20.jpg / levels/challenge-019.png
+20    B→B     2,3,5,6,10             15-solutions-17-20.jpg / levels/level-020.png
+      补充题目：33-challenges-19-20.jpg / levels/challenge-020.png
+21    B→B     1,3,4,6,8              16-solutions-21-24.jpg / levels/level-021.png
+      补充题目：34-challenges-21-22.jpg / levels/challenge-021.png
+22    F→F     1,2,4,6,7,9            16-solutions-21-24.jpg / levels/level-022.png
+      补充题目：34-challenges-21-22.jpg / levels/challenge-022.png
+23    C→C     1,2,3,4,5,7,10         16-solutions-21-24.jpg / levels/level-023.png
+      补充题目：35-challenges-23-24.jpg / levels/challenge-023.png
+24    E→E     2,4,5,7,10             16-solutions-21-24.jpg / levels/level-024.png
+      补充题目：35-challenges-23-24.jpg / levels/challenge-024.png
+25    B→B     1,2,3,4,5,6,9          17-solutions-25-28.jpg / levels/level-025.png
+      补充题目：36-challenges-25-26.jpg / levels/challenge-025.png
+26    A→A     1,3,4,5,6,7,8          17-solutions-25-28.jpg / levels/level-026.png
+      补充题目：36-challenges-25-26.jpg / levels/challenge-026.png
+27    F→F     1,4,5,6,7,9            17-solutions-25-28.jpg / levels/level-027.png
+      补充题目：37-challenges-27-28.jpg / levels/challenge-027.png
+28    D→D     2,3,4,5,6,7,10         17-solutions-25-28.jpg / levels/level-028.png
+      补充题目：37-challenges-27-28.jpg / levels/challenge-028.png
+29    A→A     2,3,4,5,7,9            18-solutions-29-32.jpg / levels/level-029.png
+      补充题目：38-challenges-29-30.jpg / levels/challenge-029.png
+30    A→A     4,5,6,10               18-solutions-29-32.jpg / levels/level-030.png
+      补充题目：38-challenges-29-30.jpg / levels/challenge-030.png
+31    E→D     2,4,8,9                18-solutions-29-32.jpg / levels/level-031.png
+      补充题目：39-challenges-31-32.jpg / levels/challenge-031.png
+32    A→A     4,5,6,7,10             18-solutions-29-32.jpg / levels/level-032.png
+      补充题目：39-challenges-31-32.jpg / levels/challenge-032.png
+33    C→A     1,4,5,7,9,10           19-solutions-33-36.jpg / levels/level-033.png
+      补充题目：40-challenges-33-34.jpg / levels/challenge-033.png
+34    B→B     2,3,4,5,6,7,8,9,10     19-solutions-33-36.jpg / levels/level-034.png
+      补充题目：40-challenges-33-34.jpg / levels/challenge-034.png
+35    A→A     4,5,6,8,9,10           19-solutions-33-36.jpg / levels/level-035.png
+      补充题目：41-challenges-35-36.jpg / levels/challenge-035.png
+36    A→B     1,4,5,6,8,9            19-solutions-33-36.jpg / levels/level-036.png
+      补充题目：41-challenges-35-36.jpg / levels/challenge-036.png
+37    D→B     1,2,3,4,5,6,8,9        20-solutions-37-40.jpg / levels/level-037.png
+      补充题目：42-challenges-37-38.jpg / levels/challenge-037.png
+38    E→F     2,3,4,5,7,9,10         20-solutions-37-40.jpg / levels/level-038.png
+      补充题目：42-challenges-37-38.jpg / levels/challenge-038.png
+39    D→D     2,4,5,8,9,10           20-solutions-37-40.jpg / levels/level-039.png
+      补充题目：43-challenges-39-40.jpg / levels/challenge-039.png
+40    E→E     1,2,3,4,5,6,7,8        20-solutions-37-40.jpg / levels/level-040.png
+      补充题目：43-challenges-39-40.jpg / levels/challenge-040.png
+41    A→A     4,6,8,9,10             21-solutions-41-44.jpg / levels/level-041.png
+      补充题目：44-challenges-41-42.jpg / levels/challenge-041.png
+42    B→B     2,4,5,8,9,10           21-solutions-41-44.jpg / levels/level-042.png
+      补充题目：44-challenges-41-42.jpg / levels/challenge-042.png
+43    C→C     2,4,5,6,7,8            21-solutions-41-44.jpg / levels/level-043.png
+      补充题目：45-challenges-43-44.jpg / levels/challenge-043.png
+44    C→C     2,3,4,5,6,8,9,10       21-solutions-41-44.jpg / levels/level-044.png
+      补充题目：45-challenges-43-44.jpg / levels/challenge-044.png
+45    B→B     1,2,3,4,5,6,7,8        22-solutions-45-48.jpg / levels/level-045.png
+      补充题目：46-challenges-45-46.jpg / levels/challenge-045.png
+46    B→D     2,3,4,5,6,8,9          22-solutions-45-48.jpg / levels/level-046.png
+      补充题目：46-challenges-45-46.jpg / levels/challenge-046.png
+47    A→E     2,4,6,8,9              22-solutions-45-48.jpg / levels/level-047.png
+      补充题目：47-challenges-47-48.jpg / levels/challenge-047.png
+48    F→B     1,2,4,5,6,7,8,9        22-solutions-45-48.jpg / levels/level-048.png
+      补充题目：47-challenges-47-48.jpg / levels/challenge-048.png
+49    C→A     1,2,3,5,6,7,8,10       23-solutions-49-52.jpg / levels/level-049.png
+      补充题目：48-challenges-49-50.jpg / levels/challenge-049.png
+50    D→D     1,2,4,5,7,8,9,10       23-solutions-49-52.jpg / levels/level-050.png
+      补充题目：48-challenges-49-50.jpg / levels/challenge-050.png
+51    E→F     2,3,4,5,6,7,8,10       23-solutions-49-52.jpg / levels/level-051.png
+      补充题目：49-challenges-51-52.jpg / levels/challenge-051.png
+52    C→D     1,2,3,4,5,6,7,8,9      23-solutions-49-52.jpg / levels/level-052.png
+      补充题目：49-challenges-51-52.jpg / levels/challenge-052.png
+53    F→E     1,2,3,4,5,6,7,8,9      24-solutions-53-56.jpg / levels/level-053.png
+      补充题目：50-challenges-53-54.jpg / levels/challenge-053.png
+54    E→F     1,4,5,6,7,9,10         24-solutions-53-56.jpg / levels/level-054.png
+      补充题目：50-challenges-53-54.jpg / levels/challenge-054.png
+55    E→E     1,2,3,4,5,6,8,9,10     24-solutions-53-56.jpg / levels/level-055.png
+      补充题目：51-challenges-55-56.jpg / levels/challenge-055.png
+56    E→F     2,3,4,5,6,7,8,10       24-solutions-53-56.jpg / levels/level-056.png
+      补充题目：51-challenges-55-56.jpg / levels/challenge-056.png
+57    E→E     2,4,5,6,7,8,9,10       25-solutions-57-60.jpg / levels/level-057.png
+      补充题目：52-challenges-57-58.jpg / levels/challenge-057.png
+58    C→A     2,3,5,6,7,8,10         25-solutions-57-60.jpg / levels/level-058.png
+      补充题目：52-challenges-57-58.jpg / levels/challenge-058.png
+59    C→C     2,3,4,5,6,7,8,9,10     25-solutions-57-60.jpg / levels/level-059.png
+      补充题目：53-challenges-59-60.jpg / levels/challenge-059.png
+60    B→B     1,3,4,5,6,7,8,9,10     25-solutions-57-60.jpg / levels/level-060.png
+      补充题目：53-challenges-59-60.jpg / levels/challenge-060.png
+61    B→B     3,4,5,6,8,9,10         26-solutions-61-64.jpg / levels/level-061.png
+      补充题目：54-challenges-61-62.jpg / levels/challenge-061.png
+62    E→E     4,5,6,7,8,9,10         26-solutions-61-64.jpg / levels/level-062.png
+      补充题目：54-challenges-61-62.jpg / levels/challenge-062.png
+63    C→C     2,4,5,6,7,8,9,10       26-solutions-61-64.jpg / levels/level-063.png
+      补充题目：55-challenges-63-64.jpg / levels/challenge-063.png
+64    B→B     1,3,4,5,6,8,9,10       26-solutions-61-64.jpg / levels/level-064.png
+      补充题目：55-challenges-63-64.jpg / levels/challenge-064.png
+65    A→A     4,5,6,7,9              27-solutions-65-68.jpg / levels/level-065.png
+      补充题目：56-challenges-65-66.jpg / levels/challenge-065.png
+66    D→B     1,3,4,5,6,7            27-solutions-65-68.jpg / levels/level-066.png
+      补充题目：56-challenges-65-66.jpg / levels/challenge-066.png
+67    C→C     2,3,4,5,6,7,8          27-solutions-65-68.jpg / levels/level-067.png
+      补充题目：57-challenges-67-68.jpg / levels/challenge-067.png
+68    E→D     2,3,4,5,6,7            27-solutions-65-68.jpg / levels/level-068.png
+      补充题目：57-challenges-67-68.jpg / levels/challenge-068.png
+69    E→E     1,3,4,5,6,8,9,10       28-solutions-69-72.jpg / levels/level-069.png
+      补充题目：58-challenges-69-70.jpg / levels/challenge-069.png
+70    B→A     2,3,4,5,6,8,9          28-solutions-69-72.jpg / levels/level-070.png
+      补充题目：58-challenges-69-70.jpg / levels/challenge-070.png
+71    E→A     1,2,4,5,6,7,8,9        28-solutions-69-72.jpg / levels/level-071.png
+      补充题目：59-challenges-71-72.jpg / levels/challenge-071.png
+72    E→E     1,2,4,5,6,8,9,10       28-solutions-69-72.jpg / levels/level-072.png
+      补充题目：59-challenges-71-72.jpg / levels/challenge-072.png
+73    D→D     4,5,6,7,8,9,10         29-solutions-73-76.jpg / levels/level-073.png
+      补充题目：60-challenges-73-74.jpg / levels/challenge-073.png
+74    F→C     2,3,4,5,6,9,10         29-solutions-73-76.jpg / levels/level-074.png
+      补充题目：60-challenges-73-74.jpg / levels/challenge-074.png
+75    C→C     4,5,6,7,8,9,10         29-solutions-73-76.jpg / levels/level-075.png
+      补充题目：61-challenges-75-76.jpg / levels/challenge-075.png
+76    C→C     1,2,4,5,6,8,9,10       29-solutions-73-76.jpg / levels/level-076.png
+      补充题目：61-challenges-75-76.jpg / levels/challenge-076.png
+77    无解答图    2,3,4,6,7,8,9          30-challenges-77-78.jpg / levels/level-077.png
+      补充题目：30-challenges-77-78.jpg / levels/level-077.png
+78    无解答图    1,2,3,4,5,6,8,9        30-challenges-77-78.jpg / levels/level-078.png
+      补充题目：30-challenges-77-78.jpg / levels/level-078.png
+79    无解答图    2,3,4,5,6,7,8,9        31-challenges-79-80.jpg / levels/level-079.png
+      补充题目：31-challenges-79-80.jpg / levels/level-079.png
+80    无解答图    1,2,3,4,5,6,8,9,10     31-challenges-79-80.jpg / levels/level-080.png
+      补充题目：31-challenges-79-80.jpg / levels/level-080.png
+
+四、验证边界
+76 份布局检查占格、朝向、道路连接和实际跨障；原图、裁切和目录的校验值对应。
+无原题时，分析要求跨越全部图示障碍并遵守岔路短刻线；没有增加“必须走最短路线”的假设。
+17–76 原题已逐项匹配参考道路；按进入端口和序列进度验证完整顺序，不以有限候选示例代替长回环检查。
+55 为 17 次、64 为 15 次、76 为 18 次跨越，重复项完整保留。无障碍支路不记跨障。
+77–80 按箭头复核；80 为 14 次跨越、9 块实体拼卡，2、3、5、6、9 各两次。
+本次是资料复核；原型仍只启用 03、04，不代表其余关卡已在 App 验收。

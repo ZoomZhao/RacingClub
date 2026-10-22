@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "transport": "HTTPS JSON",
+  "authentication": "Bearer access token from future guest or account authentication",
+  "endpoints": {
+    "GET /v1/levels": {
+      "response": "Versioned GameData excluding solutions for competitive sessions"
+    },
+    "POST /v1/runs": {
+      "request": {
+        "levelId": 3,
+        "rulesVersion": 2
+      },
+      "response": {
+        "runId": "server-generated",
+        "startedAt": "server timestamp",
+        "nonce": "single-use challenge"
+      }
+    },
+    "POST /v1/runs/{runId}/actions": {
+      "request": {
+        "sequence": 1,
+        "kind": "place|rotate|remove|undo|hint|select_start|select_finish|pause|resume",
+        "placement": {
+          "id": 5,
+          "x": 0,
+          "y": 3,
+          "r": 0
+        },
+        "clientElapsedMs": 1200,
+        "endpointLetter": "A–F for endpoint selection actions"
+      },
+      "response": "Server acknowledgement with monotonic sequence"
+    },
+    "POST /v1/runs/{runId}/finish": {
+      "request": {
+        "nonce": "single-use challenge",
+        "placements": [],
+        "clientElapsedMs": 10000,
+        "startGate": "Player-selected letter for solve_both levels; fixed letter otherwise",
+        "finishGate": "Player-selected letter for solve_both levels; fixed letter otherwise"
+      },
+      "response": {
+        "accepted": true,
+        "verifiedElapsedMs": 10000,
+        "rank": 1
+      }
+    },
+    "GET /v1/levels/{levelId}/leaderboard?scope=global&limit=10": {
+      "response": {
+        "scope": "global",
+        "verified": true,
+        "entries": []
+      }
+    }
+  },
+  "ranking": "Independent runs before assisted runs, then verified duration, then move count. Ties share rank.",
+  "validation": "Server owns rules, run timestamps, ordered actions, hint and pause policy, replay validation, nonce consumption and ranking. Device scores are local practice only.",
+  "implementationStatus": "Contract and repository boundaries only. No remote endpoint deployed; no fabricated online rankings.",
+  "rules": "Validate legal port pairs, obstacle events including repeats and empty branches, selected endpoints, and full sequence progress. Never validate against a saved hint layout."
+}

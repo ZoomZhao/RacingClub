@@ -1,0 +1,940 @@
+{
+  "receivedOn": "2026-10-23",
+  "status": "consolidated",
+  "instruction": "用户要求先快速逐批确认，所有图片提供完后统一收尾。",
+  "sources": [
+    {
+      "file": "56-challenges-65-66.jpg",
+      "levelIds": [
+        65,
+        66
+      ],
+      "bytes": 96787,
+      "sha256": "4eea3b8283cae8ad92fc8985a48053424bdd295894693637fa030cd85507791b",
+      "originalName": "1000019684.jpg"
+    },
+    {
+      "file": "57-challenges-67-68.jpg",
+      "levelIds": [
+        67,
+        68
+      ],
+      "bytes": 100113,
+      "sha256": "a544bd5178984c42532328b7f276e0d3a5d868df0c6e8cd6f0eebf485cce9209",
+      "originalName": "1000019685.jpg"
+    },
+    {
+      "file": "58-challenges-69-70.jpg",
+      "levelIds": [
+        69,
+        70
+      ],
+      "bytes": 106546,
+      "sha256": "fb466235d6a60eb8ee9c4c2875b2aa7b6806b969b6a2098d82739e68844aeb52",
+      "originalName": "1000019686.jpg"
+    },
+    {
+      "file": "59-challenges-71-72.jpg",
+      "levelIds": [
+        71,
+        72
+      ],
+      "bytes": 107275,
+      "sha256": "020518d0a6f9b31f5b6f22071ab02887ea5efa01fa48b8cc82c6e304713551db",
+      "originalName": "1000019687.jpg"
+    },
+    {
+      "file": "60-challenges-73-74.jpg",
+      "levelIds": [
+        73,
+        74
+      ],
+      "bytes": 99787,
+      "sha256": "2ee5cccba034ba420ecffd180629f4e9e4ebec451fbfcf8f70fd9097588c1cb1",
+      "originalName": "1000019688.jpg"
+    }
+  ],
+  "levels": [
+    {
+      "id": 65,
+      "start": null,
+      "obstacleSequence": [
+        6,
+        5,
+        7,
+        4,
+        9,
+        7,
+        5,
+        6
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "A",
+      "referenceFinishGate": "A",
+      "pieceTraversals": [
+        {
+          "pieceId": 7,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 6,
+          "from": 0,
+          "to": 1,
+          "jump": 6
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 7,
+          "from": 2,
+          "to": 3,
+          "jump": 7
+        },
+        {
+          "pieceId": 9,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 9,
+          "from": 2,
+          "to": 0,
+          "jump": 9
+        },
+        {
+          "pieceId": 7,
+          "from": 3,
+          "to": 2,
+          "jump": 7
+        },
+        {
+          "pieceId": 5,
+          "from": 0,
+          "to": 1,
+          "jump": 5
+        },
+        {
+          "pieceId": 6,
+          "from": 1,
+          "to": 0,
+          "jump": 6
+        },
+        {
+          "pieceId": 7,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        }
+      ],
+      "cropFile": "levels/challenge-065.png"
+    },
+    {
+      "id": 66,
+      "start": null,
+      "obstacleSequence": [
+        1,
+        3,
+        4,
+        7,
+        5,
+        6
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "D",
+      "referenceFinishGate": "B",
+      "pieceTraversals": [
+        {
+          "pieceId": 1,
+          "from": 1,
+          "to": 0,
+          "jump": 1
+        },
+        {
+          "pieceId": 3,
+          "from": 0,
+          "to": 1,
+          "jump": 3
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 7,
+          "from": 3,
+          "to": 2,
+          "jump": 7
+        },
+        {
+          "pieceId": 5,
+          "from": 0,
+          "to": 1,
+          "jump": 5
+        },
+        {
+          "pieceId": 6,
+          "from": 1,
+          "to": 0,
+          "jump": 6
+        },
+        {
+          "pieceId": 7,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        }
+      ],
+      "cropFile": "levels/challenge-066.png"
+    },
+    {
+      "id": 67,
+      "start": null,
+      "obstacleSequence": [
+        3,
+        6,
+        5,
+        4,
+        7,
+        2,
+        8
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "C",
+      "referenceFinishGate": "C",
+      "pieceTraversals": [
+        {
+          "pieceId": 8,
+          "from": 0,
+          "to": 2,
+          "jump": null
+        },
+        {
+          "pieceId": 3,
+          "from": 1,
+          "to": 0,
+          "jump": 3
+        },
+        {
+          "pieceId": 6,
+          "from": 0,
+          "to": 1,
+          "jump": 6
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 7,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 7,
+          "from": 2,
+          "to": 3,
+          "jump": 7
+        },
+        {
+          "pieceId": 2,
+          "from": 0,
+          "to": 1,
+          "jump": 2
+        },
+        {
+          "pieceId": 8,
+          "from": 1,
+          "to": 0,
+          "jump": 8
+        }
+      ],
+      "cropFile": "levels/challenge-067.png"
+    },
+    {
+      "id": 68,
+      "start": null,
+      "obstacleSequence": [
+        6,
+        7,
+        5,
+        4,
+        2,
+        3
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "E",
+      "referenceFinishGate": "D",
+      "pieceTraversals": [
+        {
+          "pieceId": 6,
+          "from": 1,
+          "to": 0,
+          "jump": 6
+        },
+        {
+          "pieceId": 7,
+          "from": 2,
+          "to": 3,
+          "jump": 7
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 7,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 2,
+          "from": 0,
+          "to": 1,
+          "jump": 2
+        },
+        {
+          "pieceId": 3,
+          "from": 1,
+          "to": 0,
+          "jump": 3
+        }
+      ],
+      "cropFile": "levels/challenge-068.png"
+    },
+    {
+      "id": 69,
+      "start": null,
+      "obstacleSequence": [
+        9,
+        5,
+        3,
+        4,
+        6,
+        5,
+        3,
+        4,
+        10,
+        1,
+        8
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "E",
+      "referenceFinishGate": "E",
+      "pieceTraversals": [
+        {
+          "pieceId": 8,
+          "from": 0,
+          "to": 2,
+          "jump": null
+        },
+        {
+          "pieceId": 9,
+          "from": 2,
+          "to": 0,
+          "jump": 9
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 3,
+          "from": 0,
+          "to": 1,
+          "jump": 3
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 10,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 6,
+          "from": 0,
+          "to": 1,
+          "jump": 6
+        },
+        {
+          "pieceId": 9,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 3,
+          "from": 0,
+          "to": 1,
+          "jump": 3
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 10,
+          "from": 0,
+          "to": 2,
+          "jump": 10
+        },
+        {
+          "pieceId": 1,
+          "from": 1,
+          "to": 0,
+          "jump": 1
+        },
+        {
+          "pieceId": 8,
+          "from": 1,
+          "to": 0,
+          "jump": 8
+        }
+      ],
+      "cropFile": "levels/challenge-069.png"
+    },
+    {
+      "id": 70,
+      "start": null,
+      "obstacleSequence": [
+        3,
+        2,
+        8,
+        4,
+        6,
+        5,
+        9,
+        4
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "B",
+      "referenceFinishGate": "A",
+      "pieceTraversals": [
+        {
+          "pieceId": 3,
+          "from": 1,
+          "to": 0,
+          "jump": 3
+        },
+        {
+          "pieceId": 2,
+          "from": 0,
+          "to": 1,
+          "jump": 2
+        },
+        {
+          "pieceId": 8,
+          "from": 1,
+          "to": 0,
+          "jump": 8
+        },
+        {
+          "pieceId": 4,
+          "from": 0,
+          "to": 1,
+          "jump": 4
+        },
+        {
+          "pieceId": 9,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 6,
+          "from": 0,
+          "to": 1,
+          "jump": 6
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 9,
+          "from": 2,
+          "to": 0,
+          "jump": 9
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 8,
+          "from": 0,
+          "to": 2,
+          "jump": null
+        }
+      ],
+      "cropFile": "levels/challenge-070.png"
+    },
+    {
+      "id": 71,
+      "start": null,
+      "obstacleSequence": [
+        1,
+        7,
+        4,
+        5,
+        6,
+        9,
+        7,
+        4,
+        8,
+        2
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "E",
+      "referenceFinishGate": "A",
+      "pieceTraversals": [
+        {
+          "pieceId": 1,
+          "from": 0,
+          "to": 1,
+          "jump": 1
+        },
+        {
+          "pieceId": 9,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 7,
+          "from": 3,
+          "to": 2,
+          "jump": 7
+        },
+        {
+          "pieceId": 4,
+          "from": 0,
+          "to": 1,
+          "jump": 4
+        },
+        {
+          "pieceId": 7,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 8,
+          "from": 0,
+          "to": 2,
+          "jump": null
+        },
+        {
+          "pieceId": 5,
+          "from": 0,
+          "to": 1,
+          "jump": 5
+        },
+        {
+          "pieceId": 6,
+          "from": 1,
+          "to": 0,
+          "jump": 6
+        },
+        {
+          "pieceId": 9,
+          "from": 2,
+          "to": 0,
+          "jump": 9
+        },
+        {
+          "pieceId": 7,
+          "from": 3,
+          "to": 2,
+          "jump": 7
+        },
+        {
+          "pieceId": 4,
+          "from": 0,
+          "to": 1,
+          "jump": 4
+        },
+        {
+          "pieceId": 7,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 8,
+          "from": 0,
+          "to": 1,
+          "jump": 8
+        },
+        {
+          "pieceId": 2,
+          "from": 1,
+          "to": 0,
+          "jump": 2
+        }
+      ],
+      "cropFile": "levels/challenge-071.png"
+    },
+    {
+      "id": 72,
+      "start": null,
+      "obstacleSequence": [
+        2,
+        5,
+        10,
+        9,
+        4,
+        1,
+        6,
+        8,
+        5,
+        2
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "E",
+      "referenceFinishGate": "E",
+      "pieceTraversals": [
+        {
+          "pieceId": 2,
+          "from": 1,
+          "to": 0,
+          "jump": 2
+        },
+        {
+          "pieceId": 9,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 10,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 5,
+          "from": 0,
+          "to": 1,
+          "jump": 5
+        },
+        {
+          "pieceId": 8,
+          "from": 0,
+          "to": 2,
+          "jump": null
+        },
+        {
+          "pieceId": 10,
+          "from": 2,
+          "to": 0,
+          "jump": 10
+        },
+        {
+          "pieceId": 9,
+          "from": 0,
+          "to": 2,
+          "jump": 9
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 1,
+          "from": 0,
+          "to": 1,
+          "jump": 1
+        },
+        {
+          "pieceId": 6,
+          "from": 0,
+          "to": 1,
+          "jump": 6
+        },
+        {
+          "pieceId": 8,
+          "from": 1,
+          "to": 0,
+          "jump": 8
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 10,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 9,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 2,
+          "from": 0,
+          "to": 1,
+          "jump": 2
+        }
+      ],
+      "cropFile": "levels/challenge-072.png"
+    },
+    {
+      "id": 73,
+      "start": null,
+      "obstacleSequence": [
+        9,
+        4,
+        5,
+        7,
+        8,
+        6,
+        10
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "D",
+      "referenceFinishGate": "D",
+      "pieceTraversals": [
+        {
+          "pieceId": 10,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 8,
+          "from": 2,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 9,
+          "from": 0,
+          "to": 2,
+          "jump": 9
+        },
+        {
+          "pieceId": 7,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 4,
+          "from": 0,
+          "to": 1,
+          "jump": 4
+        },
+        {
+          "pieceId": 5,
+          "from": 0,
+          "to": 1,
+          "jump": 5
+        },
+        {
+          "pieceId": 7,
+          "from": 3,
+          "to": 2,
+          "jump": 7
+        },
+        {
+          "pieceId": 9,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 8,
+          "from": 0,
+          "to": 1,
+          "jump": 8
+        },
+        {
+          "pieceId": 6,
+          "from": 1,
+          "to": 0,
+          "jump": 6
+        },
+        {
+          "pieceId": 10,
+          "from": 2,
+          "to": 0,
+          "jump": 10
+        }
+      ],
+      "cropFile": "levels/challenge-073.png"
+    },
+    {
+      "id": 74,
+      "start": null,
+      "obstacleSequence": [
+        3,
+        6,
+        9,
+        5,
+        4,
+        10,
+        6,
+        2
+      ],
+      "finish": null,
+      "startMode": "player_determined",
+      "finishMode": "player_determined",
+      "matchesReferenceRoute": true,
+      "referenceStartGate": "F",
+      "referenceFinishGate": "C",
+      "pieceTraversals": [
+        {
+          "pieceId": 3,
+          "from": 0,
+          "to": 1,
+          "jump": 3
+        },
+        {
+          "pieceId": 10,
+          "from": 1,
+          "to": 0,
+          "jump": null
+        },
+        {
+          "pieceId": 6,
+          "from": 0,
+          "to": 1,
+          "jump": 6
+        },
+        {
+          "pieceId": 9,
+          "from": 0,
+          "to": 2,
+          "jump": 9
+        },
+        {
+          "pieceId": 5,
+          "from": 1,
+          "to": 0,
+          "jump": 5
+        },
+        {
+          "pieceId": 4,
+          "from": 1,
+          "to": 0,
+          "jump": 4
+        },
+        {
+          "pieceId": 10,
+          "from": 2,
+          "to": 0,
+          "jump": 10
+        },
+        {
+          "pieceId": 6,
+          "from": 0,
+          "to": 1,
+          "jump": 6
+        },
+        {
+          "pieceId": 9,
+          "from": 0,
+          "to": 1,
+          "jump": null
+        },
+        {
+          "pieceId": 2,
+          "from": 0,
+          "to": 1,
+          "jump": 2
+        }
+      ],
+      "cropFile": "levels/challenge-074.png"
+    }
+  ],
+  "consolidatedOn": "2026-10-23",
+  "catalogFile": "level-catalog.json"
+}
