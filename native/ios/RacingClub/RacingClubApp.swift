@@ -10,6 +10,7 @@ private struct ProgressRecord:Codable {let placed:[Placement];let moves:Int;let 
 @MainActor final class Game:ObservableObject {
  let data:GameData;let repository:any LeaderboardRepository
  @Published var screen="home";@Published var level:Level;@Published var placed:[Placement]=[];@Published var selected:Int?;@Published var rotation=0;@Published var moves=0;@Published var hints=0;@Published var message="";@Published var running=false;@Published var progress=0.0;@Published var dialog="";@Published var elapsed=0.0;@Published var clockTick=0
+ @Published var selectedDifficultyId="starter";
  @Published var chosenStart="";@Published var chosenFinish=""
  var startGate:String {level.start.isEmpty ? chosenStart:level.start}
  var finishGate:String {level.finish.isEmpty ? chosenFinish:level.finish}
@@ -19,7 +20,7 @@ private struct ProgressRecord:Codable {let placed:[Placement];let moves:Int;let 
  func resume(){if started==nil && screen=="game" && !running && dialog.isEmpty {started=ProcessInfo.processInfo.systemUptime}}
  func pause(){if let start=started{elapsed+=ProcessInfo.processInfo.systemUptime-start};started=nil;save()}
  func save(){guard screen != "home" else{return};let r=ProgressRecord(placed:placed,moves:moves,hints:hints,elapsed:time,finished:running||screen=="win",start:chosenStart,finish:chosenFinish);if let d=try?JSONEncoder().encode(r){UserDefaults.standard.set(d,forKey:"level-\(level.id)")}}
- func start(_ l:Level){pause();runTask?.cancel();level=l;screen="game";running=false;placed=[];moves=0;hints=0;elapsed=0;history=[];route=[];chosenStart="";chosenFinish="";if let d=UserDefaults.standard.data(forKey:"level-\(l.id)"),let p=try?JSONDecoder().decode(ProgressRecord.self,from:d),!p.finished{for tile in p.placed where l.sequence.contains(tile.id)&&data.fits(tile,placed){placed.removeAll{$0.id==tile.id};placed.append(tile)};moves=p.moves;hints=p.hints;elapsed=p.elapsed;chosenStart=p.start ?? "";chosenFinish=p.finish ?? ""};selected=l.requiredPieces.first{n in !placed.contains{$0.id==n}};rotation=0;message="";resume()}
+ func start(_ l:Level){pause();runTask?.cancel();level=l;selectedDifficultyId=l.difficultyId;screen="game";running=false;placed=[];moves=0;hints=0;elapsed=0;history=[];route=[];chosenStart="";chosenFinish="";if let d=UserDefaults.standard.data(forKey:"level-\(l.id)"),let p=try?JSONDecoder().decode(ProgressRecord.self,from:d),!p.finished{for tile in p.placed where l.sequence.contains(tile.id)&&data.fits(tile,placed){placed.removeAll{$0.id==tile.id};placed.append(tile)};moves=p.moves;hints=p.hints;elapsed=p.elapsed;chosenStart=p.start ?? "";chosenFinish=p.finish ?? ""};selected=l.requiredPieces.first{n in !placed.contains{$0.id==n}};rotation=0;message="";resume()}
  func home(){pause();runTask?.cancel();screen="home";running=false}
  func select(_ id:Int){guard !running else{return};selected=id;rotation=placed.first{$0.id==id}?.r ?? 0;message=""}
  private func remember(){history.append((placed,moves,hints,chosenStart,chosenFinish))}
@@ -41,8 +42,25 @@ struct ClubView:View {
  private let tick=Timer.publish(every:0.1,on:.main,in:.common).autoconnect()
  var body:some View {GeometryReader{geo in VStack(spacing:5){header;if game.screen != "home"{NativeCourseSequence(game:game,level:game.level)};if game.screen=="home"{home}else if game.screen=="win"{win}else{if geo.size.width>geo.size.height{HStack(spacing:18){NativeBoard(game:game).frame(maxWidth:.infinity,maxHeight:.infinity);workbench.frame(width:geo.size.width*0.39)}}else{VStack{NativeBoard(game:game).aspectRatio(5.7/4.7,contentMode:.fit);workbench}}}}.padding(.horizontal,18).padding(.vertical,8).background(paper).sheet(isPresented:Binding(get:{!game.dialog.isEmpty},set:{if !$0{game.close()}})){dialog}.onReceive(tick){_ in game.clockTick+=1}}
  }
- private var header:some View {HStack(spacing:12){if game.screen=="home"{Text("♞ RacingClub").font(.system(size:24,weight:.bold,design:.serif))}else{tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.headline);Spacer();Text(timeString(game.time)).font(.system(size:13,design:.monospaced));tool("trophy","本关排行榜"){game.show("rank")}};if game.screen=="home"{Spacer()};tool("questionmark.circle","玩法"){game.show("help")}}.foregroundStyle(forest).frame(height:38)}
- private var home:some View {HStack(spacing:24){ZStack(alignment:.topLeading){Image("horse-arena").resizable().scaledToFill();Text("今天，\n跃过新的挑战").font(.system(size:29,weight:.bold)).foregroundStyle(forest).padding(22)}.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().clipShape(RoundedRectangle(cornerRadius:16));ScrollView{VStack(alignment:.leading,spacing:15){Text("马术训练场").font(.title2.bold());ForEach(game.data.levels){level in Button{game.start(level)}label:{VStack(alignment:.leading,spacing:11){HStack{Text("挑战 \(level.number)").font(.title3.bold());Spacer();Text("入门").font(.caption)};Text(level.title).font(.caption);sequence(level)}.padding(18).background(Color.white.opacity(0.65),in:RoundedRectangle(cornerRadius:12))}.buttonStyle(.plain)};Text("本机训练记录 · 原生渲染").font(.caption2).foregroundStyle(saddle)}.foregroundStyle(forest)}.frame(maxWidth:.infinity)}}
+ private var header:some View {HStack(spacing:12){if game.screen=="home"{Text("♞ RacingClub").font(.system(size:24,weight:.bold,design:.serif))}else{tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.headline);difficultyBadge(game.data.difficulties.first{$0.id==game.level.difficultyId}!);Spacer();Text(timeString(game.time)).font(.system(size:13,design:.monospaced));tool("trophy","本关排行榜"){game.show("rank")}};if game.screen=="home"{Spacer()};tool("questionmark.circle","玩法"){game.show("help")}}.foregroundStyle(forest).frame(height:38)}
+ private func difficultyBadge(_ d:Difficulty)->some View {Text(d.label).font(.system(size:10,weight:.bold)).foregroundStyle(ink(d.color)).padding(.horizontal,8).padding(.vertical,4).background(ink(d.color).opacity(0.1),in:Capsule()).accessibilityLabel("难度：\(d.label) \(d.originalLabel)")}
+ private var home:some View {
+  let d=game.data.difficulties.first{$0.id==game.selectedDifficultyId}!
+  let levels=game.data.levels.filter{$0.difficultyId==d.id}
+  return HStack(spacing:18){
+   ZStack(alignment:.topLeading){Image("horse-arena").resizable().scaledToFill();Text("今天，\n跃过新的挑战").font(.system(size:27,weight:.bold)).foregroundStyle(forest).padding(18)}.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().clipShape(RoundedRectangle(cornerRadius:16))
+   VStack(spacing:10){
+    HStack{Text("马术训练场").font(.title2.bold());Spacer();Text(d.originalLabel).font(.caption.bold()).foregroundStyle(ink(d.color))}
+    HStack(spacing:5){ForEach(game.data.difficulties){item in
+     let active=game.selectedDifficultyId==item.id
+     Button{game.selectedDifficultyId=item.id}label:{VStack(spacing:2){Text(item.label).font(.system(size:12,weight:.bold));Text(String(format:"%02d–%02d",item.firstLevel,item.lastLevel)).font(.system(size:9))}.frame(maxWidth:.infinity).padding(.vertical,6).foregroundStyle(active ? Color.white:ink(item.color)).background(active ? ink(item.color):paper,in:RoundedRectangle(cornerRadius:9))}.buttonStyle(.plain).accessibilityLabel("难度 \(item.label) \(item.originalLabel)")
+    }}
+    ScrollView{LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:7),count:4),spacing:7){ForEach(levels){level in
+     Button{game.start(level)}label:{VStack(alignment:.leading,spacing:5){HStack{Text(level.number).font(.system(size:21,weight:.bold));Spacer();Text(d.label).font(.system(size:10)).foregroundStyle(ink(d.color))};Text("\(level.requiredPieces.count) 拼板 · \(level.sequence.count) 跨").font(.system(size:10)).foregroundStyle(saddle)}.padding(10).background(Color.white.opacity(0.7),in:RoundedRectangle(cornerRadius:10))}.buttonStyle(.plain)
+    }}}
+   }.foregroundStyle(forest).frame(maxWidth:.infinity)
+  }
+ }
  private var workbench:some View {
   VStack(spacing:8){
    HStack(spacing:0){

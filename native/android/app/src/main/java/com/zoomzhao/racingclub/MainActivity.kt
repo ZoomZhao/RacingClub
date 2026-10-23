@@ -49,7 +49,7 @@ private fun placements(a:JSONArray)=(0 until a.length()).map { placement(a.getJS
 private fun encode(p:Placement)=JSONObject().put("id",p.id).put("x",p.x).put("y",p.y).put("r",p.r)
 internal fun loadRules(context:Context)=parseRules(context.assets.open("game-data.json").bufferedReader().use {it.readText()})
 internal fun parseRules(json:String):Rules {
- val o=JSONObject(json);val ps=o.getJSONArray("pieces");val ls=o.getJSONArray("levels");val gs=o.getJSONObject("gates");val inv=o.getJSONArray("inventory")
+ val o=JSONObject(json);val ps=o.getJSONArray("pieces");val ls=o.getJSONArray("levels");val gs=o.getJSONObject("gates");val inv=o.getJSONArray("inventory");val ds=o.getJSONArray("difficulties")
  fun string(o:JSONObject,k:String)=if(o.isNull(k))"" else o.optString(k,"")
  return Rules((0 until ps.length()).associate {
   val p=ps.getJSONObject(it);val id=p.getInt("id");val paths=p.getJSONArray("paths")
@@ -58,8 +58,8 @@ internal fun parseRules(json:String):Rules {
   })
  },gs.keys().asSequence().associateWith{k->gs.getJSONArray(k).let{Point(it.getDouble(0).toFloat(),it.getDouble(1).toFloat())}},(0 until ls.length()).map {
   val l=ls.getJSONObject(it);val seq=l.getJSONArray("sequence")
-  Level(l.getInt("id"),l.getString("title"),string(l,"start"),string(l,"finish"),(0 until seq.length()).map{n->seq.getInt(n)},placements(l.getJSONArray("solution")),l.getString("group"),string(l,"solutionStart"),string(l,"solutionFinish"))
- },(0 until inv.length()).associate{inv.getJSONObject(it).let{p->p.getInt("id") to p.getString("color")}})
+  Level(l.getInt("id"),l.getString("title"),string(l,"start"),string(l,"finish"),(0 until seq.length()).map{n->seq.getInt(n)},placements(l.getJSONArray("solution")),l.getString("group"),string(l,"solutionStart"),string(l,"solutionFinish"),l.getString("difficultyId"))
+ },(0 until inv.length()).associate{inv.getJSONObject(it).let{p->p.getInt("id") to p.getString("color")}},(0 until ds.length()).map{n->ds.getJSONObject(n).let{d->Difficulty(d.getString("id"),d.getString("label"),d.getString("originalLabel"),d.getString("color"),d.getInt("firstLevel"),d.getInt("lastLevel"))}})
 }
 class LocalLeaderboard(context:Context):LeaderboardRepository {
  private val prefs=context.getSharedPreferences("leaderboard-v1",Context.MODE_PRIVATE)
@@ -78,7 +78,8 @@ class LocalLeaderboard(context:Context):LeaderboardRepository {
 }
 private data class Snapshot(val pieces:List<Placement>,val moves:Int,val hints:Int,val start:String,val finish:String)
 class GameState(private val context:Context,val rules:Rules,val repository:LeaderboardRepository) {
- var level by mutableStateOf(rules.levels.first());var screen by mutableStateOf("home");var placed by mutableStateOf(listOf<Placement>());var selected by mutableStateOf<Int?>(null);var rotation by mutableIntStateOf(0);var moves by mutableIntStateOf(0);var hints by mutableIntStateOf(0);var message by mutableStateOf("");var running by mutableStateOf(false);var dialog by mutableStateOf("");var elapsed by mutableLongStateOf(0);private var started:Long?=null;private val history=mutableListOf<Snapshot>();var activeRoute:List<RouteStep> = emptyList();var chosenStart by mutableStateOf("");var chosenFinish by mutableStateOf("");var chapter by mutableIntStateOf(0);var progressVersion by mutableIntStateOf(0)
+ var level by mutableStateOf(rules.levels.first());var screen by mutableStateOf("home");var placed by mutableStateOf(listOf<Placement>());var selected by mutableStateOf<Int?>(null);var rotation by mutableIntStateOf(0);var moves by mutableIntStateOf(0);var hints by mutableIntStateOf(0);var message by mutableStateOf("");var running by mutableStateOf(false);var dialog by mutableStateOf("");var elapsed by mutableLongStateOf(0);private var started:Long?=null;private val history=mutableListOf<Snapshot>();var activeRoute:List<RouteStep> = emptyList();var chosenStart by mutableStateOf("");var chosenFinish by mutableStateOf("");var selectedDifficultyId by mutableStateOf(rules.difficulties.first().id);var progressVersion by mutableIntStateOf(0)
+ fun difficulty(l:Level=level)=rules.difficulties.first{it.id==l.difficultyId}
  val startGate get()=level.start.ifEmpty{chosenStart}
  val finishGate get()=level.finish.ifEmpty{chosenFinish}
  fun solved(id:Int):Boolean {progressVersion;return prefs.getBoolean("completed-$id",false)||repository.list(id).isNotEmpty()}
@@ -89,7 +90,7 @@ class GameState(private val context:Context,val rules:Rules,val repository:Leade
  fun pause(){started?.let{elapsed+=SystemClock.elapsedRealtime()-it};started=null;save()}
  fun resume(){if(screen=="game" && !running && dialog.isEmpty() && started==null)started=SystemClock.elapsedRealtime()}
  fun save(){if(screen=="home")return;val a=JSONArray();placed.forEach{a.put(encode(it))};prefs.edit().putString("level-${level.id}",JSONObject().put("placed",a).put("moves",moves).put("hints",hints).put("elapsed",time()).put("start",chosenStart).put("finish",chosenFinish).put("finished",running||screen=="win").toString()).apply()}
- fun start(l:Level){pause();level=l;screen="game";running=false;placed=emptyList();moves=0;hints=0;elapsed=0;history.clear();activeRoute=emptyList();chosenStart="";chosenFinish="";chapter=(l.id-1)/16;runCatching{val o=JSONObject(prefs.getString("level-${l.id}","{}")?:"{}");if(!o.optBoolean("finished")){placements(o.optJSONArray("placed")?:JSONArray()).forEach{p->if(p.id in l.sequence && rules.fits(p,placed))placed=placed.filter{it.id!=p.id}+p};moves=o.optInt("moves");hints=o.optInt("hints");elapsed=o.optLong("elapsed");chosenStart=o.optString("start").takeIf{it in rules.gates}.orEmpty();chosenFinish=o.optString("finish").takeIf{it in rules.gates}.orEmpty()}};selected=l.requiredPieces.firstOrNull{ id->placed.none{it.id==id} };rotation=0;message="";resume()}
+ fun start(l:Level){pause();level=l;screen="game";running=false;placed=emptyList();moves=0;hints=0;elapsed=0;history.clear();activeRoute=emptyList();chosenStart="";chosenFinish="";selectedDifficultyId=l.difficultyId;runCatching{val o=JSONObject(prefs.getString("level-${l.id}","{}")?:"{}");if(!o.optBoolean("finished")){placements(o.optJSONArray("placed")?:JSONArray()).forEach{p->if(p.id in l.sequence && rules.fits(p,placed))placed=placed.filter{it.id!=p.id}+p};moves=o.optInt("moves");hints=o.optInt("hints");elapsed=o.optLong("elapsed");chosenStart=o.optString("start").takeIf{it in rules.gates}.orEmpty();chosenFinish=o.optString("finish").takeIf{it in rules.gates}.orEmpty()}};selected=l.requiredPieces.firstOrNull{ id->placed.none{it.id==id} };rotation=0;message="";resume()}
  fun home(){pause();screen="home";running=false;dialog=""}
  fun select(id:Int){if(running)return;selected=id;rotation=placed.find{it.id==id}?.r?:0;message=""}
  private fun remember(){history+=Snapshot(placed,moves,hints,chosenStart,chosenFinish)}

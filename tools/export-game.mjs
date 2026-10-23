@@ -3,6 +3,7 @@ import {INVENTORY} from '../src/game.js';
 const read = async path => JSON.parse(await readFile(path,'utf8'));
 const catalog=await read('references/level-catalog.json');
 const topology=await read('references/piece-topology.json');
+const difficulties=await read('shared/difficulties.json');
 const generated=await read('shared/generated-hints.json');
 const mix=(a,b,t)=>a.map((v,i)=>v*(1-t)+b[i]*t);
 const bez=(ps,t)=>ps.length===1?ps[0]:bez(ps.slice(0,-1).map((p,i)=>mix(p,ps[i+1],t)),t);
@@ -40,11 +41,13 @@ const pieces=topology.pieces.map(p=>{
 const levels=catalog.levels.map(l=>{
  const sequence=l.challenge.obstacleSequence??l.referenceTrace?.obstacleSequence;
  if(!sequence?.length)throw Error(`Missing sequence ${l.id}`);
+ const difficulty=difficulties.find(d=>d.group===l.printedGroupColor&&l.id>=d.firstLevel&&l.id<=d.lastLevel);
+ if(!difficulty)throw Error(`Missing difficulty ${l.id}`);
  const hint=generated.levels.find(h=>h.id===l.id);
  const solution=l.referenceLayout?.map(p=>({id:p.pieceId,x:p.x,y:p.y,r:p.r}))??hint?.solution??[];
- return {id:l.id,title:l.id===3?'第一次轻盈转弯':l.id===4?'多一个弯，也从容':l.endpointMode==='solve_both'?'寻找两端，连成完整路线':new Set(sequence).size<sequence.length?'循着顺序，再次跃过障碍':'连起道路，依序跃过障碍',group:l.printedGroupColor,endpointMode:l.endpointMode,start:l.startGate,finish:l.finishGate,sequence,solution,solutionStart:l.referenceStartGate??hint?.start,solutionFinish:l.referenceFinishGate??hint?.finish,solutionSource:l.referenceLayout?'reviewed_photo':'computed_from_verified_topology',sequenceSource:l.challenge.obstacleSequence?'challenge_photo':'unique_reference_trace'};
+ return {id:l.id,title:l.id===3?'第一次轻盈转弯':l.id===4?'多一个弯，也从容':l.endpointMode==='solve_both'?'寻找两端，连成完整路线':new Set(sequence).size<sequence.length?'循着顺序，再次跃过障碍':'连起道路，依序跃过障碍',group:l.printedGroupColor,difficultyId:difficulty.id,endpointMode:l.endpointMode,start:l.startGate,finish:l.finishGate,sequence,solution,solutionStart:l.referenceStartGate??hint?.start,solutionFinish:l.referenceFinishGate??hint?.finish,solutionSource:l.referenceLayout?'reviewed_photo':'computed_from_verified_topology',sequenceSource:l.challenge.obstacleSequence?'challenge_photo':'unique_reference_trace'};
 });
-const data={schemaVersion:2,contentVersion:'80-levels-2026-10-23',columns:5,rows:4,gates:catalog.board.gates,inventory:INVENTORY,pieces,levels};
+const data={schemaVersion:2,contentVersion:'80-levels-difficulties-2026-10-23',difficulties,columns:5,rows:4,gates:catalog.board.gates,inventory:INVENTORY,pieces,levels};
 await writeFile('shared/game-data.json',JSON.stringify(data,null,2)+'\n');
 for(const folder of ['native/android/app/src/main/assets','native/ios/RacingClub/Resources']){
  await mkdir(folder,{recursive:true});await copyFile('shared/game-data.json',`${folder}/game-data.json`);

@@ -5,7 +5,7 @@ project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 sdk_dir="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
 serial="${ANDROID_SERIAL:-emulator-5554}"
 adb_bin="$sdk_dir/platform-tools/adb"
-validation_dir="$project_dir/output/android-entry-v4/validation"
+validation_dir="${VALIDATION_DIR:-$project_dir/output/android-entry-v4/validation}"
 
 "$adb_bin" -s "$serial" get-state
 cd "$project_dir/native/android"

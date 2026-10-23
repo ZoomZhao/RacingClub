@@ -4,7 +4,8 @@ data class Point(val x: Float, val y: Float)
 data class Placement(val id: Int, val x: Int, val y: Int, val r: Int)
 data class RoadPath(val from:Int,val to:Int,val jump:Int?,val samples:List<Point>,val jumpAt:Float?=.5f,val length:Float=1.5f)
 data class Piece(val id:Int,val color:String,val ports:List<Point>,val samples:List<Point>,val gate:List<Float>,val paths:List<RoadPath> = listOf(RoadPath(0,1,id,samples)))
-data class Level(val id:Int,val title:String,val start:String,val finish:String,val sequence:List<Int>,val solution:List<Placement>,val group:String="green",val solutionStart:String=start,val solutionFinish:String=finish) {
+data class Difficulty(val id:String,val label:String,val originalLabel:String,val color:String,val firstLevel:Int,val lastLevel:Int)
+data class Level(val id:Int,val title:String,val start:String,val finish:String,val sequence:List<Int>,val solution:List<Placement>,val group:String="green",val solutionStart:String=start,val solutionFinish:String=finish,val difficultyId:String="") {
     val requiredPieces get()=sequence.distinct().sorted()
     val solveEndpoints get()=start.isEmpty() && finish.isEmpty()
     val number get()=id.toString().padStart(2,'0')
@@ -12,7 +13,7 @@ data class Level(val id:Int,val title:String,val start:String,val finish:String,
 data class RouteStep(val p:Placement,val from:Int,val to:Int,val pathIndex:Int,val jump:Int?)
 data class Score(val level:Int,val millis:Long,val moves:Int,val hints:Int,val timestamp:Long=System.currentTimeMillis())
 
-class Rules(val pieces:Map<Int,Piece>,val gates:Map<String,Point>,val levels:List<Level>,val inventory:Map<Int,String>) {
+class Rules(val pieces:Map<Int,Piece>,val gates:Map<String,Point>,val levels:List<Level>,val inventory:Map<Int,String>,val difficulties:List<Difficulty> = emptyList()) {
     fun rotate(pt:Point,r:Int):Point = when(r) {1->Point(1-pt.y,pt.x);2->Point(2-pt.x,1-pt.y);3->Point(pt.y,2-pt.x);else->pt}
     fun dimensions(r:Int)=if(r%2==0)2 to 1 else 1 to 2
     fun ports(p:Placement)=pieces.getValue(p.id).ports.map {rotate(it,p.r).let{q->Point(q.x+p.x,q.y+p.y)}}

@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=eightHorseViewsAndEveryGateBoundaryRender
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 4.109
+Time: 4.291
 
 OK (1 test)
 

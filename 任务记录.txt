@@ -117,3 +117,10 @@ Android 原生视觉还原与模拟器验收（2026-10-23）：
 用户追加要求：旋转为常用操作，右下角固定两个大按钮，分别逆时针和顺时针 90°。已移除顶部旋转图标，原生状态支持正负四分之一圈并归一到 0–3。Android 按钮高 54dp，模拟器用实际摆放角度验证双向旋转、撤销与两方向越界保留原位；SwiftUI 同步实现。
 
 本轮最终验证：Android API35 横屏8项设备测试、9项Kotlin单元测试全部通过；80关完整路线回放、03/04/80自动跑动与计时、双向旋转/撤销/越界保留、目标完整显示及620dp/1.35字号已复核。SwiftUI原生arm64重新编译通过，iOS仍无设备运行验收。当前截图为 design/android-native-{play,goals,large-font,rotation}-v4.png；APK已更新 output/RacingClub-Android-debug.apk；可复现日志和摘要已归档 docs/validation/。
+
+2026-10-23 图标与难度分级：
+- 用户要求 ImageGen 应用图标并推送，同时要求关卡按原题难度处理。新原图及提示词存于 design/app-icon/，原件保留；Android 自适应/各密度图标、iOS AppIcon 资源目录和本地未签名 PNG 图标均接入。tools/package-app-icon.py 仅负责尺寸格式打包。
+- 原照片页脚核对：STARTER 入门01–16、JUNIOR 初级17–32、EXPERT 专家33–48、MASTER 大师49–64、PUNDIT 宗师65–80。shared/difficulties.json 保存照片依据及稳定ID，导出每关 difficultyId；不再按章节数字运算筛选。
+- Android/SwiftUI 首页难度导航、关卡卡片、游戏页同步实际难度。保留全部80关自由选择及旧存档。当前 iOS 主机缺少模拟器运行时，actool 不可用，本地未签名构建沿用PNG图标声明；Xcode工程使用正式AppIcon目录。
+
+最终验证：22项Node检查、9项Kotlin单元测试、8项Android设备测试全部通过；五档共80关导航与实际难度标记、完整目标条、双向旋转和自动通关复验通过。Android系统应用信息页的圆形图标裁切已检查，无主体缺失；iOS原生编译和80关Swift回放通过，未完成iOS设备验证。新版APK更新，日志归档docs/validation/；当前截图design/android-native-difficulty-{home,play}.png。

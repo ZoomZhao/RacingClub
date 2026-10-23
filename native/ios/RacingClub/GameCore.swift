@@ -4,22 +4,23 @@ struct Placement:Codable,Equatable {let id:Int;var x:Int;var y:Int;var r:Int}
 struct RoadPath:Decodable {let from:Int;let to:Int;let jump:Int?;let samples:[[Double]];let jumpAt:Double?;let length:Double}
 struct Piece:Decodable {let id:Int;let color:String;let ports:[[Double]];let samples:[[Double]];let gate:[Double];let paths:[RoadPath]}
 struct InventoryPiece:Decodable {let id:Int;let color:String}
+struct Difficulty:Decodable,Identifiable {let id:String;let label:String;let originalLabel:String;let color:String;let firstLevel:Int;let lastLevel:Int}
 struct Level:Decodable,Identifiable {
- let id:Int;let title:String;let start:String;let finish:String;let sequence:[Int];let solution:[Placement];let solutionStart:String;let solutionFinish:String
+ let id:Int;let title:String;let difficultyId:String;let start:String;let finish:String;let sequence:[Int];let solution:[Placement];let solutionStart:String;let solutionFinish:String
  var number:String {String(format:"%02d",id)}
  var requiredPieces:[Int] {Set(sequence).sorted()}
  var solveEndpoints:Bool {start.isEmpty && finish.isEmpty}
- enum CodingKeys:String,CodingKey {case id,title,start,finish,sequence,solution,solutionStart,solutionFinish}
+ enum CodingKeys:String,CodingKey {case id,title,difficultyId,start,finish,sequence,solution,solutionStart,solutionFinish}
  init(from decoder:Decoder)throws {
   let c=try decoder.container(keyedBy:CodingKeys.self)
-  id=try c.decode(Int.self,forKey:.id);title=try c.decode(String.self,forKey:.title)
+  id=try c.decode(Int.self,forKey:.id);title=try c.decode(String.self,forKey:.title);difficultyId=try c.decode(String.self,forKey:.difficultyId)
   start=try c.decodeIfPresent(String.self,forKey:.start) ?? "";finish=try c.decodeIfPresent(String.self,forKey:.finish) ?? ""
   sequence=try c.decode([Int].self,forKey:.sequence);solution=try c.decode([Placement].self,forKey:.solution)
   solutionStart=try c.decode(String.self,forKey:.solutionStart);solutionFinish=try c.decode(String.self,forKey:.solutionFinish)
  }
 }
 struct GameData:Decodable {
- let pieces:[Piece];let gates:[String:[Double]];let levels:[Level];let inventory:[InventoryPiece]
+ let difficulties:[Difficulty];let pieces:[Piece];let gates:[String:[Double]];let levels:[Level];let inventory:[InventoryPiece]
  func rotate(_ p:[Double],_ r:Int)->[Double] {switch r {case 1:return[1-p[1],p[0]];case 2:return[2-p[0],1-p[1]];case 3:return[p[1],2-p[0]];default:return p}}
  func dimensions(_ r:Int)->(Int,Int) {r%2==0 ? (2,1):(1,2)}
  func ports(_ p:Placement)->[[Double]] {pieces.first{$0.id==p.id}!.ports.map{let q=rotate($0,p.r);return[q[0]+Double(p.x),q[1]+Double(p.y)]}}

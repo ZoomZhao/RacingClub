@@ -2,7 +2,10 @@ import Foundation
 @main struct CoreTests {
  static func main() throws {
   let data=try JSONDecoder().decode(GameData.self,from:Data(contentsOf:URL(fileURLWithPath:CommandLine.arguments[1])))
+  precondition(data.difficulties.map{$0.originalLabel} == ["STARTER","JUNIOR","EXPERT","MASTER","PUNDIT"])
   for l in data.levels {
+   let difficulty=data.difficulties.first{$0.id==l.difficultyId}!
+   precondition((difficulty.firstLevel...difficulty.lastLevel).contains(l.id))
    precondition(data.trace(l,l.solution,start:l.solutionStart,finish:l.solutionFinish)?.compactMap{$0.jump} == l.sequence)
    precondition(data.trace(l,Array(l.solution.dropLast())) == nil)
    precondition(data.trace(l,l.solution + [l.solution[0]]) == nil)

@@ -6,11 +6,13 @@
 
 项目仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。源代码、80 关数据、原始参考资料和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏保留在本地，克隆后按下方步骤重新构建。
 
-已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，实际界面见 [`design/android-native-play-v4.png`](design/android-native-play-v4.png) 和 [`design/android-native-goals-v4.png`](design/android-native-goals-v4.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
+已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新难度界面见 [`design/android-native-difficulty-home.png`](design/android-native-difficulty-home.png)、[`design/android-native-difficulty-play.png`](design/android-native-difficulty-play.png) 和 [`design/android-native-goals-v4.png`](design/android-native-goals-v4.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
 
 ## 当前功能
 
 - 按确认的 ImageGen 设计稿还原马场插画、木纹倒角、颗粒沙地、奶油色路线和障碍支柱；A–F 六个字母入口均留有围栏开口。
+- ImageGen 应用图标已接入 Android 自适应启动图标与 iOS AppIcon；原图、完整提示词和打包说明见 [`design/app-icon/`](design/app-icon/)。
+- 首页难度导航、关卡卡片与游戏页统一显示原题难度，编号范围作为辅助信息；分类依据见 [`design/difficulty-levels.md`](design/difficulty-levels.md)。
 - 横屏主布局：左侧 5 × 4 棋盘，右侧拼板工作台；顶部五个紧凑工具图标，底部固定两个大旋转按钮。
 - 移除工作台标题、选中说明、放置教学和出发提示，只保留图标、选中描边与必要的重叠/越界错误反馈。
 - 拼板按编号升序排列；挑战条保留要求的障碍顺序。已放置拼板可从棋盘或工作台重新选中，旋转、移动、移回与撤销。右下角左键逆时针 90°、右键顺时针 90°，支持连续旋转。
@@ -21,7 +23,7 @@
 - 关卡计时与可持久保存的本机排行榜；提示成绩标为练习，独立完成成绩优先。离开应用或查看弹窗时暂停计时。
 - 未完成关卡的摆放与时间会保留。完成关卡再次进入会开始新一轮。
 
-已接入 **01–80 全部关卡和 10 块完整道路拼板**。关卡按 5 页、每页 16 关浏览，全部可选择；完成标记、未完成摆放、起终点选择及每关最佳成绩保存在本机。
+已接入 **01–80 全部关卡和 10 块完整道路拼板**。关卡按原题五档难度浏览：入门 STARTER（01–16）、初级 JUNIOR（17–32）、专家 EXPERT（33–48）、大师 MASTER（49–64）、宗师 PUNDIT（65–80），全部可选择；完成标记、未完成摆放、起终点选择及每关最佳成绩保存在本机。
 
 - 实际道路允许重复跨障、无障碍支路、7 号双路，以及 8–10 号的合法平顺分岔；不会把任意两个分支误连，也不会按访问拼板次数计障碍。
 - 长指令优先两行折返、按箭头阅读，全部目标始终可见，没有滚动或省略；跑动时按真实跨障进度高亮。托盘只展示不重复的实体拼板，超过 5 块时用等宽两排展示，卡片以勾选标记表示已放置。
@@ -80,7 +82,7 @@ npm start
 
 ## 测试与设计
 
-- `npm test`：21 项 JavaScript 规则、动画端点与关卡资料检查。
+- `npm test`：22 项 JavaScript 规则、动画端点与关卡资料检查。
 - `:app:testDebugUnitTest`：9 项 Kotlin 原生规则、八向/边界方向、目标换行、配色对比度和入口坐标测试。
 - `EmulatorFlowTest`：2 项 Android UI Automator 流程测试，使用真实点击和墙钟动画；两关各采样 3 个不同的马儿位置与朝向，并验证计时冻结。另有 1 项方向素材与四边门预览，以及 `CatalogIntegrationTest` 的 3 项 80 关规则、完整操作和排行榜测试。`EntryAndGoalsTest` 的 2 项检查覆盖全部 80 关目标可见、窄屏大字号、六个同位入口的稳定坐标。
 - `tests/SwiftCoreTests.swift`：读取共用数据验证 Swift 路线、非法摆法、边界和动画端点。
@@ -104,3 +106,7 @@ npm start
 这些资料已导入两端原生数据，Android 已启用全部 80 关。第 65 关起仍由玩家推导两端，不将参考解答字母作为题目预设。
 
 规则核对依据用户照片，以及 [SmartGames 产品说明](https://smartgames.com/uk/one-player-games/horse-academy)、[游戏设计者的规则说明](https://www.smartgamesandpuzzles.com/horse-academy.html)。照片编号和入口字母以用户版本为准。
+
+图标打包可通过 `python3 tools/package-app-icon.py` 复现（需要 Pillow）。当前本地 iOS 未签名构建使用同源 PNG 图标与 Info.plist 声明；Xcode 目标已接入 AppIcon 资源目录。
+
+最新图标及难度版本验收：`VALIDATION_DIR="$PWD/output/app-icon/validation" bash tools/verify-android-emulator.sh`，仍需配置 JDK 21、Android SDK 并启动模拟器。该目录包含五档首页截图、全部目标检查及 03/04/80 关录屏。

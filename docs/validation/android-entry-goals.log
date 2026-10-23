@@ -29,7 +29,7 @@ INSTRUMENTATION_STATUS: test=startFinishAndSharedEntryKeepEveryOriginalLetterPos
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 15.215
+Time: 19.933
 
 OK (2 tests)
 

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "starter",
+    "label": "入门",
+    "originalLabel": "STARTER",
+    "group": "green",
+    "color": "#426B35",
+    "firstLevel": 1,
+    "lastLevel": 16,
+    "source": "references/01-challenges-3-4.jpg",
+    "evidence": "printed_page_footer"
+  },
+  {
+    "id": "junior",
+    "label": "初级",
+    "originalLabel": "JUNIOR",
+    "group": "orange",
+    "color": "#965E14",
+    "firstLevel": 17,
+    "lastLevel": 32,
+    "source": "references/32-challenges-17-18.jpg",
+    "evidence": "printed_page_footer"
+  },
+  {
+    "id": "expert",
+    "label": "专家",
+    "originalLabel": "EXPERT",
+    "group": "red",
+    "color": "#AD382F",
+    "firstLevel": 33,
+    "lastLevel": 48,
+    "source": "references/40-challenges-33-34.jpg",
+    "evidence": "printed_page_footer"
+  },
+  {
+    "id": "master",
+    "label": "大师",
+    "originalLabel": "MASTER",
+    "group": "purple",
+    "color": "#75418E",
+    "firstLevel": 49,
+    "lastLevel": 64,
+    "source": "references/48-challenges-49-50.jpg",
+    "evidence": "printed_page_footer"
+  },
+  {
+    "id": "pundit",
+    "label": "宗师",
+    "originalLabel": "PUNDIT",
+    "group": "blue",
+    "color": "#245F91",
+    "firstLevel": 65,
+    "lastLevel": 80,
+    "source": "references/31-challenges-79-80.jpg",
+    "evidence": "printed_page_footer"
+  }
+]

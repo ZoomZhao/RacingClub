@@ -35,3 +35,18 @@ test('all native road paths preserve reviewed legal turns and exact animation en
   }
  }
 });
+
+test('all 80 levels use the five difficulty names printed in the reference book',()=>{
+ const difficulties=read('shared/difficulties.json');
+ assert.deepEqual(data.difficulties,difficulties);
+ assert.deepEqual(difficulties.map(d=>d.originalLabel),['STARTER','JUNIOR','EXPERT','MASTER','PUNDIT']);
+ assert.deepEqual(difficulties.map(d=>d.label),['入门','初级','专家','大师','宗师']);
+ for(const d of difficulties){
+  assert.ok(fs.existsSync(new URL('../'+d.source,import.meta.url)));
+  const levels=data.levels.filter(l=>l.difficultyId===d.id);
+  assert.deepEqual(levels.map(l=>l.id),Array.from({length:d.lastLevel-d.firstLevel+1},(_,i)=>d.firstLevel+i));
+  assert.equal(levels.length,16);
+  for(const l of levels)assert.equal(l.group,d.group);
+ }
+ assert.equal(new Set(data.levels.map(l=>l.difficultyId)).size,5);
+});

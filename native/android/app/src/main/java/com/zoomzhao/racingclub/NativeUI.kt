@@ -41,6 +41,11 @@ import kotlin.math.*
 private fun nativeColor(s:String)=Color(android.graphics.Color.parseColor(s))
 private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/10)
 
+@Composable private fun DifficultyBadge(d:Difficulty) {
+    val tint=nativeColor(d.color)
+    Text(d.label,fontSize=10.sp,fontWeight=FontWeight.Bold,color=tint,maxLines=1,modifier=Modifier.background(tint.copy(alpha=.1f),RoundedCornerShape(50)).padding(horizontal=8.dp,vertical=3.dp).semantics{contentDescription="难度：${d.label} ${d.originalLabel}"})
+}
+
 @Composable private fun Action(icon:ImageVector,label:String,enabled:Boolean=true,slot:Dp=30.dp,onClick:()->Unit) {
     Box(Modifier.size(slot).clip(RoundedCornerShape(8.dp)).clickable(enabled=enabled,role=Role.Button,onClick=onClick),contentAlignment=Alignment.Center) {
         Icon(icon,contentDescription=label,tint=if(enabled)Brown else Brown.copy(alpha=.3f),modifier=Modifier.size(19.dp))
@@ -111,6 +116,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     } else {
                         Action(Icons.AutoMirrored.Filled.ArrowBack,"返回"){s.home()}
                         Spacer(Modifier.width(8.dp));Text("挑战 ${s.level.number}",fontSize=18.sp,fontWeight=FontWeight.Bold,color=Green)
+                        Spacer(Modifier.width(8.dp));DifficultyBadge(s.difficulty())
                         Spacer(Modifier.weight(1f));Icon(Icons.Default.Timer,null,Modifier.size(14.dp),tint=Brown)
                         Spacer(Modifier.width(4.dp));Text(clock(if(s.running||s.screen=="win")s.elapsed else s.time()+tick*0),fontSize=12.sp,color=Brown)
                         Action(Icons.Default.EmojiEvents,"本关排行榜"){s.showDialog("rank")}
@@ -138,6 +144,8 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 }
 
 @Composable private fun TrainingHome(s:GameState) {
+    val difficulty=s.rules.difficulties.first{it.id==s.selectedDifficultyId}
+    val levels=s.rules.levels.filter{it.difficultyId==difficulty.id}
     Row(Modifier.fillMaxSize().padding(top=6.dp,bottom=6.dp),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
         Box(Modifier.weight(.27f).fillMaxHeight().clip(RoundedCornerShape(16.dp))) {
             Image(painterResource(R.drawable.horse_arena),"马术训练场",Modifier.fillMaxSize(),contentScale=ContentScale.Crop)
@@ -150,20 +158,25 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
         Column(Modifier.weight(.73f),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                 Text("马术训练场",fontSize=19.sp,color=Green,fontWeight=FontWeight.Bold)
-                Spacer(Modifier.weight(1f));Text(if(s.chapter==4)"自行推导起终点" else "按顺序连接路线",fontSize=10.sp,color=Brown)
+                Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=nativeColor(difficulty.color))
             }
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
-                repeat(5){index->
-                    val label="${(index*16+1).toString().padStart(2,'0')}–${(index+1)*16}"
-                    Box(Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if(index==s.chapter)Green else Color(0xfff2e4cc)).clickable{ s.chapter=index }.semantics{contentDescription="关卡 $label";selected=s.chapter==index}.padding(vertical=8.dp),contentAlignment=Alignment.Center){Text(label,fontSize=11.sp,color=if(index==s.chapter)Paper else Brown,fontWeight=FontWeight.Bold)}
+                s.rules.difficulties.forEach{d->
+                    val active=d.id==s.selectedDifficultyId
+                    val tint=nativeColor(d.color)
+                    val range="${d.firstLevel.toString().padStart(2,'0')}–${d.lastLevel}"
+                    Column(Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if(active)tint else Color(0xfff2e4cc)).clickable{s.selectedDifficultyId=d.id}.semantics{contentDescription="难度 ${d.label} ${d.originalLabel}";stateDescription="$range，${if(active)"已选择"else"未选择"}";selected=active}.padding(vertical=5.dp),horizontalAlignment=Alignment.CenterHorizontally){
+                        Text(d.label,fontSize=11.sp,lineHeight=14.sp,color=if(active)Color.White else tint,fontWeight=FontWeight.Bold)
+                        Text(range,fontSize=8.sp,lineHeight=10.sp,color=if(active)Color.White.copy(alpha=.9f)else Brown)
+                    }
                 }
             }
             LazyVerticalGrid(columns=GridCells.Fixed(4),modifier=Modifier.weight(1f),horizontalArrangement=Arrangement.spacedBy(7.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
-                items(s.rules.levels.filter{(it.id-1)/16==s.chapter},key={it.id}){l->
+                items(levels,key={it.id}){l->
                     val done=s.solved(l.id);val best=s.best(l.id)
                     Card(onClick={s.start(l)},modifier=Modifier.fillMaxWidth().height(58.dp).border(1.dp,if(done)Green.copy(alpha=.45f)else Color(0xffe8d4b8),RoundedCornerShape(10.dp)).semantics{contentDescription="进入挑战 ${l.number}";stateDescription=if(done)"已完成" else if(s.inProgress(l.id))"进行中" else "未开始"},shape=RoundedCornerShape(10.dp),colors=CardDefaults.cardColors(containerColor=if(done)Color(0xffeef2e5)else Color(0xfffffaf0))) {
                         Column(Modifier.fillMaxSize().padding(horizontal=10.dp,vertical=6.dp)) {
-                            Row(verticalAlignment=Alignment.CenterVertically){Text(l.number,fontSize=19.sp,lineHeight=22.sp,fontWeight=FontWeight.Bold,color=Green);Spacer(Modifier.weight(1f));if(done)Icon(Icons.Default.CheckCircle,"已完成",Modifier.size(13.dp),tint=Green)else if(s.inProgress(l.id))Icon(Icons.Default.Schedule,"进行中",Modifier.size(13.dp),tint=Brown)}
+                            Row(verticalAlignment=Alignment.CenterVertically){Text(l.number,fontSize=19.sp,lineHeight=22.sp,fontWeight=FontWeight.Bold,color=Green);Spacer(Modifier.weight(1f));Text(difficulty.label,fontSize=9.sp,color=nativeColor(difficulty.color),fontWeight=FontWeight.Bold);Spacer(Modifier.width(3.dp));if(done)Icon(Icons.Default.CheckCircle,"已完成",Modifier.size(13.dp),tint=Green)else if(s.inProgress(l.id))Icon(Icons.Default.Schedule,"进行中",Modifier.size(13.dp),tint=Brown)}
                             Text(if(best!=null)clock(best.millis)else "${l.requiredPieces.size} 拼板 · ${l.sequence.size} 跨",fontSize=9.sp,lineHeight=13.sp,color=Brown)
                         }
                     }

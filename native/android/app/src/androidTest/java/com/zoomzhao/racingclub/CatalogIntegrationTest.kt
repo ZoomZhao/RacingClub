@@ -35,8 +35,11 @@ class CatalogIntegrationTest {
  private fun capture(name:String){assertTrue(device.takeScreenshot(File(dir,"$name.png")))}
  @Test fun all80NativeRulesReplayIncludingLoopsAndUnknownEndpoints() {
   val rules=loadRules(context);assertEquals(80,rules.levels.size);assertEquals((1..10).toList(),rules.pieces.keys.sorted())
+  assertEquals(listOf("STARTER","JUNIOR","EXPERT","MASTER","PUNDIT"),rules.difficulties.map{it.originalLabel})
   val rows=JSONArray()
   for(l in rules.levels){
+   val difficulty=rules.difficulties.single{it.id==l.difficultyId}
+   assertTrue(l.id in difficulty.firstLevel..difficulty.lastLevel)
    val route=rules.trace(l,l.solution,l.solutionStart,l.solutionFinish)
    assertNotNull("Level ${l.id}",route);route!!
    assertEquals(l.sequence,route.mapNotNull{it.jump})
@@ -63,10 +66,14 @@ class CatalogIntegrationTest {
   context.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
   ActivityScenario.launch(MainActivity::class.java).use{scenario->
    find(By.text("马术训练场"));capture("20-catalog-home")
-   for(chapter in 0..4){
-    val lo=(chapter*16+1).toString().padStart(2,'0');val hi=(chapter+1)*16
-    tap("关卡 $lo–$hi")
-    for(id in chapter*16+1..hi)find(By.desc("进入挑战 ${id.toString().padStart(2,'0')}"))
+   for(d in loadRules(context).difficulties){
+    tap("难度 ${d.label} ${d.originalLabel}")
+    find(By.textContains(d.originalLabel))
+    for(id in d.firstLevel..d.lastLevel)find(By.desc("进入挑战 ${id.toString().padStart(2,'0')}"))
+    capture("50-difficulty-${d.id}")
+    tap("进入挑战 ${d.firstLevel.toString().padStart(2,'0')}")
+    find(By.desc("难度：${d.label} ${d.originalLabel}"))
+    tap("返回")
    }
    capture("21-catalog-final-chapter");tap("进入挑战 80")
    find(By.text("起点 ?"));find(By.text("终点 ?"));capture("22-level80-empty")
@@ -95,7 +102,7 @@ class CatalogIntegrationTest {
    find(By.text("返回训练场")).click();find(By.text("1 / 80 已完成"));capture("28-level80-completed")
    tap("进入挑战 65");tap("提示");choose("选择起点","C")
    choose("选择终点","D");tap("返回")
-   scenario.recreate();find(By.text("马术训练场"));SystemClock.sleep(300);tap("关卡 65–80");tap("进入挑战 65")
+   scenario.recreate();find(By.text("马术训练场"));SystemClock.sleep(300);tap("难度 宗师 PUNDIT");tap("进入挑战 65")
    find(By.text("起点 C"));find(By.text("终点 D"));assertTrue(nodeState("棋盘").contains("号"));capture("29-level65-restored")
   }
  }
