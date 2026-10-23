@@ -16,43 +16,27 @@
       "renderer": "Apple M1 host GPU, OpenGL ES 3; Vulkan disabled"
     },
     "native_ui_tests": {
-      "tests": 8,
+      "tests": 5,
       "failures": 0,
-      "runtime_seconds": 120.964,
-      "framework": "Android UI Automator, real input and wall-clock animation",
+      "runtime_seconds": 78.406,
+      "framework": "Android UI Automator on API35, real input and wall-clock animation",
       "checks": [
-        "landscape board and five compact toolbar icons in one row",
-        "two large bottom-right buttons: counterclockwise and clockwise 90 degrees",
-        "numeric tray order and all 10 inventory IDs",
-        "select unplaced and placed pieces, rotate both directions, undo and verify actual board angles",
-        "reject both directions of out-of-bounds rotation without changing position or angle",
-        "move, remove and replace pieces",
-        "challenges 03 and 04 automatically run and finish; three distinct horse positions and frozen timer",
-        "independent and assisted local leaderboard entries",
-        "eight horse views rendered; turning changes heading in native accessibility snapshots",
-        "flat entry markers rendered at A, B, C and F; letters stay at original frame positions",
-        "all 80 levels replay complete obstacle sequences with real path-specific animation endpoints",
-        "all five printed difficulty categories navigate to their exact 16 levels; each game header matches its category; level80 nine unique tiles in two rows",
-        "unknown endpoints stay unset; A/B wrong finish cannot win; A/A loop automatically runs and finishes",
-        "level65 placements and endpoint choices survive Activity recreation",
-        "ten best entries per level survive completing every other level",
-        "all 80 levels show every target simultaneously without scrolling; long goals use two serpentine rows",
-        "620dp width and 1.35 font scale keep every target visible; original six letter positions stay fixed for shared endpoints",
-        "removed workbench heading, selection instructions and route-success message stay absent",
-        "home help button absent; game help remains available",
-        "all sixteen challenge plaques fully visible at the verified default landscape density",
-        "unstarted, in-progress and completed plaques expose correct saved status",
-        "620dp / 1.35-font home keeps every difficulty tab visible and separates rank medallions from text"
+        "all 80 native rules and real animation endpoints replay",
+        "five difficulty categories navigate to their exact 16 levels",
+        "right list title shares the brand header row; all sixteen enlarged cards fully visible at default landscape size",
+        "unstarted, in-progress and completed state plus stored best time remain correct",
+        "list help absent and game help retained",
+        "level80 endpoint selection, automatic animation and win; level65 state survives Activity recreation",
+        "ten best scores retained per level",
+        "all 80 goals fully visible; narrow large-font home keeps every difficulty tab visible and rank labels separated"
       ],
       "reports": [
-        "docs/validation/android-flows.log",
-        "docs/validation/android-directions.log",
         "docs/validation/android-catalog.log",
         "docs/validation/android-entry-goals.log",
         "docs/validation/goals-visibility-report.json"
       ]
     },
-    "visual_review": "Native starter and PUNDIT plaque grids, real level65 in-progress and level80 completed markers, and the narrow large-font home inspected. Help is removed on the list; canonical tile thumbnails use public target information only.",
+    "visual_review": "Default and 620dp/1.35-font home reviewed: no tile images, right heading aligned with the left brand, cards grow into the released header space; all default cards remain fully visible.",
     "runtime_crashes": 0,
     "directional_animation_samples": [
       {
@@ -93,13 +77,19 @@
     "runtime_pieces": 10,
     "rules_schema": 2,
     "level_report": "docs/validation/catalog-rules-report.json",
-    "ui_revision": "native-home-plaque-redesign-v1"
+    "ui_revision": "home-clean-numbered-cards-and-raised-right-column",
+    "previous_full_suite": {
+      "commit": "2f31a9d",
+      "native_ui_tests": 8,
+      "failures": 0,
+      "note": "Prior full gameplay suite; current change reruns the catalog and entry/layout classes below."
+    }
   },
   "ios": {
     "native_platform": "IOS",
     "architecture": "arm64",
     "minimum_os": "17.0",
-    "compile_and_link": "passed, native wood/cream challenge plaques, rank medallions, saved progress status and home help removal; no iOS runtime validation",
+    "compile_and_link": "passed, numbered cards without tile images and home right column sharing the brand row; no device runtime validation",
     "signed": false,
     "device_validation": false,
     "runtime_levels": 80,
@@ -119,38 +109,33 @@
   "artifacts": [
     {
       "path": "output/RacingClub-Android-debug.apk",
-      "bytes": 44857392,
-      "sha256": "f033a6dadb3ef18bb56904a485802c3cd4add6932150923c452d32a2c71554fa"
+      "bytes": 44859207,
+      "sha256": "c0fac78abb747fcf2f9bc2afcc0541de382ebc0b9ad8d429525c9cec97008f6e"
     },
     {
       "path": "native/ios/build/unsigned/RacingClub.app/RacingClub",
-      "bytes": 1795992,
-      "sha256": "e40469e20167ed2874c1b5eacf0c3089ddf9a23e68620d4ddf873918a7762c2b"
+      "bytes": 1810952,
+      "sha256": "93d8c98061604d6409ece68b23977aec86589d75e7272dcc860810f6e3a721a8"
     },
     {
-      "path": "design/list-redesign/imagegen-reference-v1.png",
-      "bytes": 2364252,
-      "sha256": "0a50706a40c887ab1051bd2471226570ed2341bc6cdb39588dca6a7b0e632929"
+      "path": "design/list-redesign/android-home-clean-starter.png",
+      "bytes": 1683016,
+      "sha256": "ef9589f6f60b5d60ab4f7cecdee70b052fe0e2ce5f5f1c0c2cd39140d84fca98"
     },
     {
-      "path": "design/list-redesign/android-home-starter.png",
-      "bytes": 1814853,
-      "sha256": "1373dafc56716c8806ddc2ef1832bb85601b0b26e0727953c39950f59798f628"
+      "path": "design/list-redesign/android-home-clean-progress.png",
+      "bytes": 1689659,
+      "sha256": "791eb2eb70208f0ccd59a4a7eec5834798fa569c1cf225fd57a772f3602549a7"
     },
     {
-      "path": "design/list-redesign/android-home-progress.png",
-      "bytes": 1823324,
-      "sha256": "df26336af671c36515a65f4062ec980fa62e5611c962691a3dce7cbd4df052d9"
+      "path": "design/list-redesign/android-home-clean-large-font.png",
+      "bytes": 1478864,
+      "sha256": "ec38c9dec0b73a5e0ecf0e4789196bad37b447aa50b9c0c87ed33f44b94df10e"
     },
     {
-      "path": "design/list-redesign/android-home-large-font.png",
-      "bytes": 1531472,
-      "sha256": "dd84213bf80e0b20a4e0cf6df4901f1d0466ea486a73711a0a75f8c7eae4900a"
-    },
-    {
-      "path": "output/list-redesign/validation/challenge-80.mp4",
-      "bytes": 13950134,
-      "sha256": "c443d01c52226718e3577b72aab2b1b3d740d045ee4cff0c7cfb76bb9981d28c"
+      "path": "output/list-cleanup/validation/challenge-80.mp4",
+      "bytes": 13210047,
+      "sha256": "2f8905de6b671f6ac8af80a8ebeb071e3fd8b9bfd93be0b70df1f8ed2cad20bf"
     }
   ],
   "last_four_hints": "Computed offline from verified topology and instructions; independent reference replay passed. No solution photos claimed; original referenceLayout remains null.",
@@ -228,10 +213,11 @@
     "reference": "design/list-redesign/imagegen-reference-v1.png",
     "prompt": "design/list-redesign/imagegen-prompt-v1.json",
     "screenshots": [
-      "design/list-redesign/android-home-starter.png",
-      "design/list-redesign/android-home-progress.png",
-      "design/list-redesign/android-home-large-font.png"
+      "design/list-redesign/android-home-clean-starter.png",
+      "design/list-redesign/android-home-clean-progress.png",
+      "design/list-redesign/android-home-clean-large-font.png"
     ],
-    "thumbnail": "canonical orientation of the first printed target piece; no solution placement is exposed"
+    "thumbnail": "removed at user request; challenge cards show numbers, progress and statistics or best times only",
+    "reference_notes": "Initial ImageGen reference retained for visual history; its tile previews are not used."
   }
 }

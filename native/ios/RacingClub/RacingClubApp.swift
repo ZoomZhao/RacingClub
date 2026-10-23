@@ -42,17 +42,19 @@ private func timeString(_ seconds:Double)->String {let ms=Int(seconds*1000);retu
 struct ClubView:View {
  @ObservedObject var game:Game
  private let tick=Timer.publish(every:0.1,on:.main,in:.common).autoconnect()
- var body:some View {GeometryReader{geo in VStack(spacing:5){header;if game.screen != "home"{NativeCourseSequence(game:game,level:game.level)};if game.screen=="home"{home}else if game.screen=="win"{win}else{if geo.size.width>geo.size.height{HStack(spacing:18){NativeBoard(game:game).frame(maxWidth:.infinity,maxHeight:.infinity);workbench.frame(width:geo.size.width*0.39)}}else{VStack{NativeBoard(game:game).aspectRatio(5.7/4.7,contentMode:.fit);workbench}}}}.padding(.horizontal,18).padding(.vertical,8).background(paper).sheet(isPresented:Binding(get:{!game.dialog.isEmpty},set:{if !$0{game.close()}})){dialog}.onReceive(tick){_ in game.clockTick+=1}}
+ var body:some View {GeometryReader{geo in VStack(spacing:5){if game.screen != "home"{header;NativeCourseSequence(game:game,level:game.level)};if game.screen=="home"{home}else if game.screen=="win"{win}else{if geo.size.width>geo.size.height{HStack(spacing:18){NativeBoard(game:game).frame(maxWidth:.infinity,maxHeight:.infinity);workbench.frame(width:geo.size.width*0.39)}}else{VStack{NativeBoard(game:game).aspectRatio(5.7/4.7,contentMode:.fit);workbench}}}}.padding(.horizontal,18).padding(.vertical,8).background(paper).sheet(isPresented:Binding(get:{!game.dialog.isEmpty},set:{if !$0{game.close()}})){dialog}.onReceive(tick){_ in game.clockTick+=1}}
  }
  private var header:some View {HStack(spacing:12){if game.screen=="home"{Text("♞ RacingClub").font(.system(size:20,weight:.bold,design:.serif))}else{tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.headline);difficultyBadge(game.data.difficulties.first{$0.id==game.level.difficultyId}!);Spacer();Text(timeString(game.time)).font(.system(size:13,design:.monospaced));tool("trophy","本关排行榜"){game.show("rank")}};if game.screen=="home"{Spacer()};if game.screen != "home"{tool("questionmark.circle","玩法"){game.show("help")}}}.foregroundStyle(forest).frame(height:38)}
  private func difficultyBadge(_ d:Difficulty)->some View {Text(d.label).font(.system(size:10,weight:.bold)).foregroundStyle(ink(d.color)).padding(.horizontal,8).padding(.vertical,4).background(ink(d.color).opacity(0.1),in:Capsule()).accessibilityLabel("难度：\(d.label) \(d.originalLabel)")}
  private var home:some View {
   let d=game.data.difficulties.first{$0.id==game.selectedDifficultyId}!
   let levels=game.data.levels.filter{$0.difficultyId==d.id}
-  return HStack(spacing:18){
+  return GeometryReader{layout in HStack(spacing:18){
+   VStack(spacing:8){Text("♞ RacingClub").font(.system(size:20,weight:.bold,design:.serif)).foregroundStyle(forest).frame(maxWidth:.infinity,minHeight:30,alignment:.leading)
    ZStack(alignment:.topLeading){Image("horse-arena").resizable().scaledToFill();Text("今天，\n跃过新的挑战").font(.system(size:27,weight:.bold)).foregroundStyle(forest).padding(18)}.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().clipShape(RoundedRectangle(cornerRadius:16))
+   }.frame(width:layout.size.width*0.27)
    VStack(spacing:10){
-    HStack{Text("马术训练场").font(.title2.bold());Spacer();Text(d.originalLabel).font(.caption.bold()).foregroundStyle(ink(d.color))}
+    HStack{Text("马术训练场").font(.title2.bold());Spacer();Text(d.originalLabel).font(.caption.bold()).foregroundStyle(ink(d.color))}.frame(height:30)
     HStack(spacing:5){ForEach(Array(game.data.difficulties.enumerated()),id:\.element.id){index,item in
      let active=game.selectedDifficultyId==item.id
      Button{game.selectedDifficultyId=item.id}label:{ZStack(alignment:.bottom){
@@ -66,14 +68,14 @@ struct ClubView:View {
      Button{game.start(level)}label:{VStack(alignment:.leading,spacing:3){
       HStack(spacing:3){
        Text(level.number).font(.system(size:25,weight:.bold,design:.serif)).foregroundStyle(forest)
-       Canvas{context,size in var c=context;let u=min(size.width/2,size.height*0.64);drawTile(&c,game.data,Placement(id:level.sequence[0],x:0,y:0,r:0),u,CGPoint(x:(size.width-2*u)/2,y:(size.height-u)/2))}.frame(maxWidth:.infinity).frame(height:28)
+       Spacer()
        Image(systemName:done ? "checkmark.circle.fill":ongoing ? "clock":"chevron.right").font(.system(size:11,weight:.bold)).foregroundStyle(done ? forest:ongoing ? ink("#ad6a1e"):saddle)
       }
       Text(best.map{"\(d.label) · \(timeString(Double($0.millis)/1000))"} ?? "\(d.label) · \(level.requiredPieces.count) 块 · \(level.sequence.count) 跨").font(.system(size:8)).foregroundStyle(saddle).lineLimit(1)
-     }.padding(.horizontal,9).padding(.vertical,7).frame(maxWidth:.infinity,minHeight:57).background{HomePlaqueBackground()}}.buttonStyle(HomePlaquePress()).accessibilityLabel("进入挑战 \(level.number)").accessibilityValue(done ? "已完成":ongoing ? "进行中":"未开始")
+     }.padding(.horizontal,9).padding(.vertical,7).frame(maxWidth:.infinity,minHeight:max(57,(layout.size.height-114)/4)).background{HomePlaqueBackground()}}.buttonStyle(HomePlaquePress()).accessibilityLabel("进入挑战 \(level.number)").accessibilityValue(done ? "已完成":ongoing ? "进行中":"未开始")
     }}}
    }.foregroundStyle(forest).frame(maxWidth:.infinity)
-  }
+  }}
  }
  private var workbench:some View {
   VStack(spacing:8){

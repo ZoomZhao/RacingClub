@@ -6,14 +6,14 @@
 
 项目仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。源代码、80 关数据、原始参考资料和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏保留在本地，克隆后按下方步骤重新构建。
 
-已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新列表见 [`design/list-redesign/android-home-progress.png`](design/list-redesign/android-home-progress.png)，设计参考与完整提示词见 [`design/list-redesign/`](design/list-redesign/)。游戏页见 [`design/android-native-difficulty-play.png`](design/android-native-difficulty-play.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
+已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新列表见 [`design/list-redesign/android-home-clean-progress.png`](design/list-redesign/android-home-clean-progress.png)，设计记录见 [`design/list-redesign/`](design/list-redesign/)。游戏页见 [`design/android-native-difficulty-play.png`](design/android-native-difficulty-play.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
 
 ## 当前功能
 
 - 按确认的 ImageGen 设计稿还原马场插画、木纹倒角、颗粒沙地、奶油色路线和障碍支柱；A–F 六个字母入口均留有围栏开口。
 - ImageGen 应用图标已接入 Android 自适应启动图标与 iOS AppIcon；原图、完整提示词和打包说明见 [`design/app-icon/`](design/app-icon/)。
 - 首页难度导航、关卡卡片与游戏页统一显示原题难度，编号范围作为辅助信息；分类依据见 [`design/difficulty-levels.md`](design/difficulty-levels.md)。
-- 列表页移除右上角帮助按钮，五档难度改为段位徽章牌；关卡按钮使用木质倒角、奶油色内嵌面和真实道路缩略图，配合箭头、时钟、绿勾区分进入与进度。默认横屏每档 16 关完整展示，放大字号时支持纵向滚动。
+- 列表页移除右上角帮助按钮，五档难度使用段位徽章牌；关卡按钮仅显示编号、统计或成绩，配合箭头、时钟、绿勾区分进度，不显示拼板缩略图。右侧上移到与左侧品牌同行，关卡按钮按剩余高度放大。默认横屏每档 16 关完整展示，放大字号时支持纵向滚动。
 - 横屏主布局：左侧 5 × 4 棋盘，右侧拼板工作台；顶部五个紧凑工具图标，底部固定两个大旋转按钮。
 - 移除工作台标题、选中说明、放置教学和出发提示，只保留图标、选中描边与必要的重叠/越界错误反馈。
 - 拼板按编号升序排列；挑战条保留要求的障碍顺序。已放置拼板可从棋盘或工作台重新选中，旋转、移动、移回与撤销。右下角左键逆时针 90°、右键顺时针 90°，支持连续旋转。

@@ -68,10 +68,9 @@ private fun DrawScope.plaque(top:Float=0f,active:Color?=null) {
     }
 }
 
-@Composable internal fun ChallengePlaque(s:GameState,l:Level,d:Difficulty,modifier:Modifier=Modifier) {
+@Composable internal fun ChallengePlaque(s:GameState,l:Level,d:Difficulty,height:Dp,modifier:Modifier=Modifier) {
     val done=s.solved(l.id);val inProgress=!done&&s.inProgress(l.id);val best=s.best(l.id)
-    val materials=boardMaterials();val fontScale=LocalDensity.current.fontScale
-    val height=(57f+max(0f,fontScale-1f)*32f).dp
+    val fontScale=LocalDensity.current.fontScale
     BoxWithConstraints(modifier.height(height).clip(RoundedCornerShape(9.dp)).clickable(role=Role.Button){s.start(l)}.semantics{contentDescription="进入挑战 ${l.number}";stateDescription=if(done)"已完成"else if(inProgress)"进行中"else"未开始"}) {
         val compact=maxWidth<100.dp||fontScale>1.15f
         Canvas(Modifier.matchParentSize()) {
@@ -84,13 +83,7 @@ private fun DrawScope.plaque(top:Float=0f,active:Color?=null) {
         Column(Modifier.fillMaxSize().padding(horizontal=9.dp,vertical=7.dp),verticalArrangement=Arrangement.SpaceBetween){
             Row(Modifier.fillMaxWidth().weight(1f),verticalAlignment=Alignment.CenterVertically){
                 Text(l.number,fontSize=(26/fontScale.coerceAtMost(1.2f)).sp,lineHeight=29.sp,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,color=Green,maxLines=1)
-                Spacer(Modifier.width(4.dp))
-                Canvas(Modifier.weight(1f).height(28.dp)) {
-                    val u=min(size.width/2,size.height*.64f)
-                    // Only public target information: canonical tile, never a solved layout.
-                    paintTile(s.rules,Placement(l.sequence.first(),0,0,0),u,Offset((size.width-2*u)/2,(size.height-u)/2),materials)
-                }
-                Spacer(Modifier.width(2.dp))
+                Spacer(Modifier.weight(1f))
                 Icon(if(done)Icons.Default.CheckCircle else if(inProgress)Icons.Default.Schedule else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.size(12.dp),tint=if(done)Green else if(inProgress)Color(0xffad6a1e)else Brown)
             }
             val details=if(best!=null)"%02d:%02d.%02d".format(best.millis/60000,best.millis/1000%60,best.millis%1000/10)else if(compact)"${l.requiredPieces.size}块 ·${l.sequence.size}跨"else"${l.requiredPieces.size} 块 · ${l.sequence.size} 跨"

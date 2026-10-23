@@ -75,6 +75,9 @@ class CatalogIntegrationTest {
   context.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
   ActivityScenario.launch(MainActivity::class.java).use{scenario->
    find(By.text("马术训练场"));expectState("进入挑战 01","未开始");assertFalse("Home must not show help",device.hasObject(By.desc("玩法")));capture("20-catalog-home")
+   val brand=find(By.text("♞ RacingClub")).visibleBounds
+   val title=find(By.text("马术训练场")).visibleBounds
+   assertTrue("Right list should share the brand header row",kotlin.math.abs(brand.centerY()-title.centerY())<12&&title.left>brand.right)
    for(d in loadRules(context).difficulties){
     tap("难度 ${d.label} ${d.originalLabel}")
     find(By.textContains(d.originalLabel))

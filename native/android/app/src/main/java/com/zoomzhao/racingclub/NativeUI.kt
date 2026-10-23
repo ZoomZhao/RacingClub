@@ -108,20 +108,15 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
         Image(painterResource(R.drawable.arena_backdrop),null,Modifier.fillMaxSize(),contentScale=ContentScale.FillBounds)
         val margin=maxWidth*.08f
         Column(Modifier.safeDrawingPadding().padding(horizontal=margin,vertical=8.dp)) {
-            Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(3.dp)) {
-                Row(Modifier.heightIn(min=if(s.screen=="home")38.dp else 30.dp).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                    if(s.screen=="home") {
-                        Text("♞ RacingClub",fontSize=20.sp,color=Green,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif)
-                        Spacer(Modifier.weight(1f))
-                    } else {
+            if(s.screen!="home")Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(3.dp)) {
+                Row(Modifier.heightIn(min=30.dp).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                         Action(Icons.AutoMirrored.Filled.ArrowBack,"返回"){s.home()}
                         Spacer(Modifier.width(8.dp));Text("挑战 ${s.level.number}",fontSize=18.sp,fontWeight=FontWeight.Bold,color=Green)
                         Spacer(Modifier.width(8.dp));DifficultyBadge(s.difficulty())
                         Spacer(Modifier.weight(1f));Icon(Icons.Default.Timer,null,Modifier.size(14.dp),tint=Brown)
                         Spacer(Modifier.width(4.dp));Text(clock(if(s.running||s.screen=="win")s.elapsed else s.time()+tick*0),fontSize=12.sp,color=Brown)
                         Action(Icons.Default.EmojiEvents,"本关排行榜"){s.showDialog("rank")}
-                    }
-                    if(s.screen!="home")Action(Icons.Default.HelpOutline,"玩法"){s.showDialog("help")}
+                    Action(Icons.Default.HelpOutline,"玩法"){s.showDialog("help")}
                 }
                 if(s.screen!="home") {
                     val cursor=(progress.value*s.activeRoute.size).coerceAtMost((s.activeRoute.size-.0001f).coerceAtLeast(0f));val step=s.activeRoute.getOrNull(cursor.toInt())
@@ -148,16 +143,20 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
     val difficulty=s.rules.difficulties.first{it.id==s.selectedDifficultyId}
     val levels=s.rules.levels.filter{it.difficultyId==difficulty.id}
     Row(Modifier.fillMaxSize().padding(top=6.dp,bottom=6.dp),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-        Box(Modifier.weight(.27f).fillMaxHeight().clip(RoundedCornerShape(16.dp))) {
+        Column(Modifier.weight(.27f).fillMaxHeight()) {
+            Row(Modifier.height(30.dp),verticalAlignment=Alignment.CenterVertically){Text("♞ RacingClub",fontSize=(20f/fontScale.coerceAtLeast(1f)).sp,color=Green,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,maxLines=1)}
+            Spacer(Modifier.height(8.dp))
+            Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(16.dp))) {
             Image(painterResource(R.drawable.horse_arena),"马术训练场",Modifier.fillMaxSize(),contentScale=ContentScale.Crop)
             Column(Modifier.padding(14.dp)) {
                 Text("今天，\n跃过新的\n挑战",fontSize=23.sp,lineHeight=32.sp,fontWeight=FontWeight.Bold,color=Green)
                 Spacer(Modifier.weight(1f))
                 Text("${s.rules.levels.count{s.solved(it.id)}} / 80 已完成",fontSize=if(fontScale>1.15f)11.sp else 12.sp,maxLines=1,color=Green,fontWeight=FontWeight.Bold,modifier=Modifier.background(Paper.copy(alpha=.9f),RoundedCornerShape(50)).padding(horizontal=10.dp,vertical=7.dp))
             }
+            }
         }
         Column(Modifier.weight(.73f),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().height(30.dp),verticalAlignment=Alignment.CenterVertically) {
                 Text("马术训练场",fontSize=19.sp,color=Green,fontWeight=FontWeight.Bold)
                 Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=nativeColor(difficulty.color))
             }
@@ -166,10 +165,13 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     DifficultyPlaque(d,index,d.id==s.selectedDifficultyId,Modifier.weight(1f)){s.selectedDifficultyId=d.id}
                 }
             }
-            LazyVerticalGrid(columns=GridCells.Fixed(4),modifier=Modifier.weight(1f),horizontalArrangement=Arrangement.spacedBy(7.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val cardHeight=maxOf((57f+max(0f,fontScale-1f)*32f).dp,(maxHeight-20.dp)/4)
+            LazyVerticalGrid(columns=GridCells.Fixed(4),modifier=Modifier.fillMaxSize(),horizontalArrangement=Arrangement.spacedBy(7.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 items(levels,key={it.id}){l->
-                    ChallengePlaque(s,l,difficulty,Modifier.fillMaxWidth())
+                    ChallengePlaque(s,l,difficulty,cardHeight,Modifier.fillMaxWidth())
                 }
+            }
             }
         }
     }

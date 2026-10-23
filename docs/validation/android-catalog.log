@@ -43,7 +43,7 @@ INSTRUMENTATION_STATUS: test=nativeChapterNavigationTrayAndPlayerSelectedEndpoin
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 66.307
+Time: 63.941
 
 OK (3 tests)
 

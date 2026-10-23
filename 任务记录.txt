@@ -131,3 +131,5 @@ Android 原生视觉还原与模拟器验收（2026-10-23）：
 - 未开始为箭头、进行中为时钟、已完成为绿勾和真实最佳时间。SwiftUI 同步样式与进度显示并编译通过；iOS仍未进行设备验证。
 - 默认横屏每档16张牌完整展示。620dp/1.35字号下，难度牌随字号增高，卡片精简统计、列表纵向滚动，徽章与文字互不重叠。
 - 最终8项Android设备检查和9项Kotlin单元测试通过，包含列表帮助移除、三种状态、全部难度可达与放大字体布局；APK和docs/validation/已更新。真实截图见design/list-redesign/android-home-{starter,progress,large-font}.png。
+
+用户后续纠正列表：移除所有拼板缩略图，关卡牌仅保留编号、进度和统计/成绩。品牌行收进左列，右侧标题上移与品牌同行，关卡牌按新增可用高度放大；左侧马场图片位置保持。SwiftUI同步并编译通过。本轮复验Catalog/Entry共5项设备检查及9项Kotlin测试通过，含默认16关完整显示、右列上移、字号放大、80关目标与80关自动跑动。APK及验证资料已更新；当前截图为design/list-redesign/android-home-clean-{starter,progress,large-font}.png。旧ImageGen参考保留为历史风格资料，其中的拼板预览已不采用。
