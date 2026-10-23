@@ -3,8 +3,8 @@ package com.zoomzhao.racingclub
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.*
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.foundation.layout.*
@@ -105,8 +105,8 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
     LaunchedEffect(Unit) { while(true) { tick++;delay(100) } }
     val progress=remember { Animatable(0f) }
     val drag=remember(s.level.id,s.screen){BoardDrag()}
-    LaunchedEffect(s.level.id,s.placed,s.screen,s.dialog,s.chosenStart,s.chosenFinish,drag.piece) {
-        if(s.screen=="game" && !s.running && s.dialog.isEmpty() && drag.piece==null) {
+    LaunchedEffect(s.level.id,s.placed,s.screen,s.dialog,s.chosenStart,s.chosenFinish,drag.piece,drag.pressing) {
+        if(s.screen=="game" && !s.running && s.dialog.isEmpty() && drag.piece==null&&!drag.pressing) {
             s.trace()?.let { route ->
                 delay(250);s.beginRun(route);progress.snapTo(0f)
                 progress.animateTo(1f,tween(route.size*1350,easing=LinearEasing))
@@ -226,7 +226,19 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                             val placed=s.placed.firstOrNull{it.id==id};val covered=placed?.let{s.rules.coveredBy(it,s.placed).isNotEmpty()}==true
                             var origin by remember{id.let{mutableStateOf(Offset.Zero)}}
                             Box(Modifier.weight(1f).height(cardHeight).onGloballyPositioned{origin=it.positionInRoot()}.background(if(active)Color(0xfffff1d2)else if(placed!=null)Color(0xffe6eee3)else Color(0xfffcf3e2),RoundedCornerShape(8.dp)).border(if(active)2.dp else 1.dp,if(active||placed!=null)Green else Color(0xffebd9bc),RoundedCornerShape(8.dp)).pointerInput(id,s.running){
-                                detectDragGestures(onDragStart={at->val p=s.placed.firstOrNull{it.id==id}?:Placement(id,0,0,if(s.selected==id)s.rotation else 0);drag.begin(s,p,origin+at)},onDrag={change,delta->change.consume();drag.pointer+=delta},onDragEnd={drag.finish(s)},onDragCancel={drag.cancel()})
+                                awaitEachGesture{
+                                    val down=awaitFirstDown(requireUnconsumed=false);if(s.running)return@awaitEachGesture
+                                    s.select(id);drag.pressing=true
+                                    val p=s.placed.firstOrNull{it.id==id}?:Placement(id,0,0,s.rotation)
+                                    val slop=max(viewConfiguration.touchSlop,12.dp.toPx());var moving=false
+                                    try{while(true){
+                                        val change=awaitPointerEvent().changes.firstOrNull{it.id==down.id}?:break
+                                        if(change.isConsumed)break
+                                        if(!moving&&(change.position-down.position).getDistance()>slop){drag.begin(s,p,origin+down.position);moving=true}
+                                        if(moving){drag.pointer=origin+change.position;change.consume()}
+                                        if(!change.pressed){if(moving)drag.finish(s);break}
+                                    }}finally{drag.cancel()}
+                                }
                             }.clickable(enabled=!s.running){s.select(id)}.semantics{contentDescription="拼板 $id";selected=active;stateDescription="${if(active)"已选中"else"未选中"}，${if(s.placed.any{it.id==id})"已放置"else"待放置"}，${(if(active)s.rotation else s.placed.firstOrNull{it.id==id}?.r?:0)*90}度${if(covered)"，下层被遮挡，点按置顶"else""}"}.padding(3.dp),contentAlignment=Alignment.Center) {
                                 Canvas(Modifier.fillMaxSize().padding(top=12.dp,bottom=if(placed!=null)17.dp else 2.dp)){
                                     val r=1;val(w,h)=s.rules.dimensions(r);val u=min(size.width/w,size.height/h)
@@ -324,14 +336,33 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     contentDescription="棋盘"
                     stateDescription=s.placed.joinToString("；"){"${it.id}号，第${it.y+1}行第${it.x+1}列，${it.r*90}度"+if(s.rules.coveredBy(it,s.placed).isNotEmpty())"，下层被遮挡"else""}.ifEmpty{"空棋盘"}
                 }.pointerInput(s.running) {
-                    detectTapGestures{pos->if(!s.running){val u=size.width/5.7f;val x=floor(pos.x/u-.35f).toInt();val y=floor(pos.y/u-.35f).toInt()
-                        if(x in 0..4&&y in 0..3){val hit=s.rules.hit(s.placed,x,y);if(hit!=null)s.select(hit.id)else s.place(x,y)}
-                    }}
-                }.pointerInput(s.running){
-                    detectDragGestures(onDragStart={at->
-                        val u=size.width/5.7f;val x=floor(at.x/u-.35f).toInt();val y=floor(at.y/u-.35f).toInt()
-                        s.rules.hit(s.placed,x,y)?.let{p->drag.begin(s,p,drag.board.topLeft+at,Offset(at.x/u-.35f-p.x,at.y/u-.35f-p.y))}
-                    },onDrag={change,delta->if(drag.piece!=null){change.consume();drag.pointer+=delta}},onDragEnd={drag.finish(s)},onDragCancel={drag.cancel()})
+                    awaitEachGesture {
+                        val down=awaitFirstDown();if(s.running)return@awaitEachGesture
+                        val u=size.width/5.7f;val at=down.position
+                        val x=floor(at.x/u-.35f).toInt();val y=floor(at.y/u-.35f).toInt()
+                        val hit=s.rules.hit(s.placed,x,y)
+                        val slop=max(viewConfiguration.touchSlop,12.dp.toPx())
+                        var moved=false;var dragging=false
+                        drag.pressing=true
+                        if(hit!=null)s.select(hit.id)
+                        try {
+                            while(true){
+                                val event=awaitPointerEvent()
+                                val change=event.changes.firstOrNull{it.id==down.id}?:break
+                                if(change.isConsumed)break
+                                if((change.position-at).getDistance()>slop)moved=true
+                                if(moved&&!dragging&&hit!=null){
+                                    drag.begin(s,hit,drag.board.topLeft+at,Offset(at.x/u-.35f-hit.x,at.y/u-.35f-hit.y));dragging=true
+                                }
+                                if(dragging){drag.pointer=drag.board.topLeft+change.position;change.consume()}
+                                if(!change.pressed){
+                                    if(dragging)drag.finish(s)
+                                    else if(!moved&&hit==null&&x in 0..4&&y in 0..3)s.place(x,y)
+                                    break
+                                }
+                            }
+                        }finally{drag.cancel()}
+                    }
                 }){paintBoard(s,materials)
                     drag.candidate()?.let{p->
                         val(w,h)=s.rules.dimensions(p.r);val u=size.width/5.7f;val color=if(drag.problem(s).isNotEmpty())Color(0xffc04835)else if(s.placed.any{s.rules.overlaps(p,it)})Color(0xffa96b1e)else Green
@@ -358,8 +389,8 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                         contentDescription="入口 $name";stateDescription=listOfNotNull(if(name==s.startGate)"起点"else null,if(name==s.finishGate)"终点"else null).joinToString("、").ifEmpty{"未指定"}
                     })
                 }
-                s.placed.firstOrNull{it.id==s.selected}?.takeIf{!s.running&&drag.piece==null}?.let{p->
-                    BoardPieceActions(s,p,unit)
+                s.placed.firstOrNull{it.id==s.selected}?.takeIf{!s.running&&(drag.piece==null||drag.fromControls)}?.let{p->
+                    BoardPieceActions(s,p,unit,drag)
                 }
             }
             }

@@ -21,7 +21,7 @@ rg -q 'OK \(3 tests\)' emulator-catalog-80.log
 "$adb_bin" -s "$serial" shell am instrument -w -r -e class com.zoomzhao.racingclub.EntryAndGoalsTest com.zoomzhao.racingclub.test/androidx.test.runner.AndroidJUnitRunner | tee emulator-entry-goals-v4.log
 rg -q 'OK \(2 tests\)' emulator-entry-goals-v4.log
 "$adb_bin" -s "$serial" shell am instrument -w -r -e class com.zoomzhao.racingclub.DragInteractionTest com.zoomzhao.racingclub.test/androidx.test.runner.AndroidJUnitRunner | tee emulator-drag.log
-rg -q 'OK \(4 tests\)' emulator-drag.log
+rg -q 'OK \(5 tests\)' emulator-drag.log
 "$adb_bin" -s "$serial" shell am instrument -w -r -e class com.zoomzhao.racingclub.RunAnimationTest com.zoomzhao.racingclub.test/androidx.test.runner.AndroidJUnitRunner | tee emulator-animation.log
 rg -q 'OK \(1 test\)' emulator-animation.log
 mkdir -p "$validation_dir"

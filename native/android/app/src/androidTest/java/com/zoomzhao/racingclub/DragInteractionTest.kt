@@ -53,7 +53,7 @@ class DragInteractionTest {
         val rect=Rect((b.left+(p.x+.35f)*u).toInt(),(b.top+(p.y+.35f)*u).toInt(),(b.left+(p.x+.35f+if(p.r%2==0)2 else 1)*u).toInt(),(b.top+(p.y+.35f+if(p.r%2==0)1 else 2)*u).toInt())
         val bar=node("拼板操作").visibleBounds
         assertTrue("Actions stay on board",b.contains(bar))
-        assertFalse("Actions do not cover selected tile",Rect.intersects(rect,bar))
+        if(Rect.intersects(rect,bar))assertTrue("Crowded actions stay within their owner",rect.contains(bar))
         val controls=listOf("逆时针旋转90度","顺时针旋转90度","移回").map{node(it).visibleBounds}
         for(r in controls){assertTrue("Contextual hit target stays on board: $bar, $r",b.contains(r));assertTrue(bar.contains(r.centerX(),r.centerY()));assertTrue(r.width()>=110&&r.height()>=110)}
         assertEquals(controls.map{it.centerX()}.sorted(),controls.map{it.centerX()})
@@ -212,6 +212,40 @@ class DragInteractionTest {
                 }
             }
         }}
+    }
+
+    @Test fun denseBoardSelectionRespondsOnPressAndToleratesFingerJitter() {
+        Configurator.getInstance().waitForIdleTimeout=100
+        val fixture=(0..3).flatMap{y->listOf(Placement(y*2+1,0,y,0),Placement(y*2+2,2,y,0))}+listOf(Placement(9,4,0,1),Placement(10,4,2,1))
+        val dir=File(ins.targetContext.getExternalFilesDir(null),"validation").apply{mkdirs()}
+        ActivityScenario.launch(MainActivity::class.java).use{scenario->
+            lateinit var s:GameState
+            scenario.onActivity{a->s=GameState(a,loadRules(a),LocalLeaderboard(a));s.start(s.rules.levels[75]);s.level=s.level.copy(sequence=(1..10).toList());s.placed=fixture;s.moves=0;s.select(1);a.setContent{MaterialTheme(typography=ClubTypography){RacingApp(s)}}}
+            node("棋盘")
+            val jitter=10*ins.targetContext.resources.displayMetrics.density
+            for(id in listOf(2,9,3,10,4,8,1,7,6,5)){
+                val p=fixture.first{it.id==id};val at=anchor(p.x+.5f,p.y+.5f)
+                down=SystemClock.uptimeMillis();event(MotionEvent.ACTION_DOWN,at);SystemClock.sleep(90)
+                scenario.onActivity{assertEquals("Select immediately on press: $id",id,s.selected);assertEquals(0,s.moves)}
+                val shifted=PointF(at.x+jitter,at.y);event(MotionEvent.ACTION_MOVE,shifted);SystemClock.sleep(50);event(MotionEvent.ACTION_UP,shifted);SystemClock.sleep(80)
+                scenario.onActivity{assertEquals(id,s.selected);assertEquals("Jitter must not move or rotate",fixture.associateBy{it.id},s.placed.associateBy{it.id});assertEquals(0,s.moves)}
+                if(id==9)assertTrue(device.takeScreenshot(File(dir,"68-dense-selection-vertical.png")))
+            }
+            assertTrue(device.takeScreenshot(File(dir,"69-dense-selection-horizontal.png")))
+            for(id in listOf(9,5)){
+                val at=center("拼板 $id");down=SystemClock.uptimeMillis();event(MotionEvent.ACTION_DOWN,at);SystemClock.sleep(90)
+                scenario.onActivity{assertEquals("Rack selection also responds on press",id,s.selected)}
+                val shifted=PointF(at.x+jitter,at.y);event(MotionEvent.ACTION_MOVE,shifted);event(MotionEvent.ACTION_UP,shifted);SystemClock.sleep(100)
+                scenario.onActivity{assertEquals(0,s.moves);assertTrue("Rack jitter is not an invalid drop",s.message.isEmpty());assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
+            }
+            // Dragging across an action face remains a move, not an accidental rotation.
+            val from=center("顺时针旋转90度");val u=node("棋盘").visibleBounds.width()/5.7f
+            val to=PointF(from.x+u,from.y);dragTo(from,to);event(MotionEvent.ACTION_UP,to);SystemClock.sleep(180)
+            scenario.onActivity{assertEquals(Placement(5,1,2,0),s.placed.last());assertEquals(1,s.moves)}
+            node("撤销").click();SystemClock.sleep(120)
+            scenario.onActivity{assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
+            File(dir,"selection-report.json").writeText("""{"passed":true,"checks":["fully occupied board","all ten pieces selectable on press","board and rack tolerate 10dp jitter without moving or rotating","toolbar avoids neighboring pieces","horizontal and vertical fallback preserve number","drag through action face moves without rotating","undo restores layout"]}""")
+        }
     }
 
 }

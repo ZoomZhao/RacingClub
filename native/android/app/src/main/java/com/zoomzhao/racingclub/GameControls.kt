@@ -2,6 +2,7 @@ package com.zoomzhao.racingclub
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.*
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Icon
@@ -14,6 +15,10 @@ import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.semantics.*
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.*
 import kotlin.math.*
 
@@ -28,22 +33,32 @@ internal fun Modifier.gameControlFace(pressed:Boolean=false)=drawBehind {
     drawRoundRect(Color.White.copy(alpha=.85f),face.topLeft+Offset(inset,inset),Size(face.width-2*inset,face.height-2*inset),CornerRadius(r-2*inset),style=Stroke(.6.dp.toPx()))
 }
 
-@Composable internal fun BoardPieceActions(s:GameState,piece:Placement,unit:Float) {
-    val anchor=pieceActionAnchor(piece,unit)
-    Box(Modifier.offset(anchor.left.dp,anchor.top.dp).size(140.dp,52.dp).semantics{contentDescription="拼板操作";stateDescription="${piece.id}号"}) {
-        Canvas(Modifier.fillMaxSize()){
+@Composable internal fun BoardPieceActions(s:GameState,piece:Placement,unit:Float,drag:BoardDrag) {
+    val anchor=pieceActionAnchor(piece,unit,s.placed)
+    val config=LocalViewConfiguration.current
+    val density=androidx.compose.ui.platform.LocalDensity.current.density
+    val controlsConfig=remember(config,density){object:androidx.compose.ui.platform.ViewConfiguration by config{override val touchSlop=max(config.touchSlop,12*density)}}
+    Box(Modifier.offset(anchor.left.dp,anchor.top.dp).size(anchor.width.dp,anchor.height.dp).graphicsLayer{alpha=if(drag.piece==null)1f else 0f}.semantics{contentDescription="拼板操作";stateDescription="${piece.id}号${if(anchor.inside)"，贴合当前拼板"else""}"}) {
+        if(!anchor.inside)Canvas(Modifier.fillMaxSize()){
             val tip=anchor.tipX.dp.toPx();val edge=if(anchor.below)8.dp.toPx()else 44.dp.toPx();val peak=if(anchor.below)0f else 52.dp.toPx()
             val path=Path().apply{moveTo(tip-6.dp.toPx(),edge);lineTo(tip,peak);lineTo(tip+6.dp.toPx(),edge);close()}
             drawPath(path,Color(0xfffff7e5));drawLine(Color(0xffbd8d56),Offset(tip-6.dp.toPx(),edge),Offset(tip,peak),1.dp.toPx());drawLine(Color(0xffbd8d56),Offset(tip,peak),Offset(tip+6.dp.toPx(),edge),1.dp.toPx())
         }
-        Row(Modifier.padding(top=if(anchor.below)8.dp else 0.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+        @Composable fun buttons(){
             for(action in listOf(-1,1,0)){
                 val interaction=remember{MutableInteractionSource()};val pressed by interaction.collectIsPressedAsState()
-                Box(Modifier.size(44.dp).gameControlFace(pressed).clip(RoundedCornerShape(7.dp)).clickable(enabled=!s.running,interactionSource=interaction,indication=null,role=Role.Button){if(action==0)s.remove()else s.rotate(action)}.semantics{contentDescription=when(action){-1->"逆时针旋转90度";1->"顺时针旋转90度";else->"移回"}},contentAlignment=Alignment.Center){
+                var origin by remember{mutableStateOf(Offset.Zero)}
+                Box(Modifier.size(anchor.button.dp).onGloballyPositioned{origin=it.positionInRoot()}.gameControlFace(pressed).clip(RoundedCornerShape(7.dp)).pointerInput(piece,s.running){
+                    detectDragGestures(onDragStart={at->val pointer=origin+at;drag.begin(s,piece,pointer,(pointer-drag.board.topLeft)/drag.unit-Offset(piece.x+.35f,piece.y+.35f),fromControl=true)},onDrag={change,delta->if(drag.piece!=null){change.consume();drag.pointer+=delta}},onDragEnd={drag.finish(s)},onDragCancel={drag.cancel()})
+                }.clickable(enabled=!s.running,interactionSource=interaction,indication=null,role=Role.Button){if(action==0)s.remove()else s.rotate(action)}.semantics{contentDescription=when(action){-1->"逆时针旋转90度";1->"顺时针旋转90度";else->"移回"}},contentAlignment=Alignment.Center){
                     if(action==0)Icon(Icons.Default.Unarchive,null,Modifier.size(24.dp),tint=Green)
                     else QuarterTurnGlyph(action)
                 }
             }
+        }
+        CompositionLocalProvider(LocalViewConfiguration provides controlsConfig){
+            if(anchor.vertical)Column(verticalArrangement=Arrangement.spacedBy(4.dp)){buttons()}
+            else Row(Modifier.padding(top=if(anchor.below)8.dp else 0.dp),horizontalArrangement=Arrangement.spacedBy(4.dp)){buttons()}
         }
     }
 }

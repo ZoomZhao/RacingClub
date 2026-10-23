@@ -47,16 +47,17 @@ private func timeString(_ seconds:Double)->String {let ms=Int(seconds*1000);retu
 @MainActor final class NativeDrag:ObservableObject {
  @Published var board=CGRect.zero
  @Published var piece:Placement?
+ @Published var fromControls=false
  @Published var pointer=CGPoint.zero
  private var grab=CGPoint.zero
  var liftOrigin:CGPoint {CGPoint(x:pointer.x-grab.x*unit,y:pointer.y-grab.y*unit)}
  var unit:CGFloat {board.width/5.7}
- func begin(_ game:Game,_ p:Placement,_ at:CGPoint,_ anchor:CGPoint?=nil){guard !game.running,unit>0 else{return};game.beginDrag();game.select(p.id);game.rotation=p.r;piece=p;pointer=at;let(w,h)=game.data.dimensions(p.r);grab=anchor ?? CGPoint(x:Double(w)/2,y:Double(h)/2)}
+ func begin(_ game:Game,_ p:Placement,_ at:CGPoint,_ anchor:CGPoint?=nil,controls:Bool=false){guard !game.running,unit>0 else{return};game.beginDrag();game.select(p.id);game.rotation=p.r;fromControls=controls;piece=p;pointer=at;let(w,h)=game.data.dimensions(p.r);grab=anchor ?? CGPoint(x:Double(w)/2,y:Double(h)/2)}
  var candidate:Placement? {guard let p=piece,unit>0 else{return nil};return Placement(id:p.id,x:Int(((pointer.x-board.minX)/unit-0.35-grab.x).rounded()),y:Int(((pointer.y-board.minY)/unit-0.35-grab.y).rounded()),r:p.r)}
  func problem(_ game:Game)->String {guard let p=candidate else{return ""};if !board.contains(pointer){return "拖入棋盘内放置"};let(w,h)=game.data.dimensions(p.r);if p.x<0 || p.y<0 || p.x+w>5 || p.y+h>4{return "超出棋盘边界"};return ""}
  func feedback(_ game:Game)->String {let error=problem(game);if !error.isEmpty{return error};guard let p=candidate else{return ""};let ids=game.placed.filter{game.data.overlaps(p,$0)}.map(\.id).sorted();return ids.isEmpty ? "":"将叠放在 \(ids.map(String.init).joined(separator:"、")) 号上方"}
- func cancel(_ game:Game){piece=nil;game.endDrag()}
- func finish(_ game:Game){defer{piece=nil;game.endDrag()};guard let p=candidate else{return};let error=problem(game);if error.isEmpty{if game.placed.first(where:{$0.id==p.id}) != p{game.rotation=p.r;game.place(p.x,p.y)}}else{game.message=error=="拖入棋盘内放置" ? "未放入棋盘，已保留原位":"\(error)，已保留原位"}}
+ func cancel(_ game:Game){piece=nil;fromControls=false;game.endDrag()}
+ func finish(_ game:Game){defer{piece=nil;fromControls=false;game.endDrag()};guard let p=candidate else{return};let error=problem(game);if error.isEmpty{if game.placed.first(where:{$0.id==p.id}) != p{game.rotation=p.r;game.place(p.x,p.y)}}else{game.message=error=="拖入棋盘内放置" ? "未放入棋盘，已保留原位":"\(error)，已保留原位"}}
 }
 private struct BoardFrameKey:PreferenceKey {static var defaultValue=CGRect.zero;static func reduce(value:inout CGRect,nextValue:()->CGRect){value=nextValue()}}
 struct ClubView:View {
@@ -157,30 +158,53 @@ private struct GameControlFace:View {
   c.stroke(Path(roundedRect:face.insetBy(dx:1,dy:1),cornerRadius:5),with:.color(.white.opacity(0.85)),lineWidth:0.6)
  }}
 }
+private struct NativeActionAnchor {
+ let left:CGFloat;let top:CGFloat;let tip:CGFloat;let below:Bool
+ var width:CGFloat=140;var height:CGFloat=52;var button:CGFloat=44;var vertical=false;var inside=false
+}
+private func nativeActionAnchor(_ p:Placement,_ u:CGFloat,_ all:[Placement])->NativeActionAnchor {
+ let w=p.r%2==0 ? 2:1,h=p.r%2==0 ? 1:2
+ let tile=CGRect(x:(CGFloat(p.x)+0.35)*u,y:(CGFloat(p.y)+0.35)*u,width:CGFloat(w)*u,height:CGFloat(h)*u)
+ let low=0.35*u+4,high=max(low,5.35*u-144)
+ let xs=[tile.midX-70,tile.minX,tile.maxX-140].map{min(high,max(low,$0))}
+ for(top,below)in [(tile.minY-60,false),(tile.maxY+8,true)]{for left in xs{
+  let box=CGRect(x:left,y:top,width:140,height:52)
+  if top<4 || box.maxY>4.7*u-4 || box.intersects(tile){continue}
+  let blocked=all.contains{o in
+   if o.id==p.id{return false};let ow=o.r%2==0 ? 2:1,oh=o.r%2==0 ? 1:2
+   return box.insetBy(dx:-2,dy:-2).intersects(CGRect(x:(CGFloat(o.x)+0.35)*u,y:(CGFloat(o.y)+0.35)*u,width:CGFloat(ow)*u,height:CGFloat(oh)*u))
+  }
+  if !blocked{return NativeActionAnchor(left:left,top:top,tip:min(130,max(10,tile.midX-left)),below:below)}
+ }}
+ let button=max(24,min(44,(2*u-8)/3,0.64*u-5)),vertical=h>w
+ let width=vertical ? button:button*3+8,height=vertical ? button*3+8:button
+ return NativeActionAnchor(left:vertical ? tile.maxX-3-button:tile.midX-width/2,top:vertical ? tile.midY-height/2:tile.maxY-3-button,tip:0,below:false,width:width,height:height,button:button,vertical:vertical,inside:true)
+}
 private struct NativeBoardPieceActions:View {
+ @GestureState private var touching=false
  @ObservedObject var game:Game
+ @ObservedObject var drag:NativeDrag
  let piece:Placement
  let unit:CGFloat
  var body:some View {
-  let(w,h)=game.data.dimensions(piece.r),width:CGFloat=140,height:CGFloat=52
-  let center=(CGFloat(piece.x)+0.35+CGFloat(w)/2)*unit
-  let sideMargin=0.35*unit+4
-  let left=min(max(sideMargin,center-width/2),max(sideMargin,5.35*unit-width-4))
-  let above=(CGFloat(piece.y)+0.35)*unit-8-height,below=above<4
-  let top=min(max(4,below ? (CGFloat(piece.y)+0.35+CGFloat(h))*unit+8:above),max(4,4.7*unit-height-4))
-  let tip=min(width-10,max(10,center-left)),edge:CGFloat=below ? 8:44,peak:CGFloat=below ? 0:52
+  let a=nativeActionAnchor(piece,unit,game.placed),edge:CGFloat=a.below ? 8:44,peak:CGFloat=a.below ? 0:52
   return ZStack(alignment:.topLeading){
-   Path{p in p.move(to:CGPoint(x:tip-6,y:edge));p.addLine(to:CGPoint(x:tip,y:peak));p.addLine(to:CGPoint(x:tip+6,y:edge))}.stroke(ink("#bd8d56"),lineWidth:1)
-   HStack(spacing:4){ForEach([-1,1,0],id:\.self){action in
-    Button{if action==0{game.remove()}else{game.rotate(action)}}label:{
-     Group{if action==0{Image(systemName:"square.and.arrow.up").font(.system(size:23,weight:.semibold))}else{VStack(spacing:0){Image(systemName:action<0 ? "arrow.counterclockwise":"arrow.clockwise").font(.system(size:19,weight:.semibold));Text("90°").font(.system(size:10,weight:.bold))}}}.foregroundStyle(forest).frame(width:44,height:44)
-    }.buttonStyle(GameControlStyle()).accessibilityLabel(action==0 ? "移回":action<0 ? "逆时针旋转90度":"顺时针旋转90度")
-   }}.offset(y:below ? 8:0)
-  }.frame(width:width,height:height,alignment:.topLeading).accessibilityElement(children:.contain).accessibilityLabel("拼板操作").accessibilityValue("\(piece.id)号").offset(x:left,y:top)
+   if !a.inside{Path{p in p.move(to:CGPoint(x:a.tip-6,y:edge));p.addLine(to:CGPoint(x:a.tip,y:peak));p.addLine(to:CGPoint(x:a.tip+6,y:edge))}.stroke(ink("#bd8d56"),lineWidth:1)}
+   Group{if a.vertical{VStack(spacing:4){buttons(a.button)}}else{HStack(spacing:4){buttons(a.button)}}}.offset(y:a.below ? 8:0)
+  }.frame(width:a.width,height:a.height,alignment:.topLeading).accessibilityElement(children:.contain).accessibilityLabel("拼板操作").accessibilityValue("\(piece.id)号").offset(x:a.left,y:a.top).opacity(drag.piece==nil ? 1:0).onChange(of:touching){_,active in if !active,drag.fromControls{drag.cancel(game)}}
  }
+ private func buttons(_ size:CGFloat)->some View {ForEach([-1,1,0],id:\.self){action in
+  Button{if action==0{game.remove()}else{game.rotate(action)}}label:{
+   Group{if action==0{Image(systemName:"square.and.arrow.up").font(.system(size:23,weight:.semibold))}else{VStack(spacing:0){Image(systemName:action<0 ? "arrow.counterclockwise":"arrow.clockwise").font(.system(size:19,weight:.semibold));Text("90°").font(.system(size:10,weight:.bold))}}}.foregroundStyle(forest).frame(width:size,height:size)
+  }.buttonStyle(GameControlStyle()).accessibilityLabel(action==0 ? "移回":action<0 ? "逆时针旋转90度":"顺时针旋转90度").highPriorityGesture(DragGesture(minimumDistance:12,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
+   if drag.piece==nil{let local=CGPoint(x:(value.startLocation.x-drag.board.minX)/drag.unit-0.35-CGFloat(piece.x),y:(value.startLocation.y-drag.board.minY)/drag.unit-0.35-CGFloat(piece.y));drag.begin(game,piece,value.startLocation,local,controls:true)}
+   drag.pointer=value.location
+  }.onEnded{_ in drag.finish(game)})
+ }}
 }
 private struct NativeTileRack:View {
  @GestureState private var touching=false
+ @State private var pressedId:Int?
  @ObservedObject var game:Game
  @ObservedObject var drag:NativeDrag
  var body:some View {GeometryReader{geo in
@@ -197,10 +221,12 @@ private struct NativeTileRack:View {
       Text(covered ? "被遮挡":"已放置").font(.system(size:8,weight:.bold)).foregroundStyle(.white).padding(.horizontal,3).padding(.vertical,2).background(covered ? ink("#a96b1e"):forest,in:RoundedRectangle(cornerRadius:3)).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.bottom)
      }
     }.padding(3).frame(width:cardWidth,height:height).background(game.selected==id ? ink("#fff1d2"):placed != nil ? ink("#e6eee3"):ink("#fcf3e2"),in:RoundedRectangle(cornerRadius:8)).overlay{RoundedRectangle(cornerRadius:8).stroke(game.selected==id || placed != nil ? forest:ink("#ebd9bc"),lineWidth:game.selected==id ? 2:1)}}.buttonStyle(.plain).disabled(game.running)
-    .simultaneousGesture(DragGesture(minimumDistance:6,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
-     if drag.piece==nil{let p=game.placed.first{$0.id==id} ?? Placement(id:id,x:0,y:0,r:game.selected==id ? game.rotation:0);drag.begin(game,p,value.startLocation)}
-     drag.pointer=value.location
-    }.onEnded{_ in drag.finish(game)}).onChange(of:touching){_,active in if !active,drag.piece != nil{drag.cancel(game)}}.accessibilityLabel("拼板 \(id)").accessibilityValue(placed == nil ? "待放置":covered ? "下层被遮挡，点按置顶":"已放置")
+    .simultaneousGesture(DragGesture(minimumDistance:0,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
+     guard !game.running else{return}
+     if pressedId==nil{pressedId=id;game.beginDrag();game.select(id)}
+     if drag.piece==nil,hypot(value.translation.width,value.translation.height)>12{let p=game.placed.first{$0.id==id} ?? Placement(id:id,x:0,y:0,r:game.rotation);drag.begin(game,p,value.startLocation)}
+     if drag.piece != nil{drag.pointer=value.location}
+    }.onEnded{_ in if drag.piece != nil{drag.finish(game)}else{game.endDrag()};pressedId=nil}).onChange(of:touching){_,active in if !active,pressedId != nil{drag.cancel(game);pressedId=nil}}.accessibilityLabel("拼板 \(id)").accessibilityValue(placed == nil ? "待放置":covered ? "下层被遮挡，点按置顶":"已放置")
    };if row.count<columns{ForEach(0..<(columns-row.count),id:\.self){_ in Color.clear.frame(width:cardWidth,height:height)}}}
   }}
  }}
@@ -298,6 +324,9 @@ private func drawEntry(_ c:inout GraphicsContext,_ name:String,_ p:[Double],_ u:
 }
 struct NativeBoard:View {
  @GestureState private var touching=false
+ @State private var pressActive=false
+ @State private var pressMoved=false
+ @State private var pressPiece:Placement?
  @ObservedObject var game:Game
  @ObservedObject var drag:NativeDrag
  var body:some View {
@@ -325,15 +354,22 @@ struct NativeBoard:View {
        }
        if let p=drag.candidate{let(tw,th)=game.data.dimensions(p.r);let rect=CGRect(x:pad+CGFloat(p.x)*u,y:pad+CGFloat(p.y)*u,width:CGFloat(tw)*u,height:CGFloat(th)*u),color = !drag.problem(game).isEmpty ? ink("#c04835"):game.placed.contains{game.data.overlaps(p,$0)} ? ink("#a96b1e"):forest;var preview=c;preview.clip(to:Path(CGRect(x:pad,y:pad,width:5*u,height:4*u)));preview.fill(Path(roundedRect:rect,cornerRadius:6),with:.color(color.opacity(0.28)));preview.stroke(Path(roundedRect:rect,cornerRadius:6),with:.color(color),lineWidth:3)}
        for(name,p)in game.data.gates{drawEntry(&c,name,p,u,name==game.startGate,name==game.finishGate)}
-      }.contentShape(Rectangle()).simultaneousGesture(SpatialTapGesture().onEnded{tap in
-       guard !game.running else{return};let x=Int(floor((tap.location.x-pad)/u)),y=Int(floor((tap.location.y-pad)/u))
-       guard(0..<5).contains(x),(0..<4).contains(y)else{return}
-       if let p=game.data.hit(game.placed,x,y){game.select(p.id)}else{game.place(x,y)}
-      }).gesture(DragGesture(minimumDistance:6,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
+      }.contentShape(Rectangle()).gesture(DragGesture(minimumDistance:0,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
        guard !game.running else{return}
-       if drag.piece==nil{let at=CGPoint(x:value.startLocation.x-drag.board.minX,y:value.startLocation.y-drag.board.minY),x=Int(floor(at.x/u-0.35)),y=Int(floor(at.y/u-0.35));if let p=game.data.hit(game.placed,x,y){drag.begin(game,p,value.startLocation,CGPoint(x:at.x/u-0.35-CGFloat(p.x),y:at.y/u-0.35-CGFloat(p.y)))}}
-       drag.pointer=value.location
-      }.onEnded{_ in drag.finish(game)}).onChange(of:touching){_,active in if !active,drag.piece != nil{drag.cancel(game)}}
+       let at=CGPoint(x:value.startLocation.x-drag.board.minX,y:value.startLocation.y-drag.board.minY)
+       let x=Int(floor(at.x/u-0.35)),y=Int(floor(at.y/u-0.35))
+       if !pressActive{pressActive=true;pressMoved=false;game.beginDrag();pressPiece=game.data.hit(game.placed,x,y);if let p=pressPiece{game.select(p.id)}}
+       if hypot(value.translation.width,value.translation.height)>12{pressMoved=true}
+       if pressMoved,drag.piece==nil,let p=pressPiece{drag.begin(game,p,value.startLocation,CGPoint(x:at.x/u-0.35-CGFloat(p.x),y:at.y/u-0.35-CGFloat(p.y)))}
+       if drag.piece != nil{drag.pointer=value.location}
+      }.onEnded{value in
+       if drag.piece != nil{drag.finish(game)}else{
+        let x=Int(floor((value.startLocation.x-drag.board.minX)/u-0.35)),y=Int(floor((value.startLocation.y-drag.board.minY)/u-0.35))
+        if !pressMoved,pressPiece==nil,(0..<5).contains(x),(0..<4).contains(y){game.place(x,y)}
+        game.endDrag()
+       }
+       pressActive=false;pressPiece=nil;pressMoved=false
+      }).onChange(of:touching){_,active in if !active,pressActive{drag.cancel(game);pressActive=false;pressPiece=nil;pressMoved=false}}
       if !game.startGate.isEmpty{
        let pos=horsePosition,dir=horseDirection
        Image("horse-pawn").resizable().scaledToFit().frame(width:u*0.72,height:u*0.68).offset(x:pad+(pos[0]+dir[0]*0.36)*u-u*0.36,y:pad+(pos[1]+dir[1]*0.36)*u-u*0.34-jumpHeight).allowsHitTesting(false)
@@ -342,7 +378,7 @@ struct NativeBoard:View {
        let center=entryCenter(game.data.gates[letter]!)
        Button{if game.level.solveEndpoints && !game.running{game.show("gate:\(letter)")}}label:{Color.clear.frame(width:u*0.70,height:u*0.70).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel("入口 \(letter)").offset(x:(center[0]-0.35)*u,y:(center[1]-0.35)*u)
       }
-      if !game.running,drag.piece==nil,let piece=game.placed.first(where:{$0.id==game.selected}){NativeBoardPieceActions(game:game,piece:piece,unit:u)}
+      if !game.running,(drag.piece==nil || drag.fromControls),let piece=game.placed.first(where:{$0.id==game.selected}){NativeBoardPieceActions(game:game,drag:drag,piece:piece,unit:u)}
      }.frame(width:w,height:h).background{GeometryReader{frame in Color.clear.preference(key:BoardFrameKey.self,value:frame.frame(in:.named("game")))}}.onPreferenceChange(BoardFrameKey.self){drag.board=$0}
     }.frame(width:u*6.3,height:u*5.3)
    }.frame(maxWidth:.infinity,maxHeight:.infinity)

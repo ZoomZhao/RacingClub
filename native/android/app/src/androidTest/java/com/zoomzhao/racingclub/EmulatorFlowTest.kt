@@ -145,7 +145,8 @@ class EmulatorFlowTest {
             tap("撤销");expectBoard("1号，第2行第2列，90度")
 
             tap("拼板 5");cell(0,3);expectBoard("5号，第4行第1列，0度")
-            cell(0,3);tap("顺时针旋转90度");expectBoard("5号，第3行第1列，90度")
+            // This tile is already selected; its compact controls can occupy its face.
+            tap("顺时针旋转90度");expectBoard("5号，第3行第1列，90度")
             tap("逆时针旋转90度");expectBoard("5号，第3行第1列，0度");capture("06-native-edge-rotation")
             cell(3,3);expectBoard("5号，第4行第4列，0度")
             cell(0,3);expectBoard("5号，第4行第1列，0度")

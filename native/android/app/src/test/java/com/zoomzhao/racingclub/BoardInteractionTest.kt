@@ -42,4 +42,21 @@ class BoardInteractionTest {
             }
         }
     }
+    @Test fun crowdedBoardKeepsActionsOnTheirOwnerAndLeavesEveryNeighborSelectable() {
+        val dense=(0..3).flatMap{y->listOf(Placement(y*2+1,0,y,0),Placement(y*2+2,2,y,0))}+listOf(Placement(9,4,0,1),Placement(10,4,2,1))
+        fun rect(p:Placement,u:Float):androidx.compose.ui.geometry.Rect {val(w,h)=rules.dimensions(p.r);return androidx.compose.ui.geometry.Rect((p.x+.35f)*u,(p.y+.35f)*u,(p.x+.35f+w)*u,(p.y+.35f+h)*u)}
+        for(u in listOf(52f,56f,74f,100f))for(p in dense){
+            val a=pieceActionAnchor(p,u,dense);val owner=rect(p,u)
+            val box=androidx.compose.ui.geometry.Rect(a.left,a.top,a.left+a.width,a.top+a.height)
+            assertTrue("Full board uses owner's surface",a.inside)
+            assertTrue(box.left>=owner.left&&box.top>=owner.top&&box.right<=owner.right&&box.bottom<=owner.bottom)
+            assertTrue(a.button>=24f)
+            for(other in dense.filter{it.id!=p.id})assertFalse("Never cover another tile",box.overlaps(rect(other,u)))
+            val number=androidx.compose.ui.geometry.Rect(owner.left+.04f*u,owner.top+.04f*u,owner.left+.36f*u,owner.top+.36f*u)
+            assertFalse("Owner number stays visible",box.overlaps(number))
+        }
+        val p=Placement(1,1,1,0);val above=Placement(5,1,0,0)
+        val free=pieceActionAnchor(p,74f,listOf(p,above))
+        assertFalse(free.inside);assertTrue(free.below)
+    }
 }

@@ -6,13 +6,20 @@
     "Right rack thumbnails remain portrait for every piece and selection",
     "Goal faces contain only their digits; progress ring and glow render outside with extra space and raised draw order"
   ],
-  "android_unit_tests": 15,
-  "android_ui_regression_cases": 10,
+  "android_unit_tests": 16,
+  "android_ui_regression_cases": 14,
   "android_ui_evidence": {
     "device_tests": "output/visual-013/device-tests.log (9 passed, initial skip node lookup used a stale UIAutomator cache)",
     "skip_recheck": "output/visual-013/run-feedback-test.log (passed after using a fresh native node for the touch target)"
   },
   "release_ui": "Signed minified APK upgraded on API 35 and passed external UI flow",
   "ios": "Native arm64 app compiled; device UI not tested",
-  "design": "Existing native palette and materials reused; no new raster asset required"
+  "design": "Existing native palette and materials reused; no new raster asset required",
+  "selection_update": "native-selection-013.json",
+  "selection_evidence": {
+    "geometry": "full-board toolbar placement across 52/56/74/100dp cells; owner number visible; other pieces uncovered",
+    "device": "output/selection-013/device-tests.log (13 passed; one old flow tap fell on the newly relocated owner control)",
+    "flow_recheck": "output/selection-013/flow-test.log (2 passed after targeting the rotation button directly on the already selected tile)",
+    "release": "output/selection-013/release-ui/release-ui-report.json (passed)"
+  }
 }
