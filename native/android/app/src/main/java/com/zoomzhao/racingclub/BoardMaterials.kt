@@ -59,7 +59,7 @@ private fun DrawScope.texture(bitmap:ImageBitmap,rect:Rect,radius:Float) {
     }
 }
 
-internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m:BoardMaterials,selected:Boolean=false,number:Boolean=false,numberAvoid:List<Rect> = emptyList(),minimumNumberFont:Float=0f) {
+internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m:BoardMaterials,selected:Boolean=false,number:Boolean=false,numberAvoid:List<Rect> = emptyList(),minimumNumberFont:Float=0f,numberBounds:Rect?=null) {
     if(u<=0f||!u.isFinite())return
     val(w,h)=rules.dimensions(p.r);val top=origin+Offset(p.x*u,p.y*u)
     val face=Rect(top+Offset(u*.025f,u*.025f),Size(w*u-u*.05f,h*u-u*.055f))
@@ -100,7 +100,7 @@ internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m
         drawRoundRect(Green,face.topLeft-Offset(u*.012f,u*.012f),face.size+Size(u*.024f,u*.024f),CornerRadius(radius),style=Stroke(u*.027f))
     }
     if(number) {
-        val label=roadNumberLayout(rules,p,numberAvoid,minimumNumberFont/u)
+        val label=roadNumberLayout(rules,p,numberAvoid,minimumNumberFont/u,numberBounds)
         val center=top+Offset(label.center.x*u,label.center.y*u)
         val rect=Rect(center-Offset(label.width*u/2,label.height*u/2),Size(label.width*u,label.height*u))
         val corner=CornerRadius(label.height*u*.20f)

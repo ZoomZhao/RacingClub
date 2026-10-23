@@ -18,6 +18,26 @@ class SelectionAndDragTest {
     }
     private fun tapCell(x:Int,y:Int){val hit=s.rules.hit(s.placed,x,y);val was=hit!=null&&s.pressTile(hit.id);s.releaseBoardTap(hit,was,x,y,false)}
 
+    @Test fun firstTapTurnsAtTheRightEdgeAndNudgesInsideTheBottomCornerAsOneUndoableMove() {
+        s.start(h.level(3));s.select(1);tapCell(4,1)
+        assertEquals(listOf(Placement(1,4,1,1)),s.placed);assertEquals(1,s.rotation);assertEquals(1,s.moves);assertEquals("",s.message)
+        s.undo();assertTrue(s.placed.isEmpty());assertEquals(0,s.moves)
+        s.select(1);tapCell(4,3)
+        assertEquals(listOf(Placement(1,4,2,1)),s.placed);assertEquals(1,s.moves)
+        s.undo();s.select(5);s.rotate(1);tapCell(3,3)
+        assertEquals(listOf(Placement(5,3,3,2)),s.placed);assertEquals(1,s.moves)
+        s.undo();s.select(6);tapCell(2,1)
+        assertEquals(listOf(Placement(6,2,1,0)),s.placed)
+        // Explicit drag drops continue to reject an invalid position, keeping the current tile.
+        val before=s.placed;val moves=s.moves
+        assertFalse(s.placePiece(Placement(6,4,0,0)));assertEquals(before,s.placed);assertEquals(moves,s.moves)
+        for(r in 0..3)for(x in 0..4)for(y in 0..3){
+            val p=Placement(7,x,y,r);val placed=s.rules.initialPlacement(p)
+            assertTrue(s.rules.fits(placed));assertEquals(if(s.rules.fits(p))r else(r+1)%4,placed.r)
+            if(s.rules.fits(p))assertEquals(p,placed)
+        }
+    }
+
     @Test fun tappingTheSelectedTileOrFrameDismissesWithoutMoving() {
         s.start(h.level(3));s.select(1);s.place(1,1);val moves=s.moves
         tapCell(1,1);assertNull("Second tap dismisses",s.selected);assertEquals(moves,s.moves)

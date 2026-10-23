@@ -28,7 +28,8 @@
 
 - 实际道路允许重复跨障、无障碍支路、7 号双路，以及 8–10 号的合法平顺分岔；不会把任意两个分支误连，也不会按访问拼板次数计障碍。
 - 长指令优先两行折返、按箭头阅读，全部目标始终可见，没有滚动或省略；跑动时按真实跨障进度高亮。托盘只展示不重复的实体拼板，超过 5 块时用等宽两排展示，拼板缩略图统一以竖向展示；卡片以底色、边框、勾选与“已放置”标签共同表示棋盘中状态，被遮挡时改为琥珀色标签。
-- 拼板编号融入道路：浅奶油小底、深绿粗体、障碍色短线，替代角落色牌；旋转时文字正向，满盘避开选中操作，托盘最低 11dp 字号。[设计与原生截图](design/road-number/README.md)。
+- 拼板编号紧靠本块栏杆：浅奶油小底、深绿粗体、障碍色短线，替代角落色牌；仅在带障碍的道路附近定位，不落到其他支路上。旋转时文字正向，满盘避开选中操作，托盘最低 11dp 字号。[设计与原生截图](design/road-number/README.md)。
+- 操作时棋盘不显示马儿，通关跑动时才出现。新增拼板点最右列时若当前方向放不下，会先转 90° 并贴边放入，右下角自动上移一格；整体计为一步并可撤销。拖拽仍按预览方向和位置放入。
 - 第 65–80 关开局不预设马和门的位置。直接点入口字母选择设为起点或终点，也保留底部紧凑状态入口，可选择相同字母；完整路线与所选端点都正确才自动跑动。
 - 第 1–76 关提示来自核对后的解答照片；77–80 没有解答照片，其提示摆法由真实端口和已确认题面计算，并通过独立的参考路线模型复核。计算摆法保存在 `shared/generated-hints.json`，没有回填或冒充原始照片资料。
 - 本机排行榜每关保留前 10 名，完成后面的关卡不会挤掉前面关卡的最佳成绩。
@@ -36,7 +37,7 @@
 ## Android
 
 - 工程：`native/android/`，可直接用 Android Studio 打开。
-- Release 安装包：`output/RacingClub-Android-release.apk`，固定发布签名，0.1.5（versionCode 6），Android 8.0 / API 26 起；关闭 debuggable，启用 R8 与资源压缩。
+- Release 安装包：`output/RacingClub-Android-release.apk`，固定发布签名，0.1.6（versionCode 7），Android 8.0 / API 26 起；关闭 debuggable，启用 R8 与资源压缩。
 - 本次使用 JDK 21、Gradle 8.14.3、SDK 36 构建；依赖和 Wrapper 版本已固定。
 
 ```sh
@@ -44,7 +45,7 @@ cd native/android
 ./gradlew :app:assembleRelease :app:testReleaseUnitTest
 ```
 
-需配置本机 `JAVA_HOME` 与 Android SDK。Release 构建需要下文签名配置，APK 位于 `app/build/outputs/apk/release/app-release.apk`。开发调试仍可使用 `:app:assembleDebug`。已在独立的 `RacingClub_API35` 模拟器（Android 15 / API 35，arm64，1920 × 1080 横屏）验证 80 关的原生规则、真实端口与动画端点。原有选中旋转、撤销、越界保留原位、03/04 自动跑动流程通过；新增 80 关导航、两排九块托盘、完整折行目标、65+ 字母入口的起终点选择与恢复、80 关完整自动跑动和每关成绩保留检查。当前 22 项 Android 集成/界面用例与 39 项 Kotlin 单元测试通过，包含全 80 关目标完整可见、六个入口坐标不偏移，以及 620dp/1.35 倍字号检查。新增 124 组十块堆叠时的合法位置/双向旋转检查，确保旋转不丢拼板；跨障动效、跳过结算及不重复记分已验证。签名压缩 Release 另在独立 API 35 模拟器覆盖安装并通过外部 UI 检查。设备范围仍为这些模拟器，尚未进行实体手机适配。
+需配置本机 `JAVA_HOME` 与 Android SDK。Release 构建需要下文签名配置，APK 位于 `app/build/outputs/apk/release/app-release.apk`。开发调试仍可使用 `:app:assembleDebug`。已在独立的 `RacingClub_API35` 模拟器（Android 15 / API 35，arm64，1920 × 1080 横屏）验证 80 关的原生规则、真实端口与动画端点。原有选中旋转、撤销、越界保留原位、03/04 自动跑动流程通过；新增 80 关导航、两排九块托盘、完整折行目标、65+ 字母入口的起终点选择与恢复、80 关完整自动跑动和每关成绩保留检查。当前 23 项 Android 集成/界面用例与 40 项 Kotlin 单元测试通过，包含全 80 关目标完整可见、六个入口坐标不偏移，以及 620dp/1.35 倍字号检查。新增 124 组十块堆叠时的合法位置/双向旋转检查，确保旋转不丢拼板；跨障动效、跳过结算及不重复记分已验证。签名压缩 Release 另在独立 API 35 模拟器覆盖安装并通过外部 UI 检查。设备范围仍为这些模拟器，尚未进行实体手机适配。
 
 本机专用 AVD 已设为硬件图形模式；启动命令为 `~/Library/Android/sdk/emulator/emulator -avd RacingClub_API35 -gpu host -feature -Vulkan -no-snapshot`。默认软件图形模式在此机明显变慢，应使用本次验证的 host GPU 配置。
 
@@ -72,7 +73,7 @@ GitHub Secrets 已配置：`ANDROID_RELEASE_KEYSTORE_BASE64`、`ANDROID_RELEASE_
 - 部署目标：iOS 17，横屏，支持 iPhone 与 iPad。
 - 原生 arm64 编译产物：`native/ios/build/unsigned/RacingClub.app`。
 
-iOS 已接入同源马场背景、木纹/沙地、条纹障碍、六个围栏开口和八向马，使用 SwiftUI / Canvas 原生绘制。版本为 0.1.5（build 6），Release 启用编译优化。命令行可用 iOS SDK 完成全部源码编译、链接与资源打包，生成未签名 `.app`；Xcode Release 的编译/链接与资源复制已核对，本机 actool 图标步骤仍受缺少模拟器运行时限制。
+iOS 已接入同源马场背景、木纹/沙地、条纹障碍、六个围栏开口和八向马，使用 SwiftUI / Canvas 原生绘制。版本为 0.1.6（build 7），Release 启用编译优化。命令行可用 iOS SDK 完成全部源码编译、链接与资源打包，生成未签名 `.app`；Xcode Release 的编译/链接与资源复制已核对，本机 actool 图标步骤仍受缺少模拟器运行时限制。
 
 ```sh
 sh tools/verify-swift-core.sh
@@ -108,7 +109,7 @@ Android 的 `GameSession.kt` 与 iOS 的 `GameSession.swift` 分别持有对局�
 ## 测试与设计
 
 - `npm test`：26 项 JavaScript 规则、动画端点、关卡资料、弹窗计时/坏存档与静态文件边界检查。
-- `:app:testDebugUnitTest` / `:app:testReleaseUnitTest`：39 项 Kotlin 单元测试，包含真实 80 关正反例、共享会话场景、存档/计时/恢复、选中/拖动事务、目标换行、配色和入口坐标。
+- `:app:testDebugUnitTest` / `:app:testReleaseUnitTest`：40 项 Kotlin 单元测试，包含真实 80 关正反例、共享会话场景、存档/计时/恢复、选中/拖动事务、目标换行、配色和入口坐标。
 - `EmulatorFlowTest`：2 项 Android UI Automator 流程测试，使用真实点击和墙钟动画；两关各采样 3 个不同的马儿位置与朝向，并验证计时冻结。另有 1 项方向素材与四边门预览，以及 `CatalogIntegrationTest` 的 3 项 80 关规则、完整操作和排行榜测试。`EntryAndGoalsTest` 的 2 项检查覆盖全部 80 关目标可见、窄屏大字号、六个同位入口的稳定坐标。
 - `DragInteractionTest`：8 项原生拖拽、堆叠、置顶、边缘旋转、保存恢复与旋转不丢失检查；`RunAnimationTest` 验证真实跨障动效与跳过后时间、步数和单次成绩保持。报告见 [`docs/validation/native-stacking-validation.json`](docs/validation/native-stacking-validation.json)。
 - `LifecycleRegressionTest`：4 项真实 Activity 重建、后台、弹窗与单次结算测试；`AccessibilityBoardTest` 检查拼板读屏选择、旋转/移回动作以及真实触摸穿透。

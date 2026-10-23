@@ -23,7 +23,7 @@ private func texture(_ c:GraphicsContext,_ image:GraphicsContext.ResolvedImage?,
 private func vertical(_ colors:[Color],_ r:CGRect)->GraphicsContext.Shading {.linearGradient(Gradient(colors:colors),startPoint:CGPoint(x:r.midX,y:r.minY),endPoint:CGPoint(x:r.midX,y:r.maxY))}
 private func line(_ c:GraphicsContext,_ a:CGPoint,_ b:CGPoint,_ color:Color,_ width:CGFloat,_ cap:CGLineCap = .butt){var p=Path();p.move(to:a);p.addLine(to:b);c.stroke(p,with:.color(color),style:StrokeStyle(lineWidth:width,lineCap:cap))}
 
-func drawTile(_ c:GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ origin:CGPoint,_ tex:BoardTextures,selected:Bool=false,number:Bool=false,numberAvoid:[CGRect]=[],minimumNumberFont:Double=0){
+func drawTile(_ c:GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ origin:CGPoint,_ tex:BoardTextures,selected:Bool=false,number:Bool=false,numberAvoid:[CGRect]=[],minimumNumberFont:Double=0,numberBounds:CGRect?=nil){
  guard u>0 && u.isFinite else{return}
  let(w,h)=data.dimensions(p.r),top=CGPoint(x:origin.x+CGFloat(p.x)*u,y:origin.y+CGFloat(p.y)*u)
  let face=CGRect(x:top.x+u*0.025,y:top.y+u*0.025,width:CGFloat(w)*u-u*0.05,height:CGFloat(h)*u-u*0.055),radius=u*0.07
@@ -58,7 +58,7 @@ func drawTile(_ c:GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ or
   c.stroke(rounded(ring,radius),with:.color(forest),lineWidth:u*0.027)
  }
  if number{
-  let label=roadNumberLayout(data,p,avoiding:numberAvoid,minimumFont:minimumNumberFont/Double(u))
+  let label=roadNumberLayout(data,p,avoiding:numberAvoid,minimumFont:minimumNumberFont/Double(u),available:numberBounds)
   let center=CGPoint(x:top.x+label.center[0]*u,y:top.y+label.center[1]*u)
   let rect=CGRect(x:center.x-label.width*u/2,y:center.y-label.height*u/2,width:label.width*u,height:label.height*u)
   c.fill(rounded(rect,label.height*u*0.20),with:.color(ink(Design.roadNumberFace)))

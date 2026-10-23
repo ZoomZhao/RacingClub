@@ -258,7 +258,9 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                             }.padding(3.dp),contentAlignment=Alignment.Center) {
                                 Canvas(Modifier.fillMaxSize().padding(top=3.dp,bottom=if(placed!=null)18.dp else 2.dp)){
                                     val r=1;val(w,h)=s.rules.dimensions(r);val u=min(size.width/w,size.height/h)
-                                    paintTile(s.rules,Placement(id,0,0,r),u,Offset((size.width-w*u)/2,(size.height-h*u)/2),materials,selected=active,number=true,minimumNumberFont=11.dp.toPx())
+                                    val origin=Offset((size.width-w*u)/2,(size.height-h*u)/2)
+                                    val numberBounds=if(u>0f)Rect(-origin.x/u+.04f,-origin.y/u+.04f,(size.width-origin.x)/u-.04f,(size.height-origin.y)/u-.04f)else null
+                                    paintTile(s.rules,Placement(id,0,0,r),u,origin,materials,selected=active,number=true,minimumNumberFont=11.dp.toPx(),numberBounds=numberBounds)
                                 }
                                 if(covered)Icon(Icons.Default.Layers,null,Modifier.size(13.dp).align(Alignment.TopEnd),tint=Color(0xffa96b1e))
                                 else if(placed!=null)Icon(Icons.Default.CheckCircle,null,Modifier.size(12.dp).align(Alignment.TopEnd),tint=Green)
@@ -420,7 +422,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 val body=Point(raw.x+direction.x*.36f,raw.y+direction.y*.36f)
                 val road=step?.let{s.rules.road(it)};val along=if(step?.from==road?.from)cursor%1 else 1-cursor%1
                 val jump=if(s.running&&step?.jump!=null)sin(PI.toFloat()*max(0f,1-abs(along-(road?.jumpAt?:.5f))*8))*10 else 0f
-                if(s.startGate.isNotEmpty()){
+                if(s.running&&step!=null){
                     Canvas(Modifier.offset((pad+body.x*unit-unit*.20f).dp,(pad+body.y*unit+unit*.11f).dp).size((unit*.40f).dp,(unit*.10f).dp)){drawOval(Brown.copy(alpha=if(jump>0).12f else .23f))}
                     Canvas(Modifier.offset((pad+body.x*unit-unit*.36f).dp,(pad+body.y*unit-unit*.34f-jump).dp).size((unit*.72f).dp,(unit*.68f).dp).semantics{contentDescription="马儿";stateDescription="朝向${heading.label}${if(s.running)"，跑动中"else""}"}){paintSprite(sprites.horses.getValue(heading),Rect(Offset.Zero,size))}
                 }

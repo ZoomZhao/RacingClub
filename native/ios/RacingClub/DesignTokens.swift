@@ -32,34 +32,51 @@ enum Design {
  }
 }
 
-/// Upright road inlay. Coordinates are local to the rotated tile, in board cells.
+/// Upright obstacle label. Coordinates are local to the rotated tile, in board cells.
 struct RoadNumberLayout {
  let center:[Double];let width:Double;let height:Double;let font:Double
  var bounds:CGRect {CGRect(x:center[0]-width/2,y:center[1]-height/2,width:width,height:height)}
 }
-func roadNumberLayout(_ data:GameData,_ p:Placement,avoiding:[CGRect]=[],minimumFont:Double=0)->RoadNumberLayout {
+func roadNumberLayout(_ data:GameData,_ p:Placement,avoiding:[CGRect]=[],minimumFont:Double=0,available:CGRect?=nil)->RoadNumberLayout {
  let piece=data.pieces.first{$0.id==p.id}!,size=data.dimensions(p.r)
  let font=max(0.22,minimumFont),width=max(p.id==10 ? 0.33:0.30,font*(p.id==10 ? 1.4:1.05)),height=max(0.28,font*1.3)
- let g=piece.gate,angle=g[2] * .pi/180,dx = -sin(angle)*0.35,dy=cos(angle)*0.35
- let a=data.rotate([g[0]/100-dx,g[1]/100-dy],p.r),b=data.rotate([g[0]/100+dx,g[1]/100+dy],p.r)
- let points=piece.paths.flatMap{$0.samples.enumerated().filter{$0.offset%2==0}.map{data.rotate($0.element,p.r)}}
+ let bounds=available ?? CGRect(x:0.04,y:0.04,width:Double(size.0)-0.08,height:Double(size.1)-0.08)
+ let g=piece.gate,center=data.rotate([g[0]/100,g[1]/100],p.r),angle=(g[2]+Double(p.r*90)) * .pi/180
+ let normal=[cos(angle),sin(angle)],tangent=[-sin(angle),cos(angle)]
+ func points(_ jumping:Bool)->[[Double]]{piece.paths.filter{($0.jump==p.id)==jumping}.flatMap{$0.samples.enumerated().filter{$0.offset%4==0}.map{data.rotate($0.element,p.r)}}}
+ let own=points(true),other=points(false)
+ func distanceSquared(_ q:[Double],_ points:[[Double]])->Double {points.map{pow($0[0]-q[0],2)+pow($0[1]-q[1],2)}.min() ?? Double.greatestFiniteMagnitude}
  func label(_ q:[Double])->RoadNumberLayout {RoadNumberLayout(center:q,width:width,height:height,font:font)}
- func railDistance(_ q:[Double])->Double {
-  let vx=b[0]-a[0],vy=b[1]-a[1]
-  let t=min(1,max(0,((q[0]-a[0])*vx+(q[1]-a[1])*vy)/(vx*vx+vy*vy)))
-  return hypot(q[0]-a[0]-t*vx,q[1]-a[1]-t*vy)
- }
  func valid(_ q:[Double])->Bool {
   let box=label(q).bounds
-  return box.minX>=0.04-0.0001 && box.minY>=0.04-0.0001 && box.maxX<=Double(size.0)-0.04+0.0001 && box.maxY<=Double(size.1)-0.04+0.0001 && railDistance(q)+0.0001>=max(0.31,min(width,height)/2+0.14) && !avoiding.contains{box.insetBy(dx:-0.01,dy:-0.01).intersects($0)}
+  if box.minX<bounds.minX-0.0001 || box.minY<bounds.minY-0.0001 || box.maxX>bounds.maxX+0.0001 || box.maxY>bounds.maxY+0.0001 || avoiding.contains(where:{box.insetBy(dx:-0.01,dy:-0.01).intersects($0)}){return false}
+  // Separate the label from the complete rotated rail, both posts and a small clear gap.
+  let separate=[[1.0,0],[0,1],normal,tangent].contains{axis in
+   let labelSpan=width/2*abs(axis[0])+height/2*abs(axis[1])
+   let railSpan=0.13*abs(axis[0]*normal[0]+axis[1]*normal[1])+0.375*abs(axis[0]*tangent[0]+axis[1]*tangent[1])
+   return abs((q[0]-center[0])*axis[0]+(q[1]-center[1])*axis[1])+0.0001>=labelSpan+railSpan
+  }
+  if !separate{return false}
+  let otherDistance=distanceSquared(q,other)
+  return otherDistance>=pow(0.28,2) || sqrt(otherDistance)+0.02>=sqrt(distanceSquared(q,own))
  }
- func score(_ q:[Double])->Double {pow(q[0]-0.45,2)+pow(q[1]-0.42,2)}
- if let q=points.filter({valid($0)}).min(by:{score($0)<score($1)}){return label(q)}
- let offsets=[-0.29,-0.24,-0.16,-0.08,0.08,0.16,0.24,0.29]
- let shoulders=points.flatMap{q in offsets.flatMap{d in [[q[0]+d,q[1]],[q[0],q[1]+d]]}}
- if let q=shoulders.filter({valid($0)}).min(by:{score($0)<score($1)}){return label(q)}
- if !avoiding.isEmpty{return roadNumberLayout(data,p,minimumFont:minimumFont)}
- return label([Double(size.0)/2,Double(size.1)/2])
+ func score(_ q:[Double])->Double {pow(q[0]-center[0],2)+pow(q[1]-center[1],2)+0.1*distanceSquared(q,own)+0.001*(q[0]+q[1])}
+ var candidates=[[Double]]()
+ if bounds.width>=width && bounds.height>=height{
+  for(axis,half)in [(normal,0.105),(tangent,0.35)]{
+   let cross=[-axis[1],axis[0]],projection=width/2*abs(axis[0])+height/2*abs(axis[1])
+   for sign in [-1.0,1]{for extra in [0.0,0.06,0.12,0.24,0.32,0.40]{for shift in [0.0,-0.08,0.08,-0.16,0.16,-0.24,0.24,-0.32,0.32]{
+    let d=(half+projection+0.025+extra)*sign
+    let x=min(bounds.maxX-width/2,max(bounds.minX+width/2,center[0]+axis[0]*d+cross[0]*shift))
+    let y=min(bounds.maxY-height/2,max(bounds.minY+height/2,center[1]+axis[1]*d+cross[1]*shift))
+    if valid([x,y]){candidates.append([x,y])}
+   }}}
+  }
+ }
+ if let q=candidates.min(by:{score($0)<score($1)}){return label(q)}
+ // Occlusion must not move the number onto a different branch.
+ if !avoiding.isEmpty{return roadNumberLayout(data,p,minimumFont:minimumFont,available:available)}
+ return label(center)
 }
 
 /// Eight ImageGen horse sprites, chosen from the route tangent (y grows downward).

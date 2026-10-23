@@ -5,19 +5,24 @@ import org.junit.Test
 import kotlin.math.*
 
 class PresentationTest {
-    @Test fun roadNumbersStayOnTheirOwnRoadAndKeepTheirSizeAndContrastInEveryTurn() {
+    @Test fun roadNumbersStayNearTheirOwnRailAndKeepTheirSizeAndContrastInEveryTurn() {
         val rules=RepoData.rules
         assertTrue("Small road numerals exceed 7:1",contrast(RoadNumberInk,RoadNumberFace)>=7)
         for(id in 1..10)for(r in 0..3){
             val p=Placement(id,0,0,r);val label=roadNumberLayout(rules,p);val(w,h)=rules.dimensions(r)
             assertTrue("Never shrink the old .20 cell font",label.font>=.22f)
             assertTrue(label.bounds.left>=.04f&&label.bounds.top>=.04f&&label.bounds.right<=w-.04f&&label.bounds.bottom<=h-.04f)
-            val points=rules.pieces.getValue(id).paths.flatMap{it.samples}.map{rules.rotate(it,r)}
-            assertTrue("$id/$r sits on the road",points.minOf{hypot(it.x-label.center.x,it.y-label.center.y)}<.30f)
+            val piece=rules.pieces.getValue(id)
+            val points=piece.paths.filter{it.jump==id}.flatMap{it.samples}.map{rules.rotate(it,r)}
+            val rail=rules.rotate(Point(piece.gate[0]/100,piece.gate[1]/100),r)
+            assertTrue("$id/$r stays next to its rail",hypot(rail.x-label.center.x,rail.y-label.center.y)<.36f)
+            assertTrue("$id/$r sits on the obstacle's own road",points.minOf{hypot(it.x-label.center.x,it.y-label.center.y)}<.20f)
             for(unit in listOf(20f,24f,32f,48f)){
-                val preview=roadNumberLayout(rules,p,minimumFont=11f/unit)
+                val card=androidx.compose.ui.geometry.Rect(-.65f,.04f,w+.65f,h-.04f)
+                val preview=roadNumberLayout(rules,p,minimumFont=11f/unit,available=card)
                 assertTrue("Rack digits keep their previous physical font size",preview.font*unit>=10.99f)
-                assertTrue("Preview $id/$r stays on its own tile",preview.bounds.left>=0&&preview.bounds.top>=0&&preview.bounds.right<=w&&preview.bounds.bottom<=h)
+                assertTrue("Preview $id/$r stays in its own card",preview.bounds.left>=card.left-.0001f&&preview.bounds.top>=card.top-.0001f&&preview.bounds.right<=card.right+.0001f&&preview.bounds.bottom<=card.bottom+.0001f)
+                assertTrue("Preview $id/$r remains next to its rail",hypot(rail.x-preview.center.x,rail.y-preview.center.y)<.75f)
             }
         }
     }

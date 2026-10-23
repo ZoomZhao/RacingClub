@@ -41,6 +41,25 @@ class DragInteractionTest {
         }
         fail("Removing tile must hide its contextual actions")
     }
+    @Test fun newTrayTileTurnsAtRightColumnAndBottomRightWithoutAnEditingHorse() {
+        Configurator.getInstance().waitForIdleTimeout=100
+        val dir=File(ins.targetContext.getExternalFilesDir(null),"validation").apply{mkdirs()}
+        ActivityScenario.launch(MainActivity::class.java).use{scenario->
+            lateinit var s:GameState
+            scenario.onActivity{a->s=GameState(a,loadRules(a),LocalLeaderboard(a));s.start(s.rules.levels[2]);a.setContent{MaterialTheme(typography=ClubTypography){RacingApp(s)}}}
+            node("棋盘");assertFalse("No horse obstructs editing",device.hasObject(By.desc("马儿")))
+            node("拼板 1").click();val right=anchor(4.5f,1.5f);device.click(right.x.toInt(),right.y.toInt());expectActions()
+            scenario.onActivity{assertEquals(listOf(Placement(1,4,1,1)),s.placed);assertEquals(1,s.moves);assertTrue(s.message.isEmpty())}
+            node("顺时针旋转90度").click();SystemClock.sleep(120)
+            scenario.onActivity{assertEquals(Placement(1,3,1,2),s.placed.single())}
+            node("撤销").click();SystemClock.sleep(120);node("撤销").click();SystemClock.sleep(120)
+            scenario.onActivity{assertTrue(s.placed.isEmpty());assertEquals(0,s.moves)}
+            val corner=anchor(4.5f,3.5f);device.click(corner.x.toInt(),corner.y.toInt());expectActions()
+            scenario.onActivity{assertEquals(listOf(Placement(1,4,2,1)),s.placed);assertEquals(1,s.moves);assertTrue(s.message.isEmpty())}
+            assertFalse(device.hasObject(By.desc("马儿")))
+            assertTrue(device.takeScreenshot(File(dir,"72-right-edge-first-placement.png")))
+        }
+    }
     private fun expectNoText(value:String) {
         val end=SystemClock.uptimeMillis()+3000
         while(SystemClock.uptimeMillis()<end){

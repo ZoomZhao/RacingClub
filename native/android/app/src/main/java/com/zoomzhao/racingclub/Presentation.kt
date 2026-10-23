@@ -6,40 +6,49 @@ import kotlin.math.*
 internal const val RoadNumberFace=0xfffff0d2L
 internal const val RoadNumberInk=0xff214334L
 
-/** Upright road inlay, in tile-local cell units. The rail and road ports stay exposed. */
+/** Upright obstacle label, in tile-local cell units. The rail stays exposed. */
 internal data class RoadNumberLayout(val center:Point,val width:Float,val height:Float,val font:Float) {
     val bounds get()=Rect(center.x-width/2,center.y-height/2,center.x+width/2,center.y+height/2)
 }
-internal fun roadNumberLayout(rules:Rules,p:Placement,avoid:List<Rect> = emptyList(),minimumFont:Float=0f):RoadNumberLayout {
+internal fun roadNumberLayout(rules:Rules,p:Placement,avoid:List<Rect> = emptyList(),minimumFont:Float=0f,available:Rect?=null):RoadNumberLayout {
     val piece=rules.pieces.getValue(p.id);val(w,h)=rules.dimensions(p.r)
     val font=max(.22f,minimumFont)
     val width=max(if(p.id==10).33f else .30f,font*if(p.id==10)1.4f else 1.05f)
     val height=max(.28f,font*1.3f)
-    val g=piece.gate;val angle=g[2]*PI.toFloat()/180
-    val dx=-sin(angle)*.35f;val dy=cos(angle)*.35f
-    val a=rules.rotate(Point(g[0]/100-dx,g[1]/100-dy),p.r)
-    val b=rules.rotate(Point(g[0]/100+dx,g[1]/100+dy),p.r)
-    val points=piece.paths.flatMap{it.samples.filterIndexed{i,_->i%2==0}.map{q->rules.rotate(q,p.r)}}
-    fun railDistance(q:Point):Float {
-        val vx=b.x-a.x;val vy=b.y-a.y
-        val t=(((q.x-a.x)*vx+(q.y-a.y)*vy)/(vx*vx+vy*vy)).coerceIn(0f,1f)
-        return hypot(q.x-a.x-t*vx,q.y-a.y-t*vy)
-    }
+    val bounds=available?:Rect(.04f,.04f,w-.04f,h-.04f)
+    val g=piece.gate;val center=rules.rotate(Point(g[0]/100,g[1]/100),p.r)
+    val angle=(g[2]+p.r*90)*PI.toFloat()/180
+    val normal=Point(cos(angle),sin(angle));val tangent=Point(-normal.y,normal.x)
+    fun points(jumping:Boolean)=piece.paths.filter{(it.jump==p.id)==jumping}.flatMap{road->road.samples.filterIndexed{i,_->i%4==0}.map{rules.rotate(it,p.r)}}
+    val own=points(true);val other=points(false)
+    fun distanceSquared(q:Point,points:List<Point>)=points.minOfOrNull{(it.x-q.x).pow(2)+(it.y-q.y).pow(2)}?:Float.MAX_VALUE
     fun label(q:Point)=RoadNumberLayout(q,width,height,font)
     fun valid(q:Point):Boolean {
         val box=label(q).bounds
-        return box.left>=.04f-.0001f&&box.top>=.04f-.0001f&&box.right<=w-.04f+.0001f&&box.bottom<=h-.04f+.0001f&&
-            railDistance(q)+.0001f>=max(.31f,min(width,height)/2+.14f)&&avoid.none{box.inflate(.01f).overlaps(it)}
+        if(box.left<bounds.left-.0001f||box.top<bounds.top-.0001f||box.right>bounds.right+.0001f||box.bottom>bounds.bottom+.0001f||avoid.any{box.inflate(.01f).overlaps(it)})return false
+        // SAT against the whole rotated rail, including both posts and a small clear gap.
+        val separate=listOf(Point(1f,0f),Point(0f,1f),normal,tangent).any{axis->
+            val span=width/2*abs(axis.x)+height/2*abs(axis.y)+.13f*abs(axis.x*normal.x+axis.y*normal.y)+.375f*abs(axis.x*tangent.x+axis.y*tangent.y)
+            abs((q.x-center.x)*axis.x+(q.y-center.y)*axis.y)+.0001f>=span
+        }
+        if(!separate)return false
+        val otherDistance=distanceSquared(q,other)
+        return otherDistance>=.28f.pow(2)||sqrt(otherDistance)+.02f>=sqrt(distanceSquared(q,own))
     }
-    fun score(q:Point)=(q.x-.45f).pow(2)+(q.y-.42f).pow(2)
-    // Prefer the road centre. A crowded selection can use its shoulder to clear the controls.
-    points.filter(::valid).minByOrNull(::score)?.let{return label(it)}
-    val offsets=listOf(-.29f,-.24f,-.16f,-.08f,.08f,.16f,.24f,.29f)
-    val shoulders=points.flatMap{q->offsets.flatMap{d->listOf(Point(q.x+d,q.y),Point(q.x,q.y+d))}}
-    shoulders.filter(::valid).minByOrNull(::score)?.let{return label(it)}
-    // Covered tiles are drawn underneath their occluder; never move an ID onto another tile.
-    if(avoid.isNotEmpty())return roadNumberLayout(rules,p,minimumFont=minimumFont)
-    return label(Point(w/2f,h/2f))
+    fun score(q:Point)=(q.x-center.x).pow(2)+(q.y-center.y).pow(2)+.1f*distanceSquared(q,own)+.001f*(q.x+q.y)
+    val candidates=mutableListOf<Point>()
+    if(bounds.width>=width&&bounds.height>=height)for((axis,half)in listOf(normal to .105f,tangent to .35f)){
+        val cross=Point(-axis.y,axis.x);val projection=width/2*abs(axis.x)+height/2*abs(axis.y)
+        for(sign in listOf(-1,1))for(extra in listOf(0f,.06f,.12f,.24f,.32f,.40f))for(shift in listOf(0f,-.08f,.08f,-.16f,.16f,-.24f,.24f,-.32f,.32f)){
+            val d=(half+projection+.025f+extra)*sign
+            val q=Point((center.x+axis.x*d+cross.x*shift).coerceIn(bounds.left+width/2,bounds.right-width/2),(center.y+axis.y*d+cross.y*shift).coerceIn(bounds.top+height/2,bounds.bottom-height/2))
+            if(valid(q))candidates+=q
+        }
+    }
+    candidates.minByOrNull(::score)?.let{return label(it)}
+    // Occlusion must never send a label to an unrelated branch. Keep its rail anchor.
+    if(avoid.isNotEmpty())return roadNumberLayout(rules,p,minimumFont=minimumFont,available=available)
+    return label(center)
 }
 
 /** Keep long instructions legible and complete; never hide goals in a scroller. */

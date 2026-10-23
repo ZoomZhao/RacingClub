@@ -33,23 +33,32 @@ class RunAnimationTest {
         }
         ActivityScenario.launch(MainActivity::class.java).use{scenario->
             lateinit var s:GameState
-            scenario.onActivity{a->s=GameState(a,loadRules(a),LocalLeaderboard(a));s.start(s.rules.levels[2]);a.setContent{MaterialTheme(typography=ClubTypography){RacingApp(s)}};repeat(3){s.hint()}}
+            scenario.onActivity{a->s=GameState(a,loadRules(a),LocalLeaderboard(a));s.start(s.rules.levels[2]);a.setContent{MaterialTheme(typography=ClubTypography){RacingApp(s)}}}
+            val boardDeadline=SystemClock.uptimeMillis()+5000
+            while(find("棋盘")==null&&SystemClock.uptimeMillis()<boardDeadline)SystemClock.sleep(50)
+            assertNotNull(find("棋盘"));assertNull("Editing leaves the board free of the horse",find("马儿"))
+            scenario.onActivity{repeat(3){s.hint()}}
             val end=SystemClock.uptimeMillis()+6000
             var pulsed=false;val observed=linkedSetOf<String>()
+            var frozen=0L;var scoreCount=0;var moves=0
+            var pulseImage:android.graphics.Bitmap?=null
             fun state(n:AccessibilityNodeInfo?)=n?.stateDescription?.toString()?.takeIf{it.isNotEmpty()}?:n?.parent?.stateDescription?.toString().orEmpty()
             while(SystemClock.uptimeMillis()<end){
                 val node=find("目标 1：5号")
                 observed+=state(node)
                 if(state(node).contains("完成动效中")){
+                    assertNotNull("Horse appears only for the completed route animation",find("马儿"))
                     assertEquals("等待跨越",state(find("目标 2：1号")))
-                    pulsed=true;assertTrue(device.takeScreenshot(File(dir,"66-goal-crossing-pulse.png")));break
+                    scenario.onActivity{assertTrue("Pulse observed during the run",s.running);frozen=s.elapsed;scoreCount=s.repository.list(3).size;moves=s.moves}
+                    // Grab the frame directly; PNG encoding and UiDevice's idle wait must not
+                    // consume the remaining animation before we exercise its skip button.
+                    pulseImage=ins.uiAutomation.takeScreenshot();assertNotNull(pulseImage)
+                    pulsed=true;break
                 }
                 SystemClock.sleep(25)
             }
             File(dir,"goal-feedback-observed.txt").writeText(observed.joinToString("\n"))
             assertTrue("A real horse rail crossing must animate its corresponding goal: $observed",pulsed)
-            var frozen=0L;var scoreCount=0;var moves=0
-            scenario.onActivity{assertTrue(s.running);frozen=s.elapsed;scoreCount=s.repository.list(3).size;moves=s.moves}
             // Read a fresh native node while animated semantics are changing each frame.
             // UiAutomator's cached selector can otherwise briefly miss a visible button.
             var skip=find("跳过动画");val skipDeadline=SystemClock.uptimeMillis()+1500
@@ -60,6 +69,7 @@ class RunAnimationTest {
             val settled=SystemClock.uptimeMillis()+2000
             while(SystemClock.uptimeMillis()<settled&&!device.hasObject(By.text("漂亮，顺利通关！"))){if(android.os.Build.VERSION.SDK_INT>=33)ins.uiAutomation.clearCache();SystemClock.sleep(50)}
             scenario.onActivity{assertEquals("win",s.screen);assertFalse(s.running);assertEquals(frozen,s.elapsed);assertEquals(scoreCount,s.repository.list(3).size);assertEquals(moves,s.moves)}
+            pulseImage!!.let{bitmap->File(dir,"66-goal-crossing-pulse.png").outputStream().use{assertTrue(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it))};bitmap.recycle()}
             assertTrue(device.takeScreenshot(File(dir,"67-skipped-run-settlement.png")))
             SystemClock.sleep(500)
             scenario.onActivity{assertEquals("win",s.screen);assertEquals(1,s.repository.list(3).size);assertTrue(s.solved(3))}

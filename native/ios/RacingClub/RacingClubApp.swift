@@ -269,7 +269,13 @@ private struct HomePlaqueBackground:View {
 struct TilePreview:View,Equatable {
  let data:GameData;let id:Int;var selected=false
  static func ==(a:TilePreview,b:TilePreview)->Bool {a.id==b.id && a.selected==b.selected}
- var body:some View{Canvas{c,size in let r=1;let(w,h)=data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(c,data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2),BoardTextures(c),selected:selected,number:true,minimumNumberFont:11)}.accessibilityHidden(true)}
+ var body:some View{Canvas{c,size in
+  let r=1;let(w,h)=data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h))
+  guard u>0 else{return}
+  let origin=CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2)
+  let bounds=CGRect(x:-origin.x/u+0.04,y:-origin.y/u+0.04,width:size.width/u-0.08,height:size.height/u-0.08)
+  drawTile(c,data,Placement(id:id,x:0,y:0,r:r),u,origin,BoardTextures(c),selected:selected,number:true,minimumNumberFont:11,numberBounds:bounds)
+ }.accessibilityHidden(true)}
 }
 private struct NativeCourseSequence:View {
  @ObservedObject var game:Game
@@ -378,7 +384,7 @@ struct NativeBoard:View {
        .contentShape(Rectangle()).gesture(boardGesture(u))
        .accessibilityElement(children:.contain).accessibilityLabel("棋盘").accessibilityChildren{pieceElements(u,w,h)}
       DragPreviewLayer(game:game,drag:drag,u:u)
-      if !game.startGate.isEmpty{HorseLayer(game:game,u:u)}
+      if game.running{HorseLayer(game:game,u:u)}
       ForEach(game.data.gates.keys.sorted(),id:\.self){letter in gateButton(letter,u)}
       if !game.running,(drag.piece==nil || drag.fromControls),let piece=game.placed.first(where:{$0.id==game.selected}){NativeBoardPieceActions(game:game,drag:drag,piece:piece,unit:u)}
      }.frame(width:w,height:h).background{GeometryReader{frame in Color.clear.preference(key:BoardFrameKey.self,value:frame.frame(in:.named("game")))}}.onPreferenceChange(BoardFrameKey.self){drag.board=$0}

@@ -33,6 +33,9 @@ class Rules(val pieces:Map<Int,Piece>,val gates:Map<String,Point>,val levels:Lis
         val r=((p.r+quarterTurns)%4+4)%4;val(w,h)=dimensions(r)
         return p.copy(x=p.x.coerceIn(0,5-w),y=p.y.coerceIn(0,4-h),r=r)
     }
+    /** First tap from the tray: turn once if needed, then hug the nearest board edge. */
+    fun initialPlacement(p:Placement):Placement =
+        if(p.id in pieces&&p.r in 0..3&&p.x in 0..4&&p.y in 0..3&&!fits(p))turnedInside(p,1)else p
     /** Lists are stored bottom to top, including saved progress and undo snapshots. */
     fun hit(all:List<Placement>,x:Int,y:Int)=all.lastOrNull{val(w,h)=dimensions(it.r);x in it.x until it.x+w&&y in it.y until it.y+h}
     fun coveredBy(p:Placement,all:List<Placement>)=all.dropWhile{it.id!=p.id}.drop(1).filter{overlaps(p,it)}

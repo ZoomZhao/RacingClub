@@ -108,7 +108,7 @@ typealias SessionScheduler = (_ seconds:Double,_ action:@escaping @MainActor ()-
  func deselect(){selected=nil}
  private func remember(){history.append((placed,moves,hints,chosenStart,chosenFinish))}
  /// Places the selected piece; used only for rack pieces that are not on the board yet.
- func place(_ x:Int,_ y:Int){guard let id=selected else{return};drop(Placement(id:id,x:x,y:y,r:rotation))}
+ func place(_ x:Int,_ y:Int){guard let id=selected else{return};let p=Placement(id:id,x:x,y:y,r:rotation);drop(placed.contains{$0.id==id} ? p:data.initialPlacement(p))}
  /// Commits a specific piece, independent of any selection changed by another touch.
  func drop(_ p:Placement){
   guard canEdit,level.requiredPieces.contains(p.id) else{return}

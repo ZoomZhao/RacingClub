@@ -53,7 +53,7 @@ class GameState(val rules:Rules,val repository:LeaderboardRepository,private val
   if(!rules.fits(p)){message="超出棋盘边界，已保留原位";return false}
   remember();placed=placed.filter{it.id!=p.id}+p;selected=p.id;rotation=p.r;moves++;message="";save();return true
  }
- fun place(x:Int,y:Int){val id=selected?:return;placePiece(Placement(id,x,y,rotation))}
+ fun place(x:Int,y:Int){val id=selected?:return;val p=Placement(id,x,y,rotation);placePiece(if(placed.none{it.id==id})rules.initialPlacement(p)else p)}
  fun rotatePiece(id:Int,quarterTurns:Int){
   if(running)return
   val old=placed.find{it.id==id}

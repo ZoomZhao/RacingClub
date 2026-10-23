@@ -27,7 +27,6 @@ class EmulatorFlowTest {
     private var recordingFile:File?=null
     private var observedHorse:AccessibilityNodeInfo?=null
     private var observedTimer:AccessibilityNodeInfo?=null
-    private var initialHorse=Rect()
 
     @Before fun prepare() {
         Configurator.getInstance().waitForIdleTimeout=100
@@ -176,7 +175,7 @@ class EmulatorFlowTest {
             File(dir,"flow-report.json").writeText(JSONObject().put("passed",true).put("events",events).toString(2))
         }
     }
-    private fun beginRecording(name:String) {
+    private fun observeRunNodes() {
         freshAccessibility()
         fun observe(node:AccessibilityNodeInfo?) {
             if(node==null)return
@@ -185,7 +184,11 @@ class EmulatorFlowTest {
             for(i in 0 until node.childCount)observe(node.getChild(i))
         }
         observe(instrumentation.uiAutomation.rootInActiveWindow)
-        requireNotNull(observedHorse).getBoundsInScreen(initialHorse)
+    }
+    private fun beginRecording(name:String) {
+        observedHorse=null
+        observeRunNodes()
+        assertNull("The horse is hidden while editing",observedHorse)
         requireNotNull(observedTimer)
         val file=File(dir,"$name.mp4")
         recordingFile=file
@@ -197,9 +200,11 @@ class EmulatorFlowTest {
         // avoids UI Automator's idle wait and a full accessibility-tree traversal.
         data class Frame(val timer:String,val horse:Rect?,val running:Boolean,val heading:String)
         fun sample():Frame {
+            if(observedHorse?.refresh()!=true)observeRunNodes()
             val alive=observedHorse?.refresh()==true&&observedTimer?.refresh()==true
             val horse=if(alive)Rect().also{observedHorse!!.getBoundsInScreen(it)}else null
-            return Frame(observedTimer?.text?.toString().orEmpty(),horse,alive&&horse!=initialHorse,observedHorse?.stateDescription?.toString().orEmpty())
+            val heading=observedHorse?.stateDescription?.toString().orEmpty()
+            return Frame(observedTimer?.text?.toString().orEmpty(),horse,alive&&heading.contains("跑动中"),heading)
         }
         var first=sample();val deadline=SystemClock.uptimeMillis()+2500
         while(!first.running&&SystemClock.uptimeMillis()<deadline){SystemClock.sleep(50);first=sample()}

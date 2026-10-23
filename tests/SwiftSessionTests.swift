@@ -144,6 +144,19 @@ func check(_ ok:Bool,_ message:@autoclosure ()->String,line:Int=#line){if !ok{Fi
   }
   // Leaderboard reads come from memory; progress summary follows writes.
   do{
+   let h=Harness(data),g=h.game;h.start(3)
+   g.select(1);g.place(4,1)
+   check(g.placed==[Placement(id:1,x:4,y:1,r:1)] && g.moves==1 && g.message.isEmpty,"right-column tap auto-turns as one move")
+   g.undo();check(g.placed.isEmpty && g.moves==0,"auto-turn and placement undo together")
+   g.select(1);g.place(4,3)
+   check(g.placed==[Placement(id:1,x:4,y:2,r:1)] && g.moves==1,"bottom-right tap turns and nudges upward")
+   for r in 0...3{for x in 0...4{for y in 0...3{
+    let p=Placement(id:7,x:x,y:y,r:r),first=data.initialPlacement(p)
+    check(data.fits(first) && first.r==(data.fits(p) ? r:(r+1)%4),"first-tap fit across board")
+    if data.fits(p){check(first==p,"valid taps preserve location and orientation")}
+   }}}
+  }
+  do{
    let suite="racingclub-session-tests-\(UUID().uuidString)",defaults=UserDefaults(suiteName:suite)!
    defer{defaults.removePersistentDomain(forName:suite)}
    let board=LocalLeaderboard(defaults:defaults)
@@ -171,9 +184,17 @@ func check(_ ok:Bool,_ message:@autoclosure ()->String,line:Int=#line){if !ok{Fi
    let p=Placement(id:id,x:0,y:0,r:r),label=roadNumberLayout(data,p),size=data.dimensions(r)
    check(label.font>=0.22,"road numerals never shrink")
    check(label.bounds.minX>=0.04 && label.bounds.minY>=0.04 && label.bounds.maxX<=Double(size.0)-0.04 && label.bounds.maxY<=Double(size.1)-0.04,"\(id)/\(r) numeral stays on its own tile")
-   let points=data.pieces.first{$0.id==id}!.paths.flatMap{$0.samples}.map{data.rotate($0,r)}
-   check(points.map{hypot($0[0]-label.center[0],$0[1]-label.center[1])}.min()!<0.30,"\(id)/\(r) numeral stays on road")
-   for unit in [20.0,24,32,48]{let preview=roadNumberLayout(data,p,minimumFont:11/unit);check(preview.font*unit>=10.99,"rack numerals retain their physical font size");check(preview.bounds.minX>=0 && preview.bounds.minY>=0 && preview.bounds.maxX<=Double(size.0) && preview.bounds.maxY<=Double(size.1),"rack numeral stays on its own preview")}
+   let piece=data.pieces.first{$0.id==id}!,rail=data.rotate([piece.gate[0]/100,piece.gate[1]/100],r)
+   let points=piece.paths.filter{$0.jump==id}.flatMap{$0.samples}.map{data.rotate($0,r)}
+   check(hypot(rail[0]-label.center[0],rail[1]-label.center[1])<0.36,"\(id)/\(r) numeral stays next to its own rail")
+   check(points.map{hypot($0[0]-label.center[0],$0[1]-label.center[1])}.min()!<0.20,"\(id)/\(r) numeral stays on its obstacle road")
+   for unit in [20.0,24,32,48]{
+    let card=CGRect(x:-0.65,y:0.04,width:Double(size.0)+1.3,height:Double(size.1)-0.08)
+    let preview=roadNumberLayout(data,p,minimumFont:11/unit,available:card)
+    check(preview.font*unit>=10.99,"rack numerals retain their physical font size")
+    check(preview.bounds.minX>=card.minX-0.0001 && preview.bounds.minY>=card.minY-0.0001 && preview.bounds.maxX<=card.maxX+0.0001 && preview.bounds.maxY<=card.maxY+0.0001,"rack numeral stays in its own card")
+    check(hypot(rail[0]-preview.center[0],rail[1]-preview.center[1])<0.75,"rack numeral stays beside its rail")
+   }
    for unit in [52.0,56,74,100]{
     let button=max(24,min(44,(2*unit-8)/3,0.64*unit-5)),vertical=r%2==1
     let width=vertical ? button:button*3+8,height=vertical ? button*3+8:button

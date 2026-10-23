@@ -28,6 +28,8 @@ struct GameData:Decodable {
  func overlaps(_ p:Placement,_ o:Placement)->Bool {let(w,h)=dimensions(p.r),(ow,oh)=dimensions(o.r);return p.id != o.id && p.x<o.x+ow && o.x<p.x+w && p.y<o.y+oh && o.y<p.y+h}
  func hasOverlap(_ all:[Placement])->Bool {all.enumerated().contains{i,p in all.dropFirst(i+1).contains{overlaps(p,$0)}}}
  func turnedInside(_ p:Placement,_ turns:Int)->Placement {let r=((p.r+turns)%4+4)%4,(w,h)=dimensions(r);return Placement(id:p.id,x:min(max(0,p.x),5-w),y:min(max(0,p.y),4-h),r:r)}
+ /// A first board tap from the tray turns once when needed, then hugs the nearest edge.
+ func initialPlacement(_ p:Placement)->Placement {fits(p) || !pieces.contains(where:{$0.id==p.id}) || !(0...3).contains(p.r) || !(0...4).contains(p.x) || !(0...3).contains(p.y) ? p:turnedInside(p,1)}
  func hit(_ all:[Placement],_ x:Int,_ y:Int)->Placement? {all.last{p in let(w,h)=dimensions(p.r);return(p.x..<p.x+w).contains(x) && (p.y..<p.y+h).contains(y)}}
  func coveredBy(_ p:Placement,_ all:[Placement])->[Placement] {guard let i=all.firstIndex(where:{$0.id==p.id})else{return[]};return all.dropFirst(i+1).filter{overlaps(p,$0)}}
  func beneath(_ p:Placement,_ all:[Placement])->[Placement] {all.prefix(while:{$0.id != p.id}).filter{overlaps(p,$0)}}
