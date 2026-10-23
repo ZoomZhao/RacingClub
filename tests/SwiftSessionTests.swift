@@ -166,6 +166,22 @@ func check(_ ok:Bool,_ message:@autoclosure ()->String,line:Int=#line){if !ok{Fi
   for d in data.difficulties{for bg in Design.plaqueFaces+[Design.paper]{check(contrastRatio(Design.legibleInk(d.color,on:Design.plaqueFaces+[Design.paper]),bg)>=4.5,"\(d.id) label on \(bg)")}}
   check(Design.legibleInk("#426b35")=="#426b35","already legible colors are unchanged")
   check((1...10).filter(Design.numberInkIsDark)==[2,3,7],"dark number ink set")
+  check(contrastRatio(Design.roadNumberInk,Design.roadNumberFace)>=7,"road numeral contrast exceeds 7:1")
+  for id in 1...10{for r in 0...3{
+   let p=Placement(id:id,x:0,y:0,r:r),label=roadNumberLayout(data,p),size=data.dimensions(r)
+   check(label.font>=0.22,"road numerals never shrink")
+   check(label.bounds.minX>=0.04 && label.bounds.minY>=0.04 && label.bounds.maxX<=Double(size.0)-0.04 && label.bounds.maxY<=Double(size.1)-0.04,"\(id)/\(r) numeral stays on its own tile")
+   let points=data.pieces.first{$0.id==id}!.paths.flatMap{$0.samples}.map{data.rotate($0,r)}
+   check(points.map{hypot($0[0]-label.center[0],$0[1]-label.center[1])}.min()!<0.30,"\(id)/\(r) numeral stays on road")
+   for unit in [20.0,24,32,48]{let preview=roadNumberLayout(data,p,minimumFont:11/unit);check(preview.font*unit>=10.99,"rack numerals retain their physical font size");check(preview.bounds.minX>=0 && preview.bounds.minY>=0 && preview.bounds.maxX<=Double(size.0) && preview.bounds.maxY<=Double(size.1),"rack numeral stays on its own preview")}
+   for unit in [52.0,56,74,100]{
+    let button=max(24,min(44,(2*unit-8)/3,0.64*unit-5)),vertical=r%2==1
+    let width=vertical ? button:button*3+8,height=vertical ? button*3+8:button
+    let x=vertical ? unit-3-button:(2*unit-width)/2,y=vertical ? (2*unit-height)/2:unit-3-button
+    let blocked=CGRect(x:x/unit,y:y/unit,width:width/unit,height:height/unit)
+    check(!roadNumberLayout(data,p,avoiding:[blocked]).bounds.intersects(blocked),"\(id)/\(r) numeral clears dense-board controls at \(unit)")
+   }
+  }}
   check([HorseHeading(dx:1,dy:0),HorseHeading(dx:1,dy:1),HorseHeading(dx:0,dy:1),HorseHeading(dx:-1,dy:1),HorseHeading(dx:-1,dy:0),HorseHeading(dx:-1,dy:-1),HorseHeading(dx:0,dy:-1),HorseHeading(dx:1,dy:-1)]==HorseHeading.allCases,"eight headings")
   // Art: every bundled bitmap loads from the Resources folder, downsampled; horses are trimmed.
   let art=ArtLibrary(directory:resources)

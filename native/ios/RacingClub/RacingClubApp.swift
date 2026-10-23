@@ -158,12 +158,12 @@ private struct GameControlFace:View {
   c.stroke(Path(roundedRect:face.insetBy(dx:1,dy:1),cornerRadius:5),with:.color(.white.opacity(0.85)),lineWidth:0.6)
  }}
 }
-private struct NativeActionAnchor {
+struct NativeActionAnchor {
  let left:CGFloat;let top:CGFloat;let tip:CGFloat;let below:Bool
  var width:CGFloat=140;var height:CGFloat=52;var button:CGFloat=44;var vertical=false;var inside=false
 }
 /// Prefer free space beside the tile; a crowded board keeps controls on their owner, never on a neighbor.
-private func nativeActionAnchor(_ p:Placement,_ u:CGFloat,_ all:[Placement])->NativeActionAnchor {
+func nativeActionAnchor(_ p:Placement,_ u:CGFloat,_ all:[Placement])->NativeActionAnchor {
  let w=p.r%2==0 ? 2:1,h=p.r%2==0 ? 1:2
  let tile=CGRect(x:(CGFloat(p.x)+0.35)*u,y:(CGFloat(p.y)+0.35)*u,width:CGFloat(w)*u,height:CGFloat(h)*u)
  let low=0.35*u+4,high=max(low,5.35*u-144)
@@ -232,8 +232,7 @@ private struct RackCard:View {
  var body:some View {
   let placed=game.placed.first{$0.id==id},covered=placed.map{!game.data.coveredBy($0,game.placed).isEmpty} ?? false,active=game.selected==id
   ZStack(alignment:.topLeading){
-   TilePreview(data:game.data,id:id,selected:active).equatable().padding(.top,12).padding(.bottom,placed != nil ? 18:2)
-   Text("\(id)").font(.system(size:11,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:18,height:18).background(numberFill(id),in:Circle())
+   TilePreview(data:game.data,id:id,selected:active).equatable().padding(.top,3).padding(.bottom,placed != nil ? 18:2)
    if placed != nil{Image(systemName:covered ? "square.3.layers.3d":"checkmark.circle.fill").font(.system(size:12)).foregroundStyle(covered ? ink(Design.coveredAmber):forest).frame(maxWidth:.infinity,alignment:.trailing)
     Text(covered ? "被遮挡":"已放置").font(.system(size:9,weight:.bold)).foregroundStyle(.white).lineLimit(1).padding(.horizontal,3).padding(.vertical,2).background(covered ? ink(Design.coveredAmber):forest,in:RoundedRectangle(cornerRadius:3)).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.bottom)
    }
@@ -270,7 +269,7 @@ private struct HomePlaqueBackground:View {
 struct TilePreview:View,Equatable {
  let data:GameData;let id:Int;var selected=false
  static func ==(a:TilePreview,b:TilePreview)->Bool {a.id==b.id && a.selected==b.selected}
- var body:some View{Canvas{c,size in let r=1;let(w,h)=data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(c,data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2),BoardTextures(c),selected:selected)}.accessibilityHidden(true)}
+ var body:some View{Canvas{c,size in let r=1;let(w,h)=data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(c,data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2),BoardTextures(c),selected:selected,number:true,minimumNumberFont:11)}.accessibilityHidden(true)}
 }
 private struct NativeCourseSequence:View {
  @ObservedObject var game:Game
@@ -327,9 +326,9 @@ private struct NativeCourseSequence:View {
 
 /// Static board picture; equality skips redraws while a finger moves a drag preview.
 private struct BoardSurface:View,Equatable {
- let data:GameData;let placed:[Placement];let selected:Int?;let start:String;let finish:String
- static func ==(a:BoardSurface,b:BoardSurface)->Bool {a.placed==b.placed && a.selected==b.selected && a.start==b.start && a.finish==b.finish}
- var body:some View {Canvas{c,size in drawBoard(c,size,data,placed:placed,selected:selected,start:start,finish:finish)}}
+ let data:GameData;let placed:[Placement];let selected:Int?;let start:String;let finish:String;let actionsVisible:Bool
+ static func ==(a:BoardSurface,b:BoardSurface)->Bool {a.placed==b.placed && a.selected==b.selected && a.start==b.start && a.finish==b.finish && a.actionsVisible==b.actionsVisible}
+ var body:some View {Canvas{c,size in drawBoard(c,size,data,placed:placed,selected:selected,start:start,finish:finish,actionsVisible:actionsVisible)}}
 }
 private struct DragPreviewLayer:View {
  @ObservedObject var game:Game;@ObservedObject var drag:NativeDrag;let u:CGFloat
@@ -375,7 +374,7 @@ struct NativeBoard:View {
    VStack(spacing:0){
     ZStack{
      ZStack(alignment:.topLeading){
-      BoardSurface(data:game.data,placed:game.placed,selected:game.selected,start:game.startGate,finish:game.finishGate).equatable()
+      BoardSurface(data:game.data,placed:game.placed,selected:game.selected,start:game.startGate,finish:game.finishGate,actionsVisible:!game.running).equatable()
        .contentShape(Rectangle()).gesture(boardGesture(u))
        .accessibilityElement(children:.contain).accessibilityLabel("棋盘").accessibilityChildren{pieceElements(u,w,h)}
       DragPreviewLayer(game:game,drag:drag,u:u)

@@ -23,7 +23,8 @@ private func texture(_ c:GraphicsContext,_ image:GraphicsContext.ResolvedImage?,
 private func vertical(_ colors:[Color],_ r:CGRect)->GraphicsContext.Shading {.linearGradient(Gradient(colors:colors),startPoint:CGPoint(x:r.midX,y:r.minY),endPoint:CGPoint(x:r.midX,y:r.maxY))}
 private func line(_ c:GraphicsContext,_ a:CGPoint,_ b:CGPoint,_ color:Color,_ width:CGFloat,_ cap:CGLineCap = .butt){var p=Path();p.move(to:a);p.addLine(to:b);c.stroke(p,with:.color(color),style:StrokeStyle(lineWidth:width,lineCap:cap))}
 
-func drawTile(_ c:GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ origin:CGPoint,_ tex:BoardTextures,selected:Bool=false,number:Bool=false){
+func drawTile(_ c:GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ origin:CGPoint,_ tex:BoardTextures,selected:Bool=false,number:Bool=false,numberAvoid:[CGRect]=[],minimumNumberFont:Double=0){
+ guard u>0 && u.isFinite else{return}
  let(w,h)=data.dimensions(p.r),top=CGPoint(x:origin.x+CGFloat(p.x)*u,y:origin.y+CGFloat(p.y)*u)
  let face=CGRect(x:top.x+u*0.025,y:top.y+u*0.025,width:CGFloat(w)*u-u*0.05,height:CGFloat(h)*u-u*0.055),radius=u*0.07
  c.fill(rounded(face.offsetBy(dx:0,dy:u*0.045),radius),with:.color(ink("#80603f").opacity(0.26)))
@@ -57,18 +58,20 @@ func drawTile(_ c:GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ or
   c.stroke(rounded(ring,radius),with:.color(forest),lineWidth:u*0.027)
  }
  if number{
-  let badge=CGPoint(x:top.x+u*0.20,y:top.y+u*0.20),r=u*0.16
-  func circle(_ center:CGPoint)->Path {Path(ellipseIn:CGRect(x:center.x-r,y:center.y-r,width:2*r,height:2*r))}
-  c.fill(circle(CGPoint(x:badge.x,y:badge.y+u*0.025)),with:.color(ink("#74522f").opacity(0.25)))
-  c.fill(circle(badge),with:.color(numberFill(p.id)))
-  c.stroke(circle(badge),with:.color(ink("#fff5d8")),lineWidth:u*0.018)
-  c.draw(Text("\(p.id)").font(.system(size:u*0.20,weight:.bold)).foregroundColor(numberInk(p.id)),at:badge)
+  let label=roadNumberLayout(data,p,avoiding:numberAvoid,minimumFont:minimumNumberFont/Double(u))
+  let center=CGPoint(x:top.x+label.center[0]*u,y:top.y+label.center[1]*u)
+  let rect=CGRect(x:center.x-label.width*u/2,y:center.y-label.height*u/2,width:label.width*u,height:label.height*u)
+  c.fill(rounded(rect,label.height*u*0.20),with:.color(ink(Design.roadNumberFace)))
+  c.stroke(rounded(rect,label.height*u*0.20),with:.color(ink("#b89665").opacity(0.48)),lineWidth:max(0.6,u*0.006))
+  let accentY=center.y+label.height*u*0.35
+  line(c,CGPoint(x:center.x-label.width*u*0.24,y:accentY),CGPoint(x:center.x+label.width*u*0.24,y:accentY),ink(piece.color),label.height*u*0.065,.round)
+  c.draw(Text("\(p.id)").font(.system(size:label.font*u,weight:.bold)).foregroundColor(ink(Design.roadNumberInk)),at:CGPoint(x:center.x,y:center.y-label.height*u*0.08))
  }
 }
 
 /// Static board layer; the drag preview and horse are separate layers so moving a finger
 /// does not redraw textures.
-func drawBoard(_ c:GraphicsContext,_ size:CGSize,_ data:GameData,placed:[Placement],selected:Int?,start:String,finish:String){
+func drawBoard(_ c:GraphicsContext,_ size:CGSize,_ data:GameData,placed:[Placement],selected:Int?,start:String,finish:String,actionsVisible:Bool=true){
  let u=size.width/5.7,origin=CGPoint(x:u*0.35,y:u*0.35),tex=BoardTextures(c)
  let outer=CGRect(x:u*0.025,y:u*0.025,width:size.width-u*0.05,height:size.height-u*0.065),rad=u*0.28
  c.fill(rounded(outer.offsetBy(dx:0,dy:u*0.055),rad),with:.color(ink("#76512e").opacity(0.17)))
@@ -88,7 +91,15 @@ func drawBoard(_ c:GraphicsContext,_ size:CGSize,_ data:GameData,placed:[Placeme
   c.fill(rounded(cell,u*0.13),with:vertical([.white.opacity(0.14),.clear,ink("#8c5d31").opacity(0.10)],cell))
  }}
  c.stroke(rounded(inset,u*0.14),with:.color(ink("#f9e2b2")),lineWidth:u*0.028)
- for p in placed{drawTile(c,data,p,u,origin,tex,selected:selected==p.id,number:true)}
+ for p in placed{
+  var avoid=data.coveredBy(p,placed).map{o in let(w,h)=data.dimensions(o.r);return CGRect(x:o.x-p.x,y:o.y-p.y,width:w,height:h)}
+  if !data.beneath(p,placed).isEmpty,let q=data.stackMarker(p,placed){avoid.append(CGRect(x:q[0]-Double(p.x)-0.80,y:q[1]-Double(p.y)-0.16,width:0.80,height:0.31))}
+  if selected==p.id && actionsVisible{
+   let a=nativeActionAnchor(p,u,placed)
+   if a.inside{avoid.append(CGRect(x:a.left/u-Double(p.x)-0.35,y:a.top/u-Double(p.y)-0.35,width:a.width/u,height:a.height/u))}
+  }
+  drawTile(c,data,p,u,origin,tex,selected:selected==p.id,number:true,numberAvoid:avoid)
+ }
  // Only exposed top faces get a stack badge. Fully covered pieces stay reachable in the rack.
  for p in placed{
   let below=data.beneath(p,placed).count

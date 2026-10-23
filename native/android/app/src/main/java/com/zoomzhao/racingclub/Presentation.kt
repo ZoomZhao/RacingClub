@@ -1,6 +1,46 @@
 package com.zoomzhao.racingclub
 
+import androidx.compose.ui.geometry.Rect
 import kotlin.math.*
+
+internal const val RoadNumberFace=0xfffff0d2L
+internal const val RoadNumberInk=0xff214334L
+
+/** Upright road inlay, in tile-local cell units. The rail and road ports stay exposed. */
+internal data class RoadNumberLayout(val center:Point,val width:Float,val height:Float,val font:Float) {
+    val bounds get()=Rect(center.x-width/2,center.y-height/2,center.x+width/2,center.y+height/2)
+}
+internal fun roadNumberLayout(rules:Rules,p:Placement,avoid:List<Rect> = emptyList(),minimumFont:Float=0f):RoadNumberLayout {
+    val piece=rules.pieces.getValue(p.id);val(w,h)=rules.dimensions(p.r)
+    val font=max(.22f,minimumFont)
+    val width=max(if(p.id==10).33f else .30f,font*if(p.id==10)1.4f else 1.05f)
+    val height=max(.28f,font*1.3f)
+    val g=piece.gate;val angle=g[2]*PI.toFloat()/180
+    val dx=-sin(angle)*.35f;val dy=cos(angle)*.35f
+    val a=rules.rotate(Point(g[0]/100-dx,g[1]/100-dy),p.r)
+    val b=rules.rotate(Point(g[0]/100+dx,g[1]/100+dy),p.r)
+    val points=piece.paths.flatMap{it.samples.filterIndexed{i,_->i%2==0}.map{q->rules.rotate(q,p.r)}}
+    fun railDistance(q:Point):Float {
+        val vx=b.x-a.x;val vy=b.y-a.y
+        val t=(((q.x-a.x)*vx+(q.y-a.y)*vy)/(vx*vx+vy*vy)).coerceIn(0f,1f)
+        return hypot(q.x-a.x-t*vx,q.y-a.y-t*vy)
+    }
+    fun label(q:Point)=RoadNumberLayout(q,width,height,font)
+    fun valid(q:Point):Boolean {
+        val box=label(q).bounds
+        return box.left>=.04f-.0001f&&box.top>=.04f-.0001f&&box.right<=w-.04f+.0001f&&box.bottom<=h-.04f+.0001f&&
+            railDistance(q)+.0001f>=max(.31f,min(width,height)/2+.14f)&&avoid.none{box.inflate(.01f).overlaps(it)}
+    }
+    fun score(q:Point)=(q.x-.45f).pow(2)+(q.y-.42f).pow(2)
+    // Prefer the road centre. A crowded selection can use its shoulder to clear the controls.
+    points.filter(::valid).minByOrNull(::score)?.let{return label(it)}
+    val offsets=listOf(-.29f,-.24f,-.16f,-.08f,.08f,.16f,.24f,.29f)
+    val shoulders=points.flatMap{q->offsets.flatMap{d->listOf(Point(q.x+d,q.y),Point(q.x,q.y+d))}}
+    shoulders.filter(::valid).minByOrNull(::score)?.let{return label(it)}
+    // Covered tiles are drawn underneath their occluder; never move an ID onto another tile.
+    if(avoid.isNotEmpty())return roadNumberLayout(rules,p,minimumFont=minimumFont)
+    return label(Point(w/2f,h/2f))
+}
 
 /** Keep long instructions legible and complete; never hide goals in a scroller. */
 internal fun courseRows(nodeCount:Int,width:Float,fontScale:Float):List<List<Int>> {

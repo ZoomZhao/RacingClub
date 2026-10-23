@@ -256,11 +256,10 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                                 if(placed!=null)text=AnnotatedString(if(covered)"被遮挡"else"已放置")
                                 stateDescription="${if(active)"已选中"else"未选中"}，${if(placed!=null)"已放置"else"待放置"}，${(if(active)s.rotation else placed?.r?:0)*90}度${if(covered)"，下层被遮挡，点按置顶"else""}"
                             }.padding(3.dp),contentAlignment=Alignment.Center) {
-                                Canvas(Modifier.fillMaxSize().padding(top=12.dp,bottom=if(placed!=null)18.dp else 2.dp)){
+                                Canvas(Modifier.fillMaxSize().padding(top=3.dp,bottom=if(placed!=null)18.dp else 2.dp)){
                                     val r=1;val(w,h)=s.rules.dimensions(r);val u=min(size.width/w,size.height/h)
-                                    paintTile(s.rules,Placement(id,0,0,r),u,Offset((size.width-w*u)/2,(size.height-h*u)/2),materials,selected=active)
+                                    paintTile(s.rules,Placement(id,0,0,r),u,Offset((size.width-w*u)/2,(size.height-h*u)/2),materials,selected=active,number=true,minimumNumberFont=11.dp.toPx())
                                 }
-                                Box(Modifier.align(Alignment.TopStart)){NumberBadge(id,s,18.dp)}
                                 if(covered)Icon(Icons.Default.Layers,null,Modifier.size(13.dp).align(Alignment.TopEnd),tint=Color(0xffa96b1e))
                                 else if(placed!=null)Icon(Icons.Default.CheckCircle,null,Modifier.size(12.dp).align(Alignment.TopEnd),tint=Green)
                                 if(placed!=null)Text(if(covered)"被遮挡"else"已放置",fontSize=9.sp,lineHeight=11.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=1,modifier=Modifier.align(Alignment.BottomCenter).background(if(covered)Color(CoveredTag)else Green,RoundedCornerShape(3.dp)).padding(horizontal=3.dp,vertical=2.dp))

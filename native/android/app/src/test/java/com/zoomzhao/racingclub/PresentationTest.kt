@@ -5,6 +5,36 @@ import org.junit.Test
 import kotlin.math.*
 
 class PresentationTest {
+    @Test fun roadNumbersStayOnTheirOwnRoadAndKeepTheirSizeAndContrastInEveryTurn() {
+        val rules=RepoData.rules
+        assertTrue("Small road numerals exceed 7:1",contrast(RoadNumberInk,RoadNumberFace)>=7)
+        for(id in 1..10)for(r in 0..3){
+            val p=Placement(id,0,0,r);val label=roadNumberLayout(rules,p);val(w,h)=rules.dimensions(r)
+            assertTrue("Never shrink the old .20 cell font",label.font>=.22f)
+            assertTrue(label.bounds.left>=.04f&&label.bounds.top>=.04f&&label.bounds.right<=w-.04f&&label.bounds.bottom<=h-.04f)
+            val points=rules.pieces.getValue(id).paths.flatMap{it.samples}.map{rules.rotate(it,r)}
+            assertTrue("$id/$r sits on the road",points.minOf{hypot(it.x-label.center.x,it.y-label.center.y)}<.30f)
+            for(unit in listOf(20f,24f,32f,48f)){
+                val preview=roadNumberLayout(rules,p,minimumFont=11f/unit)
+                assertTrue("Rack digits keep their previous physical font size",preview.font*unit>=10.99f)
+                assertTrue("Preview $id/$r stays on its own tile",preview.bounds.left>=0&&preview.bounds.top>=0&&preview.bounds.right<=w&&preview.bounds.bottom<=h)
+            }
+        }
+    }
+    @Test fun everyRoadNumberClearsItsControlsOnAFullyOccupiedBoard() {
+        val rules=RepoData.rules
+        for(unit in listOf(52f,56f,74f,100f))for(id in 1..10)for(r in 0..3){
+            val ids=listOf(id)+(1..10).filter{it!=id}
+            val slots=if(r%2==0)(0..3).flatMap{y->listOf(Placement(0,0,y,r),Placement(0,2,y,r))}+listOf(Placement(0,4,0,1),Placement(0,4,2,1))
+                else (0..1).flatMap{y->(0..4).map{x->Placement(0,x,y*2,r)}}
+            val all=slots.mapIndexed{i,p->p.copy(id=ids[i])};val p=all.first()
+            val a=pieceActionAnchor(p,unit,all)
+            assertTrue(a.inside)
+            val blocked=androidx.compose.ui.geometry.Rect(a.left/unit-p.x-.35f,a.top/unit-p.y-.35f,(a.left+a.width)/unit-p.x-.35f,(a.top+a.height)/unit-p.y-.35f)
+            val label=roadNumberLayout(rules,p,listOf(blocked))
+            assertFalse("$id/$r at $unit: controls cover the number",label.bounds.overlaps(blocked))
+        }
+    }
     @Test fun allGoalPositionsSurviveWrappingAtLandscapeWidthsAndLargerFonts() {
         for(count in 3..20)for(width in listOf(240f,360f,520f,620f,800f))for(scale in listOf(1f,1.3f,1.6f,2f)){
             val rows=courseRows(count,width,scale)

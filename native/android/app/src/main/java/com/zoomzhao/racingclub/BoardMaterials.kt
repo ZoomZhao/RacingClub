@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import kotlin.math.*
 
 internal data class BoardMaterials(val wood:ImageBitmap,val sand:ImageBitmap)
@@ -58,7 +59,8 @@ private fun DrawScope.texture(bitmap:ImageBitmap,rect:Rect,radius:Float) {
     }
 }
 
-internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m:BoardMaterials,selected:Boolean=false,number:Boolean=false) {
+internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m:BoardMaterials,selected:Boolean=false,number:Boolean=false,numberAvoid:List<Rect> = emptyList(),minimumNumberFont:Float=0f) {
+    if(u<=0f||!u.isFinite())return
     val(w,h)=rules.dimensions(p.r);val top=origin+Offset(p.x*u,p.y*u)
     val face=Rect(top+Offset(u*.025f,u*.025f),Size(w*u-u*.05f,h*u-u*.055f))
     val radius=u*.07f
@@ -98,11 +100,20 @@ internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m
         drawRoundRect(Green,face.topLeft-Offset(u*.012f,u*.012f),face.size+Size(u*.024f,u*.024f),CornerRadius(radius),style=Stroke(u*.027f))
     }
     if(number) {
-        val badge=top+Offset(u*.20f,u*.20f)
-        drawCircle(hex("#74522f").copy(alpha=.25f),u*.16f,badge+Offset(0f,u*.025f))
-        drawCircle(Color(numberFace(p.id)),u*.16f,badge)
-        drawCircle(hex("#fff5d8"),u*.16f,badge,style=Stroke(u*.018f))
-        drawContext.canvas.nativeCanvas.drawText("${p.id}",badge.x,badge.y+u*.07f,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=numberInk(p.id).toInt();textSize=u*.20f;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
+        val label=roadNumberLayout(rules,p,numberAvoid,minimumNumberFont/u)
+        val center=top+Offset(label.center.x*u,label.center.y*u)
+        val rect=Rect(center-Offset(label.width*u/2,label.height*u/2),Size(label.width*u,label.height*u))
+        val corner=CornerRadius(label.height*u*.20f)
+        drawRoundRect(Color(RoadNumberFace),rect.topLeft,rect.size,corner)
+        drawRoundRect(hex("#b89665").copy(alpha=.48f),rect.topLeft,rect.size,corner,style=Stroke(max(.6.dp.toPx(),u*.006f)))
+        val accentY=center.y+label.height*u*.35f
+        drawLine(hex(piece.color),Offset(center.x-label.width*u*.24f,accentY),Offset(center.x+label.width*u*.24f,accentY),label.height*u*.065f,StrokeCap.Round)
+        val textPaint=android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color=RoadNumberInk.toInt();textSize=label.font*u;textAlign=android.graphics.Paint.Align.CENTER
+            typeface=android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD)
+        }
+        val bounds=android.graphics.Rect();textPaint.getTextBounds("${p.id}",0,"${p.id}".length,bounds)
+        drawContext.canvas.nativeCanvas.drawText("${p.id}",center.x,center.y-label.height*u*.08f-(bounds.top+bounds.bottom)/2f,textPaint)
     }
 }
 
@@ -128,7 +139,16 @@ internal fun DrawScope.paintBoard(s:GameState,m:BoardMaterials) {
         drawRoundRect(Brush.verticalGradient(listOf(Color.White.copy(alpha=.14f),Color.Transparent,hex("#8c5d31").copy(alpha=.10f))),cell.topLeft,cell.size,CornerRadius(u*.13f))
     }
     drawRoundRect(hex("#f9e2b2"),inset.topLeft,inset.size,CornerRadius(u*.14f),style=Stroke(u*.028f))
-    s.placed.forEach {paintTile(s.rules,it,u,origin,m,s.selected==it.id,true)}
+    s.placed.forEach {p->
+        val avoid=mutableListOf<Rect>()
+        s.rules.coveredBy(p,s.placed).forEach{o->val(w,h)=s.rules.dimensions(o.r);avoid+=Rect((o.x-p.x).toFloat(),(o.y-p.y).toFloat(),(o.x-p.x+w).toFloat(),(o.y-p.y+h).toFloat())}
+        if(s.rules.beneath(p,s.placed).isNotEmpty())s.rules.stackMarker(p,s.placed)?.let{q->avoid+=Rect(q.x-p.x-.80f,q.y-p.y-.16f,q.x-p.x,q.y-p.y+.15f)}
+        if(s.selected==p.id&&!s.running) {
+            val a=pieceActionAnchor(p,u/density,s.placed)
+            if(a.inside)avoid+=Rect(a.left/(u/density)-p.x-.35f,a.top/(u/density)-p.y-.35f,(a.left+a.width)/(u/density)-p.x-.35f,(a.top+a.height)/(u/density)-p.y-.35f)
+        }
+        paintTile(s.rules,p,u,origin,m,s.selected==p.id,true,avoid)
+    }
     // Only exposed top faces get a badge. Fully covered pieces remain reachable in the rack.
     s.placed.forEach {p->
         val below=s.rules.beneath(p,s.placed).size
