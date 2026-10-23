@@ -4,7 +4,7 @@
 
 ## GitHub 与验证记录
 
-项目仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。源代码、80 关数据、原始参考资料和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏保留在本地，克隆后按下方步骤重新构建。
+项目仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。源代码、80 关数据、原始参考资料和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏不纳入 Git。APK 可在本地构建，也可下载下方 GitHub Actions 自动生成的产物。
 
 已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新列表见 [`design/list-redesign/android-home-clean-progress.png`](design/list-redesign/android-home-clean-progress.png)，设计记录见 [`design/list-redesign/`](design/list-redesign/)。游戏页见 [`design/android-native-difficulty-play.png`](design/android-native-difficulty-play.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
 
@@ -48,6 +48,16 @@ cd native/android
 本机专用 AVD 已设为硬件图形模式；启动命令为 `~/Library/Android/sdk/emulator/emulator -avd RacingClub_API35 -gpu host -feature -Vulkan -no-snapshot`。默认软件图形模式在此机明显变慢，应使用本次验证的 host GPU 配置。
 
 设置 JDK 21 和 Android SDK 并启动模拟器后，可用 `bash tools/verify-android-emulator.sh` 复现（可通过 `ANDROID_SERIAL` 选择设备）。截图、03/04/80 原生录屏、80 关回放报告与日志在 `output/android-entry-v4/validation/`；当前画面见 `design/android-native-play-v4.png` 和 `design/android-native-goals-v4.png`。v3 素材预览与旧验收文件继续保留。
+
+### GitHub Actions 自动打包
+
+工作流见 [`.github/workflows/android-apk.yml`](.github/workflows/android-apk.yml)。将此配置提交并推送到 GitHub 后，每次推送任意分支或标签都会自动运行 Kotlin 单元测试并生成 Debug APK；仅在本地执行 `git commit` 不会触发。同一分支或标签有新推送时，会取消尚未完成的旧构建。
+
+CI 使用 Ubuntu 24.04、JDK 21、Android SDK 36 和仓库中的 Gradle Wrapper，并缓存 Gradle 依赖。测试失败时构建会失败，生成的测试报告仍会上传，方便排查。
+
+下载方式：打开仓库的 [Actions → Android APK](https://github.com/ZoomZhao/RacingClub/actions/workflows/android-apk.yml)，选择成功的运行，在 **Artifacts** 中下载 `RacingClub-Android-debug-<提交 SHA>`，解压后安装 `app-debug.apk`。APK 和测试报告保留 14 天。配置进入默认分支后，也可以点击 **Run workflow** 手动选择分支打包。
+
+产物为使用自动生成的调试密钥签名的测试包，无需配置 Secrets。不同运行生成的签名可能不同；若覆盖安装提示签名不一致，需要先卸载旧版（会清除本机进度）。正式发布包需另行配置固定的发布签名。
 
 ## iOS
 
