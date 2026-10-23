@@ -87,6 +87,19 @@ class EntryAndGoalsTest {
             }
             verifyGoals(rules.levels[75],ready(rules.levels[75]))
             assertTrue(device.takeScreenshot(File(dir,"41-goals-76-large-font.png")))
+            scenario.onActivity{state.screen="home";state.selectedDifficultyId="pundit"}
+            val homeDeadline=SystemClock.uptimeMillis()+5000
+            var home=snapshot()
+            while(home["进入挑战 65"]==null&&SystemClock.uptimeMillis()<homeDeadline){SystemClock.sleep(50);home=snapshot()}
+            assertNotNull("Narrow home must remain usable",home["进入挑战 65"])
+            for((index,d) in rules.difficulties.withIndex()){
+                val n=home.getValue("难度 ${d.label} ${d.originalLabel}");assertTrue(n.bounds.left>=0&&n.bounds.right<=device.displayWidth)
+                val rank=device.findObject(By.text(listOf("I","II","III","IV","V")[index])).visibleBounds
+                val label=device.findObject(By.text(d.label)).visibleBounds
+                assertTrue("Rank and large label must not overlap",rank.bottom<=label.top+2)
+            }
+            assertFalse("No help on narrow home",device.hasObject(By.desc("玩法")))
+            assertTrue(device.takeScreenshot(File(dir,"53-home-large-font.png")))
         }
         File(dir,"goals-visibility-report.json").writeText(JSONObject().put("passed",true).put("levels",rows).put("largeFontScale",1.35).put("narrowWidthDp",620).toString(2))
     }

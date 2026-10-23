@@ -109,9 +109,9 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
         val margin=maxWidth*.08f
         Column(Modifier.safeDrawingPadding().padding(horizontal=margin,vertical=8.dp)) {
             Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(3.dp)) {
-                Row(Modifier.heightIn(min=if(s.screen=="home")46.dp else 30.dp).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                Row(Modifier.heightIn(min=if(s.screen=="home")38.dp else 30.dp).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                     if(s.screen=="home") {
-                        Text("♞ RacingClub",fontSize=24.sp,color=Green,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif)
+                        Text("♞ RacingClub",fontSize=20.sp,color=Green,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif)
                         Spacer(Modifier.weight(1f))
                     } else {
                         Action(Icons.AutoMirrored.Filled.ArrowBack,"返回"){s.home()}
@@ -121,7 +121,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                         Spacer(Modifier.width(4.dp));Text(clock(if(s.running||s.screen=="win")s.elapsed else s.time()+tick*0),fontSize=12.sp,color=Brown)
                         Action(Icons.Default.EmojiEvents,"本关排行榜"){s.showDialog("rank")}
                     }
-                    Action(Icons.Default.HelpOutline,"玩法"){s.showDialog("help")}
+                    if(s.screen!="home")Action(Icons.Default.HelpOutline,"玩法"){s.showDialog("help")}
                 }
                 if(s.screen!="home") {
                     val cursor=(progress.value*s.activeRoute.size).coerceAtMost((s.activeRoute.size-.0001f).coerceAtLeast(0f));val step=s.activeRoute.getOrNull(cursor.toInt())
@@ -144,6 +144,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 }
 
 @Composable private fun TrainingHome(s:GameState) {
+    val fontScale=LocalDensity.current.fontScale
     val difficulty=s.rules.difficulties.first{it.id==s.selectedDifficultyId}
     val levels=s.rules.levels.filter{it.difficultyId==difficulty.id}
     Row(Modifier.fillMaxSize().padding(top=6.dp,bottom=6.dp),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -152,7 +153,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
             Column(Modifier.padding(14.dp)) {
                 Text("今天，\n跃过新的\n挑战",fontSize=23.sp,lineHeight=32.sp,fontWeight=FontWeight.Bold,color=Green)
                 Spacer(Modifier.weight(1f))
-                Text("${s.rules.levels.count{s.solved(it.id)}} / 80 已完成",fontSize=12.sp,color=Green,fontWeight=FontWeight.Bold,modifier=Modifier.background(Paper.copy(alpha=.9f),RoundedCornerShape(50)).padding(horizontal=10.dp,vertical=7.dp))
+                Text("${s.rules.levels.count{s.solved(it.id)}} / 80 已完成",fontSize=if(fontScale>1.15f)11.sp else 12.sp,maxLines=1,color=Green,fontWeight=FontWeight.Bold,modifier=Modifier.background(Paper.copy(alpha=.9f),RoundedCornerShape(50)).padding(horizontal=10.dp,vertical=7.dp))
             }
         }
         Column(Modifier.weight(.73f),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -161,25 +162,13 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=nativeColor(difficulty.color))
             }
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
-                s.rules.difficulties.forEach{d->
-                    val active=d.id==s.selectedDifficultyId
-                    val tint=nativeColor(d.color)
-                    val range="${d.firstLevel.toString().padStart(2,'0')}–${d.lastLevel}"
-                    Column(Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if(active)tint else Color(0xfff2e4cc)).clickable{s.selectedDifficultyId=d.id}.semantics{contentDescription="难度 ${d.label} ${d.originalLabel}";stateDescription="$range，${if(active)"已选择"else"未选择"}";selected=active}.padding(vertical=5.dp),horizontalAlignment=Alignment.CenterHorizontally){
-                        Text(d.label,fontSize=11.sp,lineHeight=14.sp,color=if(active)Color.White else tint,fontWeight=FontWeight.Bold)
-                        Text(range,fontSize=8.sp,lineHeight=10.sp,color=if(active)Color.White.copy(alpha=.9f)else Brown)
-                    }
+                s.rules.difficulties.forEachIndexed{index,d->
+                    DifficultyPlaque(d,index,d.id==s.selectedDifficultyId,Modifier.weight(1f)){s.selectedDifficultyId=d.id}
                 }
             }
-            LazyVerticalGrid(columns=GridCells.Fixed(4),modifier=Modifier.weight(1f),horizontalArrangement=Arrangement.spacedBy(7.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
+            LazyVerticalGrid(columns=GridCells.Fixed(4),modifier=Modifier.weight(1f),horizontalArrangement=Arrangement.spacedBy(7.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 items(levels,key={it.id}){l->
-                    val done=s.solved(l.id);val best=s.best(l.id)
-                    Card(onClick={s.start(l)},modifier=Modifier.fillMaxWidth().height(58.dp).border(1.dp,if(done)Green.copy(alpha=.45f)else Color(0xffe8d4b8),RoundedCornerShape(10.dp)).semantics{contentDescription="进入挑战 ${l.number}";stateDescription=if(done)"已完成" else if(s.inProgress(l.id))"进行中" else "未开始"},shape=RoundedCornerShape(10.dp),colors=CardDefaults.cardColors(containerColor=if(done)Color(0xffeef2e5)else Color(0xfffffaf0))) {
-                        Column(Modifier.fillMaxSize().padding(horizontal=10.dp,vertical=6.dp)) {
-                            Row(verticalAlignment=Alignment.CenterVertically){Text(l.number,fontSize=19.sp,lineHeight=22.sp,fontWeight=FontWeight.Bold,color=Green);Spacer(Modifier.weight(1f));Text(difficulty.label,fontSize=9.sp,color=nativeColor(difficulty.color),fontWeight=FontWeight.Bold);Spacer(Modifier.width(3.dp));if(done)Icon(Icons.Default.CheckCircle,"已完成",Modifier.size(13.dp),tint=Green)else if(s.inProgress(l.id))Icon(Icons.Default.Schedule,"进行中",Modifier.size(13.dp),tint=Brown)}
-                            Text(if(best!=null)clock(best.millis)else "${l.requiredPieces.size} 拼板 · ${l.sequence.size} 跨",fontSize=9.sp,lineHeight=13.sp,color=Brown)
-                        }
-                    }
+                    ChallengePlaque(s,l,difficulty,Modifier.fillMaxWidth())
                 }
             }
         }

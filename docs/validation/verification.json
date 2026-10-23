@@ -18,7 +18,7 @@
     "native_ui_tests": {
       "tests": 8,
       "failures": 0,
-      "runtime_seconds": 129.354,
+      "runtime_seconds": 120.964,
       "framework": "Android UI Automator, real input and wall-clock animation",
       "checks": [
         "landscape board and five compact toolbar icons in one row",
@@ -38,7 +38,11 @@
         "ten best entries per level survive completing every other level",
         "all 80 levels show every target simultaneously without scrolling; long goals use two serpentine rows",
         "620dp width and 1.35 font scale keep every target visible; original six letter positions stay fixed for shared endpoints",
-        "removed workbench heading, selection instructions and route-success message stay absent"
+        "removed workbench heading, selection instructions and route-success message stay absent",
+        "home help button absent; game help remains available",
+        "all sixteen challenge plaques fully visible at the verified default landscape density",
+        "unstarted, in-progress and completed plaques expose correct saved status",
+        "620dp / 1.35-font home keeps every difficulty tab visible and separates rank medallions from text"
       ],
       "reports": [
         "docs/validation/android-flows.log",
@@ -48,17 +52,17 @@
         "docs/validation/goals-visibility-report.json"
       ]
     },
-    "visual_review": "Fresh five-category PUNDIT home, level80 difficulty header and full goals inspected; Android system App Info renders the adaptive launcher icon with complete horse/tile content inside its circular mask.",
+    "visual_review": "Native starter and PUNDIT plaque grids, real level65 in-progress and level80 completed markers, and the narrow large-font home inspected. Help is removed on the list; canonical tile thumbnails use public target information only.",
     "runtime_crashes": 0,
     "directional_animation_samples": [
       {
         "name": "challenge-3-animation",
         "value": {
-          "timer": "00:09.12",
+          "timer": "00:08.85",
           "horseBounds": [
             "287 781 374 883",
-            "400 781 508 883",
-            "430 644 538 746"
+            "397 781 505 883",
+            "431 652 539 754"
           ],
           "headings": [
             "朝向东，跑动中",
@@ -70,10 +74,10 @@
       {
         "name": "challenge-4-animation",
         "value": {
-          "timer": "00:01.23",
+          "timer": "00:01.18",
           "horseBounds": [
-            "890 490 998 592",
-            "858 595 966 697",
+            "895 485 1003 587",
+            "859 599 967 701",
             "743 631 851 733"
           ],
           "headings": [
@@ -89,13 +93,13 @@
     "runtime_pieces": 10,
     "rules_schema": 2,
     "level_report": "docs/validation/catalog-rules-report.json",
-    "ui_revision": "imagegen-app-icon-and-printed-difficulty-v1"
+    "ui_revision": "native-home-plaque-redesign-v1"
   },
   "ios": {
     "native_platform": "IOS",
     "architecture": "arm64",
     "minimum_os": "17.0",
-    "compile_and_link": "passed, five printed difficulty categories and native difficulty labels; PNG launcher icons included in unsigned app",
+    "compile_and_link": "passed, native wood/cream challenge plaques, rank medallions, saved progress status and home help removal; no iOS runtime validation",
     "signed": false,
     "device_validation": false,
     "runtime_levels": 80,
@@ -115,38 +119,38 @@
   "artifacts": [
     {
       "path": "output/RacingClub-Android-debug.apk",
-      "bytes": 44660775,
-      "sha256": "2ba17f502d310f89fc391e71c0c3e779f122ba60cba687715390787224022bba"
+      "bytes": 44857392,
+      "sha256": "f033a6dadb3ef18bb56904a485802c3cd4add6932150923c452d32a2c71554fa"
     },
     {
       "path": "native/ios/build/unsigned/RacingClub.app/RacingClub",
-      "bytes": 1639168,
-      "sha256": "f78bac10172fae3181faa95dcc3130030eba3838d0689d692e1828876eaa82bc"
+      "bytes": 1795992,
+      "sha256": "e40469e20167ed2874c1b5eacf0c3089ddf9a23e68620d4ddf873918a7762c2b"
     },
     {
-      "path": "design/app-icon/racingclub-icon-source-v1.png",
-      "bytes": 1905085,
-      "sha256": "ea3af18cc3af6035e027f69c06976df53d95806ba08ded26120c7a5d4359521d"
+      "path": "design/list-redesign/imagegen-reference-v1.png",
+      "bytes": 2364252,
+      "sha256": "0a50706a40c887ab1051bd2471226570ed2341bc6cdb39588dca6a7b0e632929"
     },
     {
-      "path": "design/app-icon/android-system-preview.png",
-      "bytes": 129692,
-      "sha256": "078d5b1adaf5743f2be671e9f761d2126348252872da560a92438f6fd3c45083"
+      "path": "design/list-redesign/android-home-starter.png",
+      "bytes": 1814853,
+      "sha256": "1373dafc56716c8806ddc2ef1832bb85601b0b26e0727953c39950f59798f628"
     },
     {
-      "path": "design/android-native-difficulty-home.png",
-      "bytes": 1578017,
-      "sha256": "d8f50e6ced7ff18fab1517f08af73500daf4061fc88bc55344f9a8b2ce603809"
+      "path": "design/list-redesign/android-home-progress.png",
+      "bytes": 1823324,
+      "sha256": "df26336af671c36515a65f4062ec980fa62e5611c962691a3dce7cbd4df052d9"
     },
     {
-      "path": "design/android-native-difficulty-play.png",
-      "bytes": 1749220,
-      "sha256": "974ec28a91bea23a200c31ff6bb68f347b5d7e9ea0f80154b1e1ee332e598b30"
+      "path": "design/list-redesign/android-home-large-font.png",
+      "bytes": 1531472,
+      "sha256": "dd84213bf80e0b20a4e0cf6df4901f1d0466ea486a73711a0a75f8c7eae4900a"
     },
     {
-      "path": "output/app-icon/validation/challenge-80.mp4",
-      "bytes": 10547104,
-      "sha256": "a8507b172a6e659fe98dcbb28a583c2baaf7f5cc54f9ba6ee174536d6ab29acf"
+      "path": "output/list-redesign/validation/challenge-80.mp4",
+      "bytes": 13950134,
+      "sha256": "c443d01c52226718e3577b72aab2b1b3d740d045ee4cff0c7cfb76bb9981d28c"
     }
   ],
   "last_four_hints": "Computed offline from verified topology and instructions; independent reference replay passed. No solution photos claimed; original referenceLayout remains null.",
@@ -218,5 +222,16 @@
       }
     ],
     "navigation": "both native UIs read difficultyId; all 80 levels remain directly accessible"
+  },
+  "home_design": {
+    "generator": "built-in ImageGen reference; native Compose/Canvas and SwiftUI implementation",
+    "reference": "design/list-redesign/imagegen-reference-v1.png",
+    "prompt": "design/list-redesign/imagegen-prompt-v1.json",
+    "screenshots": [
+      "design/list-redesign/android-home-starter.png",
+      "design/list-redesign/android-home-progress.png",
+      "design/list-redesign/android-home-large-font.png"
+    ],
+    "thumbnail": "canonical orientation of the first printed target piece; no solution placement is exposed"
   }
 }

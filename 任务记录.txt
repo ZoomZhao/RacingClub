@@ -124,3 +124,10 @@ Android 原生视觉还原与模拟器验收（2026-10-23）：
 - Android/SwiftUI 首页难度导航、关卡卡片、游戏页同步实际难度。保留全部80关自由选择及旧存档。当前 iOS 主机缺少模拟器运行时，actool 不可用，本地未签名构建沿用PNG图标声明；Xcode工程使用正式AppIcon目录。
 
 最终验证：22项Node检查、9项Kotlin单元测试、8项Android设备测试全部通过；五档共80关导航与实际难度标记、完整目标条、双向旋转和自动通关复验通过。Android系统应用信息页的圆形图标裁切已检查，无主体缺失；iOS原生编译和80关Swift回放通过，未完成iOS设备验证。新版APK更新，日志归档docs/validation/；当前截图design/android-native-difficulty-{home,play}.png。
+
+2026-10-23 列表页重新设计：
+- 按用户要求移除列表页右上角帮助按钮，缩小品牌行。ImageGen 设计参考及完整提示词保存在 design/list-redesign/。
+- HomeDesign.kt 原生绘制木质倒角、奶油色内嵌面、黄铜固定钉和段位徽章。挑战牌展示大编号、首块题面拼板标准姿态与状态；缩略图不使用答案布局。
+- 未开始为箭头、进行中为时钟、已完成为绿勾和真实最佳时间。SwiftUI 同步样式与进度显示并编译通过；iOS仍未进行设备验证。
+- 默认横屏每档16张牌完整展示。620dp/1.35字号下，难度牌随字号增高，卡片精简统计、列表纵向滚动，徽章与文字互不重叠。
+- 最终8项Android设备检查和9项Kotlin单元测试通过，包含列表帮助移除、三种状态、全部难度可达与放大字体布局；APK和docs/validation/已更新。真实截图见design/list-redesign/android-home-{starter,progress,large-font}.png。

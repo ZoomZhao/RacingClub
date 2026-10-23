@@ -12,6 +12,8 @@ private struct ProgressRecord:Codable {let placed:[Placement];let moves:Int;let 
  @Published var screen="home";@Published var level:Level;@Published var placed:[Placement]=[];@Published var selected:Int?;@Published var rotation=0;@Published var moves=0;@Published var hints=0;@Published var message="";@Published var running=false;@Published var progress=0.0;@Published var dialog="";@Published var elapsed=0.0;@Published var clockTick=0
  @Published var selectedDifficultyId="starter";
  @Published var chosenStart="";@Published var chosenFinish=""
+ func solved(_ id:Int)->Bool {!repository.list(level:id).isEmpty}
+ func inProgress(_ id:Int)->Bool {guard let d=UserDefaults.standard.data(forKey:"level-\(id)"),let p=try?JSONDecoder().decode(ProgressRecord.self,from:d)else{return false};return !p.finished && !p.placed.isEmpty}
  var startGate:String {level.start.isEmpty ? chosenStart:level.start}
  var finishGate:String {level.finish.isEmpty ? chosenFinish:level.finish}
  var route:[RouteStep]=[];private var started:Double?;private var history:[([Placement],Int,Int,String,String)]=[];private var runTask:Task<Void,Never>?
@@ -42,7 +44,7 @@ struct ClubView:View {
  private let tick=Timer.publish(every:0.1,on:.main,in:.common).autoconnect()
  var body:some View {GeometryReader{geo in VStack(spacing:5){header;if game.screen != "home"{NativeCourseSequence(game:game,level:game.level)};if game.screen=="home"{home}else if game.screen=="win"{win}else{if geo.size.width>geo.size.height{HStack(spacing:18){NativeBoard(game:game).frame(maxWidth:.infinity,maxHeight:.infinity);workbench.frame(width:geo.size.width*0.39)}}else{VStack{NativeBoard(game:game).aspectRatio(5.7/4.7,contentMode:.fit);workbench}}}}.padding(.horizontal,18).padding(.vertical,8).background(paper).sheet(isPresented:Binding(get:{!game.dialog.isEmpty},set:{if !$0{game.close()}})){dialog}.onReceive(tick){_ in game.clockTick+=1}}
  }
- private var header:some View {HStack(spacing:12){if game.screen=="home"{Text("♞ RacingClub").font(.system(size:24,weight:.bold,design:.serif))}else{tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.headline);difficultyBadge(game.data.difficulties.first{$0.id==game.level.difficultyId}!);Spacer();Text(timeString(game.time)).font(.system(size:13,design:.monospaced));tool("trophy","本关排行榜"){game.show("rank")}};if game.screen=="home"{Spacer()};tool("questionmark.circle","玩法"){game.show("help")}}.foregroundStyle(forest).frame(height:38)}
+ private var header:some View {HStack(spacing:12){if game.screen=="home"{Text("♞ RacingClub").font(.system(size:20,weight:.bold,design:.serif))}else{tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.headline);difficultyBadge(game.data.difficulties.first{$0.id==game.level.difficultyId}!);Spacer();Text(timeString(game.time)).font(.system(size:13,design:.monospaced));tool("trophy","本关排行榜"){game.show("rank")}};if game.screen=="home"{Spacer()};if game.screen != "home"{tool("questionmark.circle","玩法"){game.show("help")}}}.foregroundStyle(forest).frame(height:38)}
  private func difficultyBadge(_ d:Difficulty)->some View {Text(d.label).font(.system(size:10,weight:.bold)).foregroundStyle(ink(d.color)).padding(.horizontal,8).padding(.vertical,4).background(ink(d.color).opacity(0.1),in:Capsule()).accessibilityLabel("难度：\(d.label) \(d.originalLabel)")}
  private var home:some View {
   let d=game.data.difficulties.first{$0.id==game.selectedDifficultyId}!
@@ -51,12 +53,24 @@ struct ClubView:View {
    ZStack(alignment:.topLeading){Image("horse-arena").resizable().scaledToFill();Text("今天，\n跃过新的挑战").font(.system(size:27,weight:.bold)).foregroundStyle(forest).padding(18)}.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().clipShape(RoundedRectangle(cornerRadius:16))
    VStack(spacing:10){
     HStack{Text("马术训练场").font(.title2.bold());Spacer();Text(d.originalLabel).font(.caption.bold()).foregroundStyle(ink(d.color))}
-    HStack(spacing:5){ForEach(game.data.difficulties){item in
+    HStack(spacing:5){ForEach(Array(game.data.difficulties.enumerated()),id:\.element.id){index,item in
      let active=game.selectedDifficultyId==item.id
-     Button{game.selectedDifficultyId=item.id}label:{VStack(spacing:2){Text(item.label).font(.system(size:12,weight:.bold));Text(String(format:"%02d–%02d",item.firstLevel,item.lastLevel)).font(.system(size:9))}.frame(maxWidth:.infinity).padding(.vertical,6).foregroundStyle(active ? Color.white:ink(item.color)).background(active ? ink(item.color):paper,in:RoundedRectangle(cornerRadius:9))}.buttonStyle(.plain).accessibilityLabel("难度 \(item.label) \(item.originalLabel)")
+     Button{game.selectedDifficultyId=item.id}label:{ZStack(alignment:.bottom){
+      HomePlaqueBackground(active:active ? ink(item.color):nil,top:8)
+      VStack(spacing:1){Spacer().frame(height:20);Text(item.label).font(.system(size:11,weight:.bold));Text(String(format:"%02d–%02d",item.firstLevel,item.lastLevel)).font(.system(size:8))}.padding(.bottom,5).foregroundStyle(active ? Color.white:ink(item.color))
+      Text(["I","II","III","IV","V"][index]).font(.system(size:11,weight:.bold,design:.serif)).foregroundStyle(ink("#ffedbc")).frame(width:20,height:20).background(ink(item.color),in:Circle()).overlay{Circle().stroke(ink("#d2a157"),lineWidth:2)}.frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.top)
+     }.frame(height:48)}.buttonStyle(HomePlaquePress()).accessibilityLabel("难度 \(item.label) \(item.originalLabel)").accessibilityValue(active ? "已选择":"未选择")
     }}
-    ScrollView{LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:7),count:4),spacing:7){ForEach(levels){level in
-     Button{game.start(level)}label:{VStack(alignment:.leading,spacing:5){HStack{Text(level.number).font(.system(size:21,weight:.bold));Spacer();Text(d.label).font(.system(size:10)).foregroundStyle(ink(d.color))};Text("\(level.requiredPieces.count) 拼板 · \(level.sequence.count) 跨").font(.system(size:10)).foregroundStyle(saddle)}.padding(10).background(Color.white.opacity(0.7),in:RoundedRectangle(cornerRadius:10))}.buttonStyle(.plain)
+    ScrollView{LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:7),count:4),spacing:6){ForEach(levels){level in
+     let done=game.solved(level.id),ongoing=game.inProgress(level.id),best=game.repository.list(level:level.id).first
+     Button{game.start(level)}label:{VStack(alignment:.leading,spacing:3){
+      HStack(spacing:3){
+       Text(level.number).font(.system(size:25,weight:.bold,design:.serif)).foregroundStyle(forest)
+       Canvas{context,size in var c=context;let u=min(size.width/2,size.height*0.64);drawTile(&c,game.data,Placement(id:level.sequence[0],x:0,y:0,r:0),u,CGPoint(x:(size.width-2*u)/2,y:(size.height-u)/2))}.frame(maxWidth:.infinity).frame(height:28)
+       Image(systemName:done ? "checkmark.circle.fill":ongoing ? "clock":"chevron.right").font(.system(size:11,weight:.bold)).foregroundStyle(done ? forest:ongoing ? ink("#ad6a1e"):saddle)
+      }
+      Text(best.map{"\(d.label) · \(timeString(Double($0.millis)/1000))"} ?? "\(d.label) · \(level.requiredPieces.count) 块 · \(level.sequence.count) 跨").font(.system(size:8)).foregroundStyle(saddle).lineLimit(1)
+     }.padding(.horizontal,9).padding(.vertical,7).frame(maxWidth:.infinity,minHeight:57).background{HomePlaqueBackground()}}.buttonStyle(HomePlaquePress()).accessibilityLabel("进入挑战 \(level.number)").accessibilityValue(done ? "已完成":ongoing ? "进行中":"未开始")
     }}}
    }.foregroundStyle(forest).frame(maxWidth:.infinity)
   }
@@ -94,6 +108,23 @@ struct ClubView:View {
  private func tool(_ icon:String,_ label:String,_ action:@escaping()->Void)->some View {Button(action:action){Image(systemName:icon).font(.system(size:19)).frame(width:38,height:38)}.accessibilityLabel(label)}
  private func badge(_ id:Int)->some View {Text("\(id)").font(.system(size:12,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:23,height:23).background(numberFill(id),in:Circle())}
  private func sequence(_ level:Level)->some View {NativeCourseSequence(game:game,level:level)}
+}
+private struct HomePlaquePress:ButtonStyle {
+ func makeBody(configuration:Configuration)->some View {configuration.label.scaleEffect(configuration.isPressed ? 0.98:1).offset(y:configuration.isPressed ? 1:0).animation(.easeOut(duration:0.12),value:configuration.isPressed)}
+}
+private struct HomePlaqueBackground:View {
+ var active:Color?=nil
+ var top:CGFloat=0
+ var body:some View {Canvas{context,size in
+  let frame=CGRect(x:1,y:top+1,width:max(1,size.width-2),height:max(1,size.height-top-3))
+  context.fill(Path(roundedRect:frame.offsetBy(dx:0,dy:2),cornerRadius:8),with:.color(ink("#704928").opacity(0.19)))
+  context.fill(Path(roundedRect:frame,cornerRadius:8),with:.linearGradient(Gradient(colors:[ink("#f2cd93"),ink("#b57d42"),ink("#82512d")]),startPoint:CGPoint(x:0,y:frame.minY),endPoint:CGPoint(x:0,y:frame.maxY)))
+  let face=frame.insetBy(dx:2.5,dy:2.5)
+  context.fill(Path(roundedRect:face,cornerRadius:6),with:.linearGradient(Gradient(colors:active.map{[$0,$0.opacity(0.9)]} ?? [ink("#fffbef"),ink("#f7e6c6")]),startPoint:CGPoint(x:0,y:face.minY),endPoint:CGPoint(x:0,y:face.maxY)))
+  context.stroke(Path(roundedRect:frame.insetBy(dx:1,dy:1),cornerRadius:7),with:.color(ink("#f7ddb0")),lineWidth:1)
+  context.stroke(Path(roundedRect:face.insetBy(dx:1,dy:1),cornerRadius:5),with:.color(Color.white.opacity(0.7)),lineWidth:0.5)
+  if top==0{for x in [CGFloat(5),size.width-5]{for y in [CGFloat(5),size.height-7]{context.fill(Path(ellipseIn:CGRect(x:x-1.5,y:y-1.5,width:3,height:3)),with:.color(ink("#bf8f45")))}}}
+ }}
 }
 private func drawTile(_ c:inout GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ origin:CGPoint){let(w,h)=data.dimensions(p.r);let top=CGPoint(x:origin.x+CGFloat(p.x)*u,y:origin.y+CGFloat(p.y)*u);c.fill(Path(roundedRect:CGRect(x:top.x,y:top.y,width:CGFloat(w)*u,height:CGFloat(h)*u),cornerRadius:7),with:.color(ink("#d7b68a")));let piece=data.pieces.first{$0.id==p.id}!;for road in piece.paths {var path=Path();for(i,pt)in road.samples.enumerated(){let q=data.rotate(pt,p.r);let point=CGPoint(x:top.x+q[0]*u,y:top.y+q[1]*u);if i==0{path.move(to:point)}else{path.addLine(to:point)}};c.stroke(path,with:.color(ink("#fff2d6")),lineWidth:u*0.36)};let g=piece.gate;let q=data.rotate([g[0]/100,g[1]/100],p.r);let a=(g[2]+Double(p.r*90)) * .pi/180;let center=CGPoint(x:top.x+q[0]*u,y:top.y+q[1]*u);let dx = -sin(a)*u*0.23,dy=cos(a)*u*0.23;var gate=Path();gate.move(to:CGPoint(x:center.x-dx,y:center.y-dy));gate.addLine(to:CGPoint(x:center.x+dx,y:center.y+dy));c.stroke(gate,with:.color(ink(piece.color)),lineWidth:u*0.09)}
 struct TilePreview:View {@ObservedObject var game:Game;let id:Int;var body:some View{Canvas{context,size in var c=context;let r=game.selected==id ? game.rotation:0;let(w,h)=game.data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(&c,game.data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2))}}}

@@ -6,13 +6,14 @@
 
 项目仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。源代码、80 关数据、原始参考资料和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏保留在本地，克隆后按下方步骤重新构建。
 
-已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新难度界面见 [`design/android-native-difficulty-home.png`](design/android-native-difficulty-home.png)、[`design/android-native-difficulty-play.png`](design/android-native-difficulty-play.png) 和 [`design/android-native-goals-v4.png`](design/android-native-goals-v4.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
+已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新列表见 [`design/list-redesign/android-home-progress.png`](design/list-redesign/android-home-progress.png)，设计参考与完整提示词见 [`design/list-redesign/`](design/list-redesign/)。游戏页见 [`design/android-native-difficulty-play.png`](design/android-native-difficulty-play.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
 
 ## 当前功能
 
 - 按确认的 ImageGen 设计稿还原马场插画、木纹倒角、颗粒沙地、奶油色路线和障碍支柱；A–F 六个字母入口均留有围栏开口。
 - ImageGen 应用图标已接入 Android 自适应启动图标与 iOS AppIcon；原图、完整提示词和打包说明见 [`design/app-icon/`](design/app-icon/)。
 - 首页难度导航、关卡卡片与游戏页统一显示原题难度，编号范围作为辅助信息；分类依据见 [`design/difficulty-levels.md`](design/difficulty-levels.md)。
+- 列表页移除右上角帮助按钮，五档难度改为段位徽章牌；关卡按钮使用木质倒角、奶油色内嵌面和真实道路缩略图，配合箭头、时钟、绿勾区分进入与进度。默认横屏每档 16 关完整展示，放大字号时支持纵向滚动。
 - 横屏主布局：左侧 5 × 4 棋盘，右侧拼板工作台；顶部五个紧凑工具图标，底部固定两个大旋转按钮。
 - 移除工作台标题、选中说明、放置教学和出发提示，只保留图标、选中描边与必要的重叠/越界错误反馈。
 - 拼板按编号升序排列；挑战条保留要求的障碍顺序。已放置拼板可从棋盘或工作台重新选中，旋转、移动、移回与撤销。右下角左键逆时针 90°、右键顺时针 90°，支持连续旋转。
@@ -109,4 +110,4 @@ npm start
 
 图标打包可通过 `python3 tools/package-app-icon.py` 复现（需要 Pillow）。当前本地 iOS 未签名构建使用同源 PNG 图标与 Info.plist 声明；Xcode 目标已接入 AppIcon 资源目录。
 
-最新图标及难度版本验收：`VALIDATION_DIR="$PWD/output/app-icon/validation" bash tools/verify-android-emulator.sh`，仍需配置 JDK 21、Android SDK 并启动模拟器。该目录包含五档首页截图、全部目标检查及 03/04/80 关录屏。
+最新列表版本验收：`VALIDATION_DIR="$PWD/output/list-redesign/validation" bash tools/verify-android-emulator.sh`，仍需配置 JDK 21、Android SDK 并启动模拟器。该目录包含五档首页、真实进度与放大字号截图、全部目标检查及 03/04/80 关录屏。

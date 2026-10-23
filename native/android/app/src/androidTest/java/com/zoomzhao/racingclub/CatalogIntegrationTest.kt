@@ -28,10 +28,19 @@ class CatalogIntegrationTest {
  private fun choose(label:String,letter:String){tap("入口 $letter");find(By.text("入口 $letter"));val c=find(By.text(if(label=="选择起点")"设为起点"else"设为终点")).visibleCenter;device.click(c.x,c.y);find(By.text("${if(label=="选择起点")"起点"else"终点"} $letter"))}
  private fun nodeState(description:String):String {
   fresh()
-  fun walk(n:android.view.accessibility.AccessibilityNodeInfo?):String?{if(n==null)return null;if(n.contentDescription?.toString()==description)return n.stateDescription?.toString();for(i in 0 until n.childCount)walk(n.getChild(i))?.let{return it};return null}
+  // Compose exposes a card's description as a virtual child, with state on
+  // its clickable parent. Canvas-only nodes keep both on the same node.
+  fun walk(n:android.view.accessibility.AccessibilityNodeInfo?):String?{if(n==null)return null;if(n.contentDescription?.toString()==description)return n.stateDescription?.toString()?.takeIf{it.isNotEmpty()}?:n.parent?.stateDescription?.toString();for(i in 0 until n.childCount)walk(n.getChild(i))?.let{return it};return null}
   return walk(instrumentation.uiAutomation.rootInActiveWindow).orEmpty()
  }
  private fun awaitRunning(){val end=SystemClock.uptimeMillis()+5000;while(SystemClock.uptimeMillis()<end){if(nodeState("马儿").contains("跑动中"))return;SystemClock.sleep(50)};fail("Horse must start automatically")}
+ private fun expectState(label:String,expected:String){
+  find(By.desc(label))
+  val end=SystemClock.uptimeMillis()+3000
+  while(SystemClock.uptimeMillis()<end){if(nodeState(label)==expected)return;SystemClock.sleep(50)}
+  device.dumpWindowHierarchy(File(dir,"list-state-failure.xml"))
+  fail("$label should be $expected, actual '${nodeState(label)}'")
+ }
  private fun capture(name:String){assertTrue(device.takeScreenshot(File(dir,"$name.png")))}
  @Test fun all80NativeRulesReplayIncludingLoopsAndUnknownEndpoints() {
   val rules=loadRules(context);assertEquals(80,rules.levels.size);assertEquals((1..10).toList(),rules.pieces.keys.sorted())
@@ -65,14 +74,15 @@ class CatalogIntegrationTest {
   context.getSharedPreferences("progress-v1",0).edit().clear().commit()
   context.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
   ActivityScenario.launch(MainActivity::class.java).use{scenario->
-   find(By.text("马术训练场"));capture("20-catalog-home")
+   find(By.text("马术训练场"));expectState("进入挑战 01","未开始");assertFalse("Home must not show help",device.hasObject(By.desc("玩法")));capture("20-catalog-home")
    for(d in loadRules(context).difficulties){
     tap("难度 ${d.label} ${d.originalLabel}")
     find(By.textContains(d.originalLabel))
-    for(id in d.firstLevel..d.lastLevel)find(By.desc("进入挑战 ${id.toString().padStart(2,'0')}"))
+    val cards=(d.firstLevel..d.lastLevel).map{id->find(By.desc("进入挑战 ${id.toString().padStart(2,'0')}" )).visibleBounds}
+    assertTrue("All sixteen plaques must be fully visible",cards.minOf{it.height()}>=140&&cards.maxOf{it.height()}-cards.minOf{it.height()}<=3)
     capture("50-difficulty-${d.id}")
     tap("进入挑战 ${d.firstLevel.toString().padStart(2,'0')}")
-    find(By.desc("难度：${d.label} ${d.originalLabel}"))
+    find(By.desc("难度：${d.label} ${d.originalLabel}"));find(By.desc("玩法"))
     tap("返回")
    }
    capture("21-catalog-final-chapter");tap("进入挑战 80")
@@ -101,7 +111,7 @@ class CatalogIntegrationTest {
    find(By.text("漂亮，顺利通关！"),45000);device.executeShellCommand("pkill -2 screenrecord");recording.join(2000);assertTrue(movie.length()>1000);capture("27-level80-win")
    find(By.text("返回训练场")).click();find(By.text("1 / 80 已完成"));capture("28-level80-completed")
    tap("进入挑战 65");tap("提示");choose("选择起点","C")
-   choose("选择终点","D");tap("返回")
+   choose("选择终点","D");tap("返回");expectState("进入挑战 65","进行中");expectState("进入挑战 80","已完成");capture("52-list-progress")
    scenario.recreate();find(By.text("马术训练场"));SystemClock.sleep(300);tap("难度 宗师 PUNDIT");tap("进入挑战 65")
    find(By.text("起点 C"));find(By.text("终点 D"));assertTrue(nodeState("棋盘").contains("号"));capture("29-level65-restored")
   }
