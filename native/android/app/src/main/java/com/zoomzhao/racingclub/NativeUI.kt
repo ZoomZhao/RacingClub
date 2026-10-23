@@ -2,7 +2,11 @@ package com.zoomzhao.racingclub
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.ui.platform.LocalDensity
@@ -43,12 +47,13 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 
 @Composable private fun DifficultyBadge(d:Difficulty) {
     val tint=nativeColor(d.color)
-    Text(d.label,fontSize=10.sp,fontWeight=FontWeight.Bold,color=tint,maxLines=1,modifier=Modifier.background(tint.copy(alpha=.1f),RoundedCornerShape(50)).padding(horizontal=8.dp,vertical=3.dp).semantics{contentDescription="难度：${d.label} ${d.originalLabel}"})
+    Text(d.label,fontSize=10.sp,fontWeight=FontWeight.Bold,color=tint,maxLines=1,modifier=Modifier.background(Paper.copy(alpha=.96f),RoundedCornerShape(50)).border(.6.dp,Color(0xffd5b486),RoundedCornerShape(50)).padding(horizontal=8.dp,vertical=3.dp).semantics{contentDescription="难度：${d.label} ${d.originalLabel}"})
 }
 
 @Composable private fun Action(icon:ImageVector,label:String,enabled:Boolean=true,slot:Dp=30.dp,onClick:()->Unit) {
-    Box(Modifier.size(slot).clip(RoundedCornerShape(8.dp)).clickable(enabled=enabled,role=Role.Button,onClick=onClick),contentAlignment=Alignment.Center) {
-        Icon(icon,contentDescription=label,tint=if(enabled)Brown else Brown.copy(alpha=.3f),modifier=Modifier.size(19.dp))
+    val interaction=remember{MutableInteractionSource()};val pressed by interaction.collectIsPressedAsState()
+    Box(Modifier.size(slot).gameControlFace(pressed).clip(RoundedCornerShape(7.dp)).clickable(enabled=enabled,interactionSource=interaction,indication=null,role=Role.Button,onClick=onClick),contentAlignment=Alignment.Center) {
+        Icon(icon,contentDescription=label,tint=(if(label=="提示")Color(0xff9b641b)else Green).copy(alpha=if(enabled)1f else .3f),modifier=Modifier.size(slot*.53f))
     }
 }
 @Composable private fun NumberBadge(id:Int,s:GameState,diameter:Dp=25.dp,active:Boolean=false,description:String?=null) {
@@ -58,18 +63,17 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
     }
 }
 @Composable internal fun CourseSequence(s:GameState,l:Level,modifier:Modifier=Modifier,crossed:Int=0) {
-    val density=LocalDensity.current
     BoxWithConstraints(modifier.background(Paper.copy(alpha=.96f),RoundedCornerShape(10.dp)).border(1.dp,Color(0xffe8d4b8),RoundedCornerShape(10.dp)).padding(horizontal=9.dp,vertical=5.dp).semantics{contentDescription="障碍顺序";stateDescription="${s.startGate.ifEmpty{"?"}} → ${l.sequence.joinToString(" → ")} → ${s.finishGate.ifEmpty{"?"}}"}) {
-        val rows=courseRows(l.sequence.size+2,maxWidth.value,density.fontScale)
-        val diameter=min(26f*density.fontScale.coerceAtLeast(1f),(maxWidth.value-24f-(rows.maxOf{it.size}-1)*10f)/rows.maxOf{it.size}).dp
-        val rowWidth=(diameter.value*rows.maxOf{it.size}+10f*(rows.maxOf{it.size}-1)).dp
+        val rows=courseRows(l.sequence.size+2,maxWidth.value,1f)
+        val diameter=min(24f,(maxWidth.value-8f-(rows.maxOf{it.size}-1)*8f)/rows.maxOf{it.size}).dp
+        val rowWidth=(diameter.value*rows.maxOf{it.size}+8f*(rows.maxOf{it.size}-1)).dp
         Column(Modifier.fillMaxWidth(),horizontalAlignment=Alignment.CenterHorizontally) {
             rows.forEachIndexed{rowIndex,indices->
                 val reversed=rowIndex%2==1
                 Row(Modifier.width(rowWidth),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=if(reversed)Arrangement.End else Arrangement.Start) {
                     val display=if(reversed)indices.reversed()else indices
                     display.forEachIndexed{column,index->
-                        if(column>0)Icon(if(reversed)Icons.AutoMirrored.Filled.ArrowBack else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.width(10.dp).height(9.dp),tint=Brown)
+                        if(column>0)Icon(if(reversed)Icons.AutoMirrored.Filled.ArrowBack else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.width(8.dp).height(9.dp),tint=Brown)
                         when(index){
                             0->CourseEndpoint(s.startGate.ifEmpty{"?"},false,diameter)
                             l.sequence.size+1->CourseEndpoint(s.finishGate.ifEmpty{"?"},true,diameter)
@@ -93,8 +97,9 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
     var tick by remember { mutableLongStateOf(0) }
     LaunchedEffect(Unit) { while(true) { tick++;delay(100) } }
     val progress=remember { Animatable(0f) }
-    LaunchedEffect(s.level.id,s.placed,s.screen,s.dialog,s.chosenStart,s.chosenFinish) {
-        if(s.screen=="game" && !s.running && s.dialog.isEmpty()) {
+    val drag=remember(s.level.id,s.screen){BoardDrag()}
+    LaunchedEffect(s.level.id,s.placed,s.screen,s.dialog,s.chosenStart,s.chosenFinish,drag.piece) {
+        if(s.screen=="game" && !s.running && s.dialog.isEmpty() && drag.piece==null) {
             s.trace()?.let { route ->
                 delay(250);s.beginRun(route);progress.snapTo(0f)
                 progress.animateTo(1f,tween(route.size*1350,easing=LinearEasing))
@@ -106,31 +111,27 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
     Surface(color=Paper,modifier=Modifier.fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
         Image(painterResource(R.drawable.arena_backdrop),null,Modifier.fillMaxSize(),contentScale=ContentScale.FillBounds)
-        val margin=maxWidth*.08f
+        val margin=if(s.screen=="home")maxWidth*.08f else 12.dp
+        val materials=boardMaterials()
         Column(Modifier.safeDrawingPadding().padding(horizontal=margin,vertical=8.dp)) {
-            if(s.screen!="home")Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(3.dp)) {
-                Row(Modifier.heightIn(min=30.dp).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                        Action(Icons.AutoMirrored.Filled.ArrowBack,"返回"){s.home()}
-                        Spacer(Modifier.width(8.dp));Text("挑战 ${s.level.number}",fontSize=18.sp,fontWeight=FontWeight.Bold,color=Green)
-                        Spacer(Modifier.width(8.dp));DifficultyBadge(s.difficulty())
-                        Spacer(Modifier.weight(1f));Icon(Icons.Default.Timer,null,Modifier.size(14.dp),tint=Brown)
-                        Spacer(Modifier.width(4.dp));Text(clock(if(s.running||s.screen=="win")s.elapsed else s.time()+tick*0),fontSize=12.sp,color=Brown)
-                        Action(Icons.Default.EmojiEvents,"本关排行榜"){s.showDialog("rank")}
-                    Action(Icons.Default.HelpOutline,"玩法"){s.showDialog("help")}
-                }
-                if(s.screen!="home") {
-                    val cursor=(progress.value*s.activeRoute.size).coerceAtMost((s.activeRoute.size-.0001f).coerceAtLeast(0f));val step=s.activeRoute.getOrNull(cursor.toInt())
-                    val crossed=s.activeRoute.take(cursor.toInt()).count{it.jump!=null}+(if(step?.jump!=null&&cursor%1>(s.rules.road(step).jumpAt?:.5f).let{if(step.from==s.rules.road(step).from)it else 1-it})1 else 0)
-                    CourseSequence(s,s.level,Modifier.fillMaxWidth(),crossed)
-                }
-            }
             when(s.screen) {
                 "home" -> TrainingHome(s)
-                "win" -> WinScreen(s)
-                else -> Row(Modifier.fillMaxSize().padding(top=3.dp,bottom=3.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                    NativeBoard(s,progress.value,Modifier.weight(1.55f).fillMaxHeight())
-                    Workbench(s,Modifier.weight(1f).fillMaxHeight())
+                "win" -> {GameHeader(s,tick);WinScreen(s)}
+                else -> BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val boardWidth=min(maxHeight.value*6.3f/5.3f,(maxWidth.value-250f).coerceAtLeast(maxWidth.value*.54f)).dp
+                    Row(Modifier.fillMaxSize(),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+                        NativeBoard(s,progress.value,Modifier.width(boardWidth).fillMaxHeight(),drag)
+                        Workbench(s,progress.value,tick,drag,Modifier.weight(1f).fillMaxHeight())
+                    }
                 }
+            }
+        }
+        // Root coordinates let a single native gesture travel from tray to board.
+        drag.piece?.let{p->
+            Canvas(Modifier.fillMaxSize()) {
+                val(w,h)=s.rules.dimensions(p.r);val u=drag.unit
+                val origin=drag.liftOrigin-Offset(0f,18.dp.toPx())
+                withTransform({translate(origin.x,origin.y)}){drawContext.canvas.saveLayer(Rect(Offset.Zero,Size(w*u,h*u)),Paint().apply{alpha=.86f});paintTile(s.rules,p.copy(x=0,y=0),u,Offset.Zero,materials,selected=true,number=true);if(drag.problem(s).isNotEmpty())drawRoundRect(Color(0xffc04835),Offset.Zero,Size(w*u,h*u),CornerRadius(u*.06f),style=Stroke(2.dp.toPx()));drawContext.canvas.restore()}
             }
         }
         }
@@ -156,7 +157,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
             }
         }
         Column(Modifier.weight(.73f),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Row(Modifier.fillMaxWidth().height(30.dp),verticalAlignment=Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().height(22.dp),verticalAlignment=Alignment.CenterVertically) {
                 Text("马术训练场",fontSize=19.sp,color=Green,fontWeight=FontWeight.Bold)
                 Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=nativeColor(difficulty.color))
             }
@@ -177,55 +178,81 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
     }
 }
 
-@Composable private fun Workbench(s:GameState,modifier:Modifier) {
-    val materials=boardMaterials()
-    val shape=RoundedCornerShape(16.dp)
-    BoxWithConstraints(modifier.shadow(3.dp,shape,ambientColor=Brown.copy(alpha=.12f),spotColor=Brown.copy(alpha=.12f)).background(Color(0xfffffbf2).copy(alpha=.94f),shape).border(1.dp,Color(0xffead6b8),shape).padding(10.dp)) {
-    val toolSlot=min(32f,maxWidth.value/5).dp
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.height(32.dp).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
-            Action(Icons.Default.DeleteOutline,"移回",s.selected!=null&&!s.running,slot=toolSlot) {s.remove()}
-            Action(Icons.Default.Undo,"撤销",!s.running,slot=toolSlot) {s.undo()}
-            Action(Icons.Default.Lightbulb,"提示",!s.running,slot=toolSlot) {s.hint()}
-            Action(Icons.Default.Refresh,"重置",!s.running,slot=toolSlot) {s.reset()}
-            Action(Icons.Default.GridView,"全部 10 块",slot=toolSlot) {s.showDialog("inventory")}
+@Composable private fun GameHeader(s:GameState,tick:Long) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().height(28.dp),verticalAlignment=Alignment.CenterVertically) {
+            Action(Icons.AutoMirrored.Filled.ArrowBack,"返回",slot=28.dp){s.home()}
+            Spacer(Modifier.width(6.dp));Text("挑战 ${s.level.number}",fontSize=16.sp,fontWeight=FontWeight.Bold,color=Green,maxLines=1)
+            Spacer(Modifier.weight(1f));DifficultyBadge(s.difficulty())
         }
-        HorizontalDivider(color=Color(0xffead7ba),modifier=Modifier.padding(top=3.dp,bottom=10.dp))
+        Row(Modifier.fillMaxWidth().height(26.dp),verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Default.Timer,null,Modifier.size(13.dp),tint=Brown)
+            Spacer(Modifier.width(4.dp));Text(clock(if(s.running||s.screen=="win")s.elapsed else s.time()+tick*0),fontSize=11.sp,color=Brown,maxLines=1)
+            Spacer(Modifier.weight(1f))
+            Action(Icons.Default.EmojiEvents,"本关排行榜",slot=26.dp){s.showDialog("rank")}
+            Action(Icons.Default.HelpOutline,"玩法",slot=26.dp){s.showDialog("help")}
+        }
+    }
+}
+
+@Composable private fun Workbench(s:GameState,progress:Float,tick:Long,drag:BoardDrag,modifier:Modifier) {
+    val materials=boardMaterials()
+    BoxWithConstraints(modifier.padding(vertical=2.dp)) {
+    val toolSlot=min(44f,maxWidth.value/4).dp
+    Column(Modifier.fillMaxSize()) {
+        GameHeader(s,tick)
+        val cursor=(progress*s.activeRoute.size).coerceAtMost((s.activeRoute.size-.0001f).coerceAtLeast(0f));val step=s.activeRoute.getOrNull(cursor.toInt())
+        val crossed=s.activeRoute.take(cursor.toInt()).count{it.jump!=null}+(if(step?.jump!=null&&cursor%1>(s.rules.road(step).jumpAt?:.5f).let{if(step.from==s.rules.road(step).from)it else 1-it})1 else 0)
+        CourseSequence(s,s.level,Modifier.fillMaxWidth().padding(top=4.dp),crossed)
+        Row(Modifier.fillMaxWidth().padding(vertical=5.dp),verticalAlignment=Alignment.CenterVertically) {
+            EndpointLabel(false,s.startGate,if(s.level.solveEndpoints&&!s.running)({s.showDialog("start")})else null)
+            Spacer(Modifier.weight(1f))
+            EndpointLabel(true,s.finishGate,if(s.level.solveEndpoints&&!s.running)({s.showDialog("finish")})else null)
+        }
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-        val rowCount=(s.level.requiredPieces.size+4)/5
-        val cardHeight=min(if(rowCount>1)110f else 160f,(maxHeight.value-7f*(rowCount-1))/rowCount).dp
-        Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.spacedBy(7.dp)) {
-            s.level.requiredPieces.chunked(5).forEach { row ->
-                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                    row.forEach { id ->
-                        val active=s.selected==id
-                        val border=if(active)Color(0xffb9794d) else Color.Transparent
-                        Column(Modifier.weight(1f).height(cardHeight).background(if(active)Color(0xfffff3d9) else Color(0xfffcf3e2),RoundedCornerShape(9.dp)).border(1.dp,border,RoundedCornerShape(9.dp)).clickable(enabled=!s.running) {s.select(id)}.semantics { contentDescription="拼板 $id";selected=active;stateDescription="${if(active)"已选中"else"未选中"}，${if(s.placed.any{it.id==id})"已放置"else"待放置"}，${(if(active)s.rotation else s.placed.firstOrNull{it.id==id}?.r?:0)*90}度" }.padding(horizontal=4.dp,vertical=4.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-                            Box(Modifier.fillMaxWidth(),contentAlignment=Alignment.Center){
-                                NumberBadge(id,s,22.dp)
-                                if(s.placed.any{it.id==id})Icon(Icons.Default.CheckCircle,null,Modifier.size(9.dp).align(Alignment.TopEnd),tint=Green)
-                            }
-                            Spacer(Modifier.height(3.dp))
-                            Canvas(Modifier.fillMaxWidth().weight(1f)) {
-                                val r=if(active)s.rotation else 0;val(w,h)=s.rules.dimensions(r)
-                                val u=min(size.width/w,size.height/h)
-                                paintTile(s.rules,Placement(id,0,0,r),u,Offset((size.width-w*u)/2,(size.height-h*u)/2),materials,selected=active)
+            val trayWidth=maxWidth
+            val rows=s.level.requiredPieces.chunked(5)
+            val cardHeight=min(106f,(maxHeight.value-58f-6f*(rows.size-1))/rows.size).coerceAtLeast(26f).dp
+            val activeRow=rows.indexOfFirst{s.selected in it}
+            Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+                rows.forEachIndexed { rowIndex,row ->
+                    Row(horizontalArrangement=Arrangement.spacedBy(5.dp)) {
+                        row.forEach { id ->
+                            val active=s.selected==id
+                            var origin by remember{id.let{mutableStateOf(Offset.Zero)}}
+                            Box(Modifier.weight(1f).height(cardHeight).onGloballyPositioned{origin=it.positionInRoot()}.background(if(active)Color(0xfffff1d2)else Color(0xfffcf3e2),RoundedCornerShape(8.dp)).border(1.dp,if(active)Green else Color(0xffebd9bc),RoundedCornerShape(8.dp)).pointerInput(id,s.running){
+                                detectDragGestures(onDragStart={at->val p=s.placed.firstOrNull{it.id==id}?:Placement(id,0,0,if(s.selected==id)s.rotation else 0);drag.begin(s,p,origin+at)},onDrag={change,delta->change.consume();drag.pointer+=delta},onDragEnd={drag.finish(s)},onDragCancel={drag.cancel()})
+                            }.clickable(enabled=!s.running){s.select(id)}.semantics{contentDescription="拼板 $id";selected=active;stateDescription="${if(active)"已选中"else"未选中"}，${if(s.placed.any{it.id==id})"已放置"else"待放置"}，${(if(active)s.rotation else s.placed.firstOrNull{it.id==id}?.r?:0)*90}度"}.padding(3.dp),contentAlignment=Alignment.Center) {
+                                Canvas(Modifier.fillMaxSize().padding(top=12.dp,bottom=2.dp)){
+                                    val r=if(active)s.rotation else 0;val(w,h)=s.rules.dimensions(r);val u=min(size.width/w,size.height/h)
+                                    paintTile(s.rules,Placement(id,0,0,r),u,Offset((size.width-w*u)/2,(size.height-h*u)/2),materials,selected=active)
+                                }
+                                Box(Modifier.align(Alignment.TopStart)){NumberBadge(id,s,18.dp)}
+                                if(s.placed.any{it.id==id})Icon(Icons.Default.CheckCircle,null,Modifier.size(8.dp).align(Alignment.TopEnd),tint=Green)
                             }
                         }
+                        if(rows.size>1)repeat(5-row.size){Spacer(Modifier.weight(1f))}
                     }
-                    if(s.level.requiredPieces.size>5)repeat(5-row.size){Spacer(Modifier.weight(1f))}
+                    if(rowIndex==activeRow){
+                        val columns=if(rows.size>1)5 else row.size;val cardWidth=(trayWidth.value-5f*(columns-1))/columns
+                        val center=row.indexOf(s.selected)*(cardWidth+5f)+cardWidth/2
+                        RotationPopover(s,trayWidth,center,!s.running&&drag.piece==null)
+                    }
                 }
+                if(activeRow<0)Spacer(Modifier.height(52.dp))
             }
         }
+        val problem=if(drag.piece!=null)drag.problem(s)else s.message
+        // Reserve space so conflict feedback never moves the tray during a gesture.
+        Box(Modifier.fillMaxWidth().height(22.dp),contentAlignment=Alignment.CenterStart){
+            if(problem.isNotEmpty())Text(problem,fontSize=10.sp,lineHeight=13.sp,color=Color(0xffa9442b),maxLines=2,modifier=Modifier.semantics{contentDescription="放置提示";stateDescription=problem})
         }
-        if(s.message.contains("越界")||s.message.contains("重叠"))Text(s.message,fontSize=11.sp,lineHeight=16.sp,color=Color(0xffa9442b),modifier=Modifier.padding(top=6.dp))
-        Row(Modifier.fillMaxWidth().padding(top=8.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            listOf(-1 to "逆时针旋转90度",1 to "顺时针旋转90度").forEach{(turn,label)->
-                Button(onClick={s.rotate(turn)},enabled=s.selected!=null&&!s.running,modifier=Modifier.weight(1f).height(54.dp).semantics{contentDescription=label},shape=RoundedCornerShape(12.dp),contentPadding=PaddingValues(horizontal=10.dp),colors=ButtonDefaults.buttonColors(containerColor=Green,contentColor=Color.White)){
-                    Icon(if(turn<0)Icons.Default.RotateLeft else Icons.Default.RotateRight,null,Modifier.size(25.dp))
-                    Spacer(Modifier.width(8.dp));Text("90°",fontSize=16.sp,fontWeight=FontWeight.Bold,maxLines=1)
-                }
-            }
+        HorizontalDivider(color=Color(0xffead7ba))
+        Row(Modifier.height(48.dp).fillMaxWidth().semantics{contentDescription="棋盘操作"},verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
+            Action(Icons.Default.Unarchive,"移回",s.selected!=null&&!s.running,toolSlot){s.remove()}
+            Action(Icons.Default.Undo,"撤销",!s.running,toolSlot){s.undo()}
+            Action(Icons.Default.Lightbulb,"提示",!s.running,toolSlot){s.hint()}
+            Action(Icons.Default.Refresh,"重置",!s.running,toolSlot){s.reset()}
         }
     }
     }
@@ -246,7 +273,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 
 @Composable private fun ClubDialog(s:GameState) {
     AlertDialog(onDismissRequest={s.closeDialog()},containerColor=Paper,
-        title={Text(when(s.dialog){"rank"->"挑战 ${s.level.number} · 本机排行榜";"inventory"->"全部 10 块拼板";"start"->"选择起点";"finish"->"选择终点";else->if(s.dialog.startsWith("gate:"))"入口 ${s.dialog.substringAfter(":")}"else"一条路，刚刚好的顺序"},fontSize=20.sp,lineHeight=27.sp,color=Green,fontWeight=FontWeight.Bold)},
+        title={Text(when(s.dialog){"rank"->"挑战 ${s.level.number} · 本机排行榜";"start"->"选择起点";"finish"->"选择终点";else->if(s.dialog.startsWith("gate:"))"入口 ${s.dialog.substringAfter(":")}"else"一条路，刚刚好的顺序"},fontSize=20.sp,lineHeight=27.sp,color=Green,fontWeight=FontWeight.Bold)},
         text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             when(s.dialog) {
                 "rank" -> {
@@ -264,35 +291,40 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     Text("按字母选择棋盘边界，可与另一端相同。",fontSize=12.sp,color=Brown)
                     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){s.rules.gates.keys.forEach{letter->OutlinedButton(onClick={s.chooseEndpoint(letter)},modifier=Modifier.size(42.dp),contentPadding=PaddingValues(0.dp)){Text(letter)}}}
                 }
-                "inventory" -> s.rules.inventory.toSortedMap().entries.chunked(5).forEach { row ->
-                    Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                        row.forEach { (id,_) -> Column(horizontalAlignment=Alignment.CenterHorizontally) { NumberBadge(id,s);Text(if(id in s.level.sequence)"本关" else "不用",fontSize=9.sp) } }
-                    }
-                }
                 else -> if(s.dialog.startsWith("gate:")){
                     val letter=s.dialog.substringAfter(":")
                     Text("将 $letter 设为起点或终点；两端可以使用同一入口。",fontSize=12.sp,color=Brown)
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){Button(onClick={s.chooseEndpoint(letter,false)}){Text("设为起点")};OutlinedButton(onClick={s.chooseEndpoint(letter,true)}){Text("设为终点")}}
-                }else Text("看上方障碍顺序。点右侧编号选择拼板，再点棋盘左上格放置。\n\n点已有拼板可重新选中，使用旋转图标转 90°；重叠或越界会保留原位。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。上方目标按箭头折行，始终完整展示。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
+                }else Text("看右上方障碍顺序。点右侧编号选择拼板，再点棋盘左上格放置。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。点已有拼板后，右侧卡片下的按钮可双向旋转 90°。重叠时落点标红，松手后保留原位。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。右上方目标按箭头折行，始终完整展示。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
             }
         }},confirmButton={TextButton(onClick={s.closeDialog()}) {Text("知道了")}})
 }
 
-@Composable internal fun NativeBoard(s:GameState,progress:Float,modifier:Modifier) {
+@Composable internal fun NativeBoard(s:GameState,progress:Float,modifier:Modifier,drag:BoardDrag=remember{BoardDrag()}) {
     val materials=boardMaterials();val sprites=gameSprites()
     BoxWithConstraints(modifier,contentAlignment=Alignment.Center) {
-        val unit=min(maxWidth.value/6.3f,(maxHeight.value-18f)/5.3f);val pad=unit*.35f
+        val unit=min(maxWidth.value/6.3f,maxHeight.value/5.3f);val pad=unit*.35f
         Column(horizontalAlignment=Alignment.CenterHorizontally) {
             Box(Modifier.size((unit*6.3f).dp,(unit*5.3f).dp),contentAlignment=Alignment.Center) {
-            Box(Modifier.size((unit*5.7f).dp,(unit*4.7f).dp)) {
+            Box(Modifier.size((unit*5.7f).dp,(unit*4.7f).dp).onGloballyPositioned{drag.board=Rect(it.positionInRoot(),Size(it.size.width.toFloat(),it.size.height.toFloat()))}) {
                 Canvas(Modifier.fillMaxSize().semantics {
                     contentDescription="棋盘"
                     stateDescription=s.placed.sortedBy{it.id}.joinToString("；"){"${it.id}号，第${it.y+1}行第${it.x+1}列，${it.r*90}度"}.ifEmpty{"空棋盘"}
-                }.pointerInput(s.placed,s.selected,s.rotation,s.running) {
+                }.pointerInput(s.running) {
                     detectTapGestures{pos->if(!s.running){val u=size.width/5.7f;val x=floor(pos.x/u-.35f).toInt();val y=floor(pos.y/u-.35f).toInt()
                         if(x in 0..4&&y in 0..3){val hit=s.placed.firstOrNull{val(w,h)=s.rules.dimensions(it.r);x in it.x until it.x+w&&y in it.y until it.y+h};if(hit!=null)s.select(hit.id)else s.place(x,y)}
                     }}
-                }){paintBoard(s,materials)}
+                }.pointerInput(s.running){
+                    detectDragGestures(onDragStart={at->
+                        val u=size.width/5.7f;val x=floor(at.x/u-.35f).toInt();val y=floor(at.y/u-.35f).toInt()
+                        s.placed.firstOrNull{val(w,h)=s.rules.dimensions(it.r);x in it.x until it.x+w&&y in it.y until it.y+h}?.let{p->drag.begin(s,p,drag.board.topLeft+at,Offset(at.x/u-.35f-p.x,at.y/u-.35f-p.y))}
+                    },onDrag={change,delta->if(drag.piece!=null){change.consume();drag.pointer+=delta}},onDragEnd={drag.finish(s)},onDragCancel={drag.cancel()})
+                }){paintBoard(s,materials)
+                    drag.candidate()?.let{p->
+                        val(w,h)=s.rules.dimensions(p.r);val u=size.width/5.7f;val color=if(drag.problem(s).isEmpty())Green else Color(0xffc04835)
+                        clipRect(u*.35f,u*.35f,u*5.35f,u*4.35f){drawRoundRect(color.copy(alpha=.28f),Offset((p.x+.35f)*u,(p.y+.35f)*u),Size(w*u,h*u),CornerRadius(u*.06f));drawRoundRect(color,Offset((p.x+.35f)*u,(p.y+.35f)*u),Size(w*u,h*u),CornerRadius(u*.06f),style=Stroke(3.dp.toPx()))}
+                    }
+                }
                 val route=s.activeRoute;val cursor=if(route.isEmpty())0f else(progress*route.size).coerceAtMost(route.size-.0001f);val step=route.getOrNull(cursor.toInt())
                 val raw=if(s.running&&step!=null)s.rules.position(step,cursor%1)else s.rules.gates[s.startGate]?:Point(-1f,-1f)
                 fun onRoute(at:Float):Point {val t=at.coerceIn(0f,route.size-.0001f);return s.rules.position(route[t.toInt()],t%1)}
@@ -315,16 +347,11 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 }
             }
             }
-            Row(Modifier.width((unit*5.7f).dp).height(18.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(5.dp)) {
-                EndpointLabel(false,s.startGate,if(s.level.solveEndpoints&&!s.running)({s.showDialog("start")})else null)
-                Spacer(Modifier.weight(1f))
-                EndpointLabel(true,s.finishGate,if(s.level.solveEndpoints&&!s.running)({s.showDialog("finish")})else null)
-            }
         }
     }
 }
 @Composable private fun EndpointLabel(finish:Boolean,letter:String,onClick:(()->Unit)?) {
-    Row(Modifier.then(if(onClick!=null)Modifier.clickable(onClick=onClick).semantics{contentDescription=if(finish)"选择终点"else"选择起点"}else Modifier),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(3.dp)){
+    Row(Modifier.background(Paper.copy(alpha=.92f),RoundedCornerShape(50)).padding(horizontal=4.dp,vertical=2.dp).then(if(onClick!=null)Modifier.clickable(onClick=onClick).semantics{contentDescription=if(finish)"选择终点"else"选择起点"}else Modifier),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(3.dp)){
         Icon(if(finish)Icons.Default.SportsScore else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.size(12.dp),tint=if(finish)Brown else Green)
         Text("${if(finish)"终点"else"起点"} ${letter.ifEmpty{"?"}}",fontSize=9.sp,fontWeight=FontWeight.Bold,color=if(finish)Brown else Green,maxLines=1)
     }

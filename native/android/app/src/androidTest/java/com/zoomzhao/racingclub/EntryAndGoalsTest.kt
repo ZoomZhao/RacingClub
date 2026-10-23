@@ -69,7 +69,7 @@ class EntryAndGoalsTest {
                 scenario.onActivity{state.level=l;state.chosenStart="";state.chosenFinish=""}
                 val nodes=ready(l);verifyGoals(l,nodes)
                 val y=l.sequence.indices.map{nodes.getValue("目标 ${it+1}：${l.sequence[it]}号").bounds.centerY()}.distinct()
-                if(l.sequence.size>8)assertTrue("Long goals use two rows",y.size==2)
+                if(l.sequence.size>8)assertTrue("Long sidebar goals wrap in full",y.size>=2)
                 rows.put(JSONObject().put("level",l.id).put("visibleGoals",l.sequence.size).put("rows",y.size).put("scrollable",false))
                 if(l.id in listOf(3,55,64,76,80)){
                     assertFalse(device.hasObject(By.text("拼板")))

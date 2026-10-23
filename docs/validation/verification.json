@@ -2,7 +2,7 @@
   "date": "2026-10-23",
   "android": {
     "build": "assembleDebug passed",
-    "unit_tests": 9,
+    "unit_tests": 10,
     "failures": 0,
     "device_validation": true,
     "validation_date": "2026-10-23",
@@ -16,37 +16,44 @@
       "renderer": "Apple M1 host GPU, OpenGL ES 3; Vulkan disabled"
     },
     "native_ui_tests": {
-      "tests": 5,
+      "tests": 10,
       "failures": 0,
-      "runtime_seconds": 78.406,
-      "framework": "Android UI Automator on API35, real input and wall-clock animation",
+      "runtime_seconds": 133.672,
+      "framework": "Android UI Automator and continuous native MotionEvent input, API35, real wall-clock animation",
       "checks": [
-        "all 80 native rules and real animation endpoints replay",
-        "five difficulty categories navigate to their exact 16 levels",
-        "right list title shares the brand header row; all sixteen enlarged cards fully visible at default landscape size",
-        "unstarted, in-progress and completed state plus stored best time remain correct",
-        "list help absent and game help retained",
-        "level80 endpoint selection, automatic animation and win; level65 state survives Activity recreation",
-        "ten best scores retained per level",
-        "all 80 goals fully visible; narrow large-font home keeps every difficulty tab visible and rank labels separated"
+        "board uses available landscape height; full goal sequence is on upper right and never scrolls",
+        "open right region without enclosing background; no all-ten inventory entry",
+        "ImageGen ceramic and bronze controls, four bottom actions, rotation follows selected tray card",
+        "counterclockwise and clockwise rotation, invalid rotation retention and undo; automatic wins and directional horse animation for03/04/80",
+        "live drag from tray and board; green valid and red conflict previews; overlapping piece numbers shown",
+        "preview stays uncommitted until release; rejected/cancelled drops preserve position and move count",
+        "successful drag undoes in one step; grabbed offset and pre-rotated unplaced orientation preserved",
+        "second row drag and contextual controls stay reachable; ten-tile presentation capacity fixture",
+        "all 80 actual rules replay; five exact difficulty ranges; progress and per-level leaderboards persist",
+        "all 80 complete goal lists including repeated numbers; 620dp/1.35 font; original A–F coordinates stable"
       ],
       "reports": [
+        "docs/validation/android-flows.log",
+        "docs/validation/android-directions.log",
         "docs/validation/android-catalog.log",
         "docs/validation/android-entry-goals.log",
+        "docs/validation/android-drag.log",
+        "docs/validation/drag-report.json",
         "docs/validation/goals-visibility-report.json"
-      ]
+      ],
+      "final_followup": "After the full ten-test suite, rebuilt and reran both drag tests to cover retaining an unplaced tile rotation at drag start."
     },
-    "visual_review": "Default and 620dp/1.35-font home reviewed: no tile images, right heading aligned with the left brand, cards grow into the released header space; all default cards remain fully visible.",
+    "visual_review": "Native play, long 18-obstacle instruction, second tray row, ten-tile fixture and overlapping drag preview inspected against ImageGen reference; no large right panel; controls beside selected tray card, bottom four actions; small cream endpoint/difficulty chips retain contrast.",
     "runtime_crashes": 0,
     "directional_animation_samples": [
       {
         "name": "challenge-3-animation",
         "value": {
-          "timer": "00:08.85",
+          "timer": "00:07.25",
           "horseBounds": [
-            "287 781 374 883",
-            "397 781 505 883",
-            "431 652 539 754"
+            "190 762 305 892",
+            "335 762 472 892",
+            "374 598 511 728"
           ],
           "headings": [
             "朝向东，跑动中",
@@ -58,11 +65,11 @@
       {
         "name": "challenge-4-animation",
         "value": {
-          "timer": "00:01.18",
+          "timer": "00:01.12",
           "horseBounds": [
-            "895 485 1003 587",
-            "859 599 967 701",
-            "743 631 851 733"
+            "971 383 1108 513",
+            "923 513 1060 643",
+            "800 583 937 713"
           ],
           "headings": [
             "朝向西，跑动中",
@@ -77,19 +84,13 @@
     "runtime_pieces": 10,
     "rules_schema": 2,
     "level_report": "docs/validation/catalog-rules-report.json",
-    "ui_revision": "home-clean-numbered-cards-and-raised-right-column",
-    "previous_full_suite": {
-      "commit": "2f31a9d",
-      "native_ui_tests": 8,
-      "failures": 0,
-      "note": "Prior full gameplay suite; current change reruns the catalog and entry/layout classes below."
-    }
+    "ui_revision": "open-game-sidebar-imagegen-controls-contextual-tray-rotation-and-native-drag"
   },
   "ios": {
     "native_platform": "IOS",
     "architecture": "arm64",
     "minimum_os": "17.0",
-    "compile_and_link": "passed, numbered cards without tile images and home right column sharing the brand row; no device runtime validation",
+    "compile_and_link": "passed: native open sidebar, ImageGen-style controls, contextual tray rotation, native drag and conflict feedback; no iOS device or simulator runtime validation",
     "signed": false,
     "device_validation": false,
     "runtime_levels": 80,
@@ -109,33 +110,48 @@
   "artifacts": [
     {
       "path": "output/RacingClub-Android-debug.apk",
-      "bytes": 44859207,
-      "sha256": "c0fac78abb747fcf2f9bc2afcc0541de382ebc0b9ad8d429525c9cec97008f6e"
+      "bytes": 44884290,
+      "sha256": "ade2d6649a15151a905c38c3b5dfd75115ab0465377502247dfe7dc5f4ef5120"
     },
     {
       "path": "native/ios/build/unsigned/RacingClub.app/RacingClub",
-      "bytes": 1810952,
-      "sha256": "93d8c98061604d6409ece68b23977aec86589d75e7272dcc860810f6e3a721a8"
+      "bytes": 2068152,
+      "sha256": "e629cc301d911379d080b6bd566795a51baf003739c7e732e0ccdf9832109942"
     },
     {
-      "path": "design/list-redesign/android-home-clean-starter.png",
-      "bytes": 1683016,
-      "sha256": "ef9589f6f60b5d60ab4f7cecdee70b052fe0e2ce5f5f1c0c2cd39140d84fca98"
+      "path": "design/gameplay-redesign/imagegen-reference-v1.png",
+      "bytes": 2572778,
+      "sha256": "c3baef628ea694dec947004e642ea88a0c0547a1039c4c1355d609b52c295ae1"
     },
     {
-      "path": "design/list-redesign/android-home-clean-progress.png",
-      "bytes": 1689659,
-      "sha256": "791eb2eb70208f0ccd59a4a7eec5834798fa569c1cf225fd57a772f3602549a7"
+      "path": "design/gameplay-redesign/android-play.png",
+      "bytes": 2021677,
+      "sha256": "870cedb61e91020d41d60bc7af28bc853eba2d8fc91d5f97da16796dc6c60194"
     },
     {
-      "path": "design/list-redesign/android-home-clean-large-font.png",
-      "bytes": 1478864,
-      "sha256": "ec38c9dec0b73a5e0ecf0e4789196bad37b447aa50b9c0c87ed33f44b94df10e"
+      "path": "design/gameplay-redesign/android-drag-preview.png",
+      "bytes": 2087769,
+      "sha256": "865bab8df22aa38d77899157f8375a7527faf8f817d2967753344742e85f20c6"
     },
     {
-      "path": "output/list-cleanup/validation/challenge-80.mp4",
-      "bytes": 13210047,
-      "sha256": "2f8905de6b671f6ac8af80a8ebeb071e3fd8b9bfd93be0b70df1f8ed2cad20bf"
+      "path": "design/gameplay-redesign/android-drag-conflict.png",
+      "bytes": 2095613,
+      "sha256": "77fdf50b12c66fd9ac66e75b95601e3ebefd2606ada150794d9d92ce0105ad9e"
+    },
+    {
+      "path": "design/gameplay-redesign/android-long-goals.png",
+      "bytes": 2132198,
+      "sha256": "dfb45ed6f9c4698b4e7f320f1238dbb349fe419cae72265786b43a59825e0468"
+    },
+    {
+      "path": "design/gameplay-redesign/android-ten-tile-capacity.png",
+      "bytes": 2123130,
+      "sha256": "bd7f100c200eb40484552b8eadc39a0cb68cb7e1fdfa21ee2d7c81253c450e65"
+    },
+    {
+      "path": "output/game-drag/validation/challenge-80.mp4",
+      "bytes": 14970590,
+      "sha256": "8c4af2b2e5f54a0fa11aebd80f2243647ccea0cc7de56269e5aec6ff339767c0"
     }
   ],
   "last_four_hints": "Computed offline from verified topology and instructions; independent reference replay passed. No solution photos claimed; original referenceLayout remains null.",
@@ -219,5 +235,18 @@
     ],
     "thumbnail": "removed at user request; challenge cards show numbers, progress and statistics or best times only",
     "reference_notes": "Initial ImageGen reference retained for visual history; its tile previews are not used."
+  },
+  "gameplay_design": {
+    "generator": "built-in ImageGen",
+    "reference": "design/gameplay-redesign/imagegen-reference-v1.png",
+    "prompt": "design/gameplay-redesign/imagegen-prompt-v1.json",
+    "native_screenshots": [
+      "design/gameplay-redesign/android-play.png",
+      "design/gameplay-redesign/android-drag-preview.png",
+      "design/gameplay-redesign/android-drag-conflict.png",
+      "design/gameplay-redesign/android-long-goals.png",
+      "design/gameplay-redesign/android-ten-tile-capacity.png"
+    ],
+    "controls": "Native Canvas/SwiftUI reconstruction, no enclosing right card, no inventory, paired contextual rotations beside selected tray card; four bottom action buttons"
   }
 }

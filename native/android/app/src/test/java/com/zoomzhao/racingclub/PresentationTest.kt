@@ -10,7 +10,7 @@ class PresentationTest {
             val rows=courseRows(count,width,scale)
             assertEquals((0 until count).toList(),rows.flatten())
             assertTrue(rows.maxOf{it.size}-rows.minOf{it.size}<=1)
-            rows.forEach{assertTrue(it.size*(22f*scale)+(it.size-1)*10f<=width-16f)}
+            rows.forEach{assertTrue(it.size*(22f*scale)+(it.size-1)*8f<=width-8f)}
         }
         assertEquals(listOf(10,10),courseRows(20,600f,1f).map{it.size})
     }

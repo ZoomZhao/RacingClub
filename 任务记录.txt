@@ -133,3 +133,14 @@ Android 原生视觉还原与模拟器验收（2026-10-23）：
 - 最终8项Android设备检查和9项Kotlin单元测试通过，包含列表帮助移除、三种状态、全部难度可达与放大字体布局；APK和docs/validation/已更新。真实截图见design/list-redesign/android-home-{starter,progress,large-font}.png。
 
 用户后续纠正列表：移除所有拼板缩略图，关卡牌仅保留编号、进度和统计/成绩。品牌行收进左列，右侧标题上移与品牌同行，关卡牌按新增可用高度放大；左侧马场图片位置保持。SwiftUI同步并编译通过。本轮复验Catalog/Entry共5项设备检查及9项Kotlin测试通过，含默认16关完整显示、右列上移、字号放大、80关目标与80关自动跑动。APK及验证资料已更新；当前截图为design/list-redesign/android-home-clean-{starter,progress,large-font}.png。旧ImageGen参考保留为历史风格资料，其中的拼板预览已不采用。
+
+
+2026-10-23 游戏页重排、ImageGen 操作控件与原生拖拽：
+- 依用户最新顺序：左侧移除顶部任务/页头并按可用高度放大；任务、难度与计时集中右上；底部保留移回、撤销、提示、重置四个图标。取消右侧整块背景卡片，仅目标、小标签与单块拼板保留必要背景。
+- 用户先要求棋盘两侧旋转，随后明确改到右侧选中卡片附近；最终以后一条为准。旋转以双向90°成对控件跟随选中行及卡片横坐标，边缘向内收，未放置拼板也能先旋转。棋盘上不再绘制旋转按钮。
+- 按明确要求调用内置ImageGen，设计稿和完整提示词保存design/gameplay-redesign/。原生GameControls.kt和SwiftUI控件重现奶油色按钮面、铜边、内高光、微弱下沿及按压反馈；不将截图作为界面渲染容器。
+- 移除“全部10块”入口和库存弹窗。实际关卡仍仅按编号展示所需拼板，支持两排最多10块；容量测试使用单独UI夹具，不改变80关数据。
+- BoardDrag/NativeDrag支持从右侧拖入棋盘、在棋盘内拖动。保留抓取位置和已有朝向，半透明跟手拼板+吸附预览，绿色有效/红色冲突，提示重叠编号或边界。松手才提交；失败、取消、原位放回不加步数，成功拖拽一次撤销。拖动时暂缓自动通关。
+- Android模拟器10项设备检查与10项Kotlin测试通过；先全套10项，最后补充“未放置先旋转再拖入”用例并复跑2项拖拽。包含80关规则、80关完整任务、620dp/1.35字号、第二排操作、10块容量、双向旋转、03/04/80自动通关和马儿跑动。iOS原生arm64重新编译通过，尚无iOS设备/模拟器运行验收。
+- APK：output/RacingClub-Android-debug.apk。实际截图design/gameplay-redesign/android-{play,drag-preview,drag-conflict,long-goals,ten-tile-capacity}.png。日志/摘要归档docs/validation/；工具tools/verify-android-emulator.sh现运行5个设备测试类，共10项。
+- 本轮工作期间另一任务独立提交7f4f6b9 GitHub Actions APK构建流程；保留该提交及README内容，不重复修改CI。

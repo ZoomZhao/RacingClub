@@ -6,7 +6,7 @@
 
 项目仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。源代码、80 关数据、原始参考资料和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏不纳入 Git。APK 可在本地构建，也可下载下方 GitHub Actions 自动生成的产物。
 
-已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新列表见 [`design/list-redesign/android-home-clean-progress.png`](design/list-redesign/android-home-clean-progress.png)，设计记录见 [`design/list-redesign/`](design/list-redesign/)。游戏页见 [`design/android-native-difficulty-play.png`](design/android-native-difficulty-play.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
+已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，最新列表见 [`design/list-redesign/android-home-clean-progress.png`](design/list-redesign/android-home-clean-progress.png)，设计记录见 [`design/list-redesign/`](design/list-redesign/)。游戏页、拖拽和重设计后的操作按钮见 [`design/gameplay-redesign/`](design/gameplay-redesign/)，包含 ImageGen 设计稿、完整提示词与原生截图。
 
 ## 当前功能
 
@@ -14,10 +14,10 @@
 - ImageGen 应用图标已接入 Android 自适应启动图标与 iOS AppIcon；原图、完整提示词和打包说明见 [`design/app-icon/`](design/app-icon/)。
 - 首页难度导航、关卡卡片与游戏页统一显示原题难度，编号范围作为辅助信息；分类依据见 [`design/difficulty-levels.md`](design/difficulty-levels.md)。
 - 列表页移除右上角帮助按钮，五档难度使用段位徽章牌；关卡按钮仅显示编号、统计或成绩，配合箭头、时钟、绿勾区分进度，不显示拼板缩略图。右侧上移到与左侧品牌同行，关卡按钮按剩余高度放大。默认横屏每档 16 关完整展示，放大字号时支持纵向滚动。
-- 横屏主布局：左侧 5 × 4 棋盘，右侧拼板工作台；顶部五个紧凑工具图标，底部固定两个大旋转按钮。
+- 横屏主布局：左侧 5 × 4 棋盘尽量撑满可用高度，任务和计时移到右上；右侧取消整块背景卡片，底部仅移回、撤销、提示、重置四个图标。
 - 移除工作台标题、选中说明、放置教学和出发提示，只保留图标、选中描边与必要的重叠/越界错误反馈。
-- 拼板按编号升序排列；挑战条保留要求的障碍顺序。已放置拼板可从棋盘或工作台重新选中，旋转、移动、移回与撤销。右下角左键逆时针 90°、右键顺时针 90°，支持连续旋转。
-- 共 10 块的库存视图，按关卡只展开需要的拼板；超过 5 块时分为两排。
+- 拼板按编号升序排列；任务条完整展示所有障碍顺序。旋转控件跟随右侧选中的卡片，分别逆时针与顺时针 90°；奶油色、铜边、高光和按压反馈统一操作按钮样式。
+- 仅展示本关需要的拼板；超过 5 块时分两排，支持最多 10 块，移除全部库存入口。可从右侧拖入左侧，也可拖动棋盘上的拼板；绿色落点预览、红色重叠编号提示和越界反馈，失败保留原位，成功拖拽可一步撤销。
 - ImageGen 八向马儿按路线切线切换视图，在入口内侧待命。A–F 字母固定在木框原位置，框外绿色箭头指向起点，俯视棋格标记表示终点；同位起终点可同时识别，取消立体拱门与大标牌。
 - 统一中文自然行高、字距、挑战卡片间距及路线箭头；六个围栏开口两端均有收尾柱。顶部、托盘和棋盘编号采用深底白字/浅底黑字，计算对比度均不低于 4.5:1。
 - 棋盘显示起点、终点门和马儿；实际连接与障碍顺序均正确时自动停止计时、播放沿路跑动与跳跃，再显示通关。

@@ -5,7 +5,7 @@ import kotlin.math.*
 /** Keep long instructions legible and complete; never hide goals in a scroller. */
 internal fun courseRows(nodeCount:Int,width:Float,fontScale:Float):List<List<Int>> {
     val minBadge=22f*fontScale.coerceAtLeast(1f)
-    val columns=floor((width-24f+10f)/(minBadge+10f)).toInt().coerceIn(2,10)
+    val columns=floor(width/(minBadge+8f)).toInt().coerceIn(2,10)
     val rowCount=(nodeCount+columns-1)/columns
     var index=0
     return List(rowCount){row->

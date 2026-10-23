@@ -62,7 +62,7 @@ class DirectionalVisualTest {
                     }
                 }
                 assertNotNull(awaitText("门位置验证 · $gate"))
-                assertNotNull(awaitText("终点 $gate"))
+                assertNotNull(device.findObject(By.desc("入口 $gate")))
                 val board=device.findObject(By.desc("棋盘")).visibleBounds
                 assertTrue(board.left>=0&&board.right<=device.displayWidth&&board.bottom<=device.displayHeight)
                 capture("15-gate-$gate")
