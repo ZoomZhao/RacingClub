@@ -49,7 +49,9 @@ class RunAnimationTest {
                 if(state(node).contains("完成动效中")){
                     assertNotNull("Horse appears only for the completed route animation",find("马儿"))
                     assertEquals("等待跨越",state(find("目标 2：1号")))
-                    scenario.onActivity{assertTrue("Pulse observed during the run",s.running);frozen=s.elapsed;scoreCount=s.repository.list(3).size;moves=s.moves}
+                    // ActivityScenario.onActivity waits for idle first; an active animation may
+                    // finish during that wait. Read on the main thread without an idle barrier.
+                    ins.runOnMainSync{assertTrue("Pulse observed during the run",s.running);frozen=s.elapsed;scoreCount=s.repository.list(3).size;moves=s.moves}
                     // Grab the frame directly; PNG encoding and UiDevice's idle wait must not
                     // consume the remaining animation before we exercise its skip button.
                     pulseImage=ins.uiAutomation.takeScreenshot();assertNotNull(pulseImage)
