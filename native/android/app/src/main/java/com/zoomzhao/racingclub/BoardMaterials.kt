@@ -68,13 +68,13 @@ internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m
     if(number) {
         val badge=top+Offset(u*.20f,u*.20f)
         drawCircle(hex("#74522f").copy(alpha=.25f),u*.16f,badge+Offset(0f,u*.025f))
-        drawCircle(if(selected)Green else hex(piece.color),u*.16f,badge)
+        drawCircle(Color(numberFace(p.id)),u*.16f,badge)
         drawCircle(hex("#fff5d8"),u*.16f,badge,style=Stroke(u*.018f))
-        drawContext.canvas.nativeCanvas.drawText("${p.id}",badge.x,badge.y+u*.07f,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.WHITE;textSize=u*.20f;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
+        drawContext.canvas.nativeCanvas.drawText("${p.id}",badge.x,badge.y+u*.07f,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=numberInk(p.id).toInt();textSize=u*.20f;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
     }
 }
 
-internal fun DrawScope.paintBoard(s:GameState,m:BoardMaterials,sprites:GameSprites) {
+internal fun DrawScope.paintBoard(s:GameState,m:BoardMaterials) {
     val u=size.width/5.7f;val origin=Offset(u*.35f,u*.35f)
     val outer=Rect(Offset(u*.025f,u*.025f),Size(size.width-u*.05f,size.height-u*.065f));val rad=u*.28f
     drawRoundRect(hex("#76512e").copy(alpha=.17f),outer.topLeft+Offset(0f,u*.055f),outer.size,CornerRadius(rad))
@@ -132,28 +132,44 @@ internal fun DrawScope.paintBoard(s:GameState,m:BoardMaterials,sprites:GameSprit
             if(openings.none {abs(position-it)<u*.58f})post(position)
         }
     }
-    s.rules.gates[s.finishGate]?.let {end->
-        val e=origin+Offset(end.x*u,end.y*u);val side=boundarySide(end)
-        val gate=sprites.gates.getValue(side)
-        val gateSize=if(side==BoundarySide.N||side==BoundarySide.S)Size(u*.82f,u*.63f)else Size(u*.63f,u*.90f)
-        val anchor=if(side==BoundarySide.N||side==BoundarySide.S)Offset(.5f,.91f)else Offset(.5f,.72f)
-        paintSprite(gate,Rect(e-Offset(gateSize.width*anchor.x,gateSize.height*anchor.y),gateSize))
+    s.rules.gates.forEach{(name,pt)->
+        val c=entryCenter(pt);val outward=entryOutward(pt)
+        paintEntryMarker(name,Offset(c.x*u,c.y*u),Offset(outward.x,outward.y),u,name==s.startGate,name==s.finishGate)
     }
-    s.rules.gates.forEach { (name,pt) ->
-        val c=when {pt.y==0f->Offset(origin.x+pt.x*u,u*.18f);pt.y==4f->Offset(origin.x+pt.x*u,u*4.50f);pt.x==0f->Offset(u*.18f,origin.y+pt.y*u);else->Offset(u*5.50f,origin.y+pt.y*u)}
-        val horizontal=pt.y==0f||pt.y==4f
-        if(name==s.startGate||name==s.finishGate) {
-            val roleColor=if(name==s.startGate)Green else hex("#a95837")
-            val label=c+if(horizontal)Offset(-u*.63f,0f)else Offset(if(pt.x==0f)-u*.23f else u*.23f,-u*.4f)
-            drawCircle(hex("#886440").copy(alpha=.25f),u*.15f,label+Offset(0f,u*.02f))
-            drawCircle(roleColor,u*.15f,label)
-            drawCircle(hex("#fff1ce"),u*.15f,label,style=Stroke(u*.018f))
-            drawContext.canvas.nativeCanvas.drawText(name,label.x,label.y+u*.067f,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.WHITE;textSize=u*.20f;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
-            return@forEach
+}
+
+/** Flat entry markers share the ORIGINAL letter center. Nothing occupies the road. */
+internal fun DrawScope.paintEntryMarker(name:String,c:Offset,outward:Offset,u:Float,start:Boolean,finish:Boolean) {
+    val horizontal=outward.y!=0f
+    val tag=if(horizontal)Size(u*.57f,u*.29f)else Size(u*.30f,u*.52f)
+    val face=Rect(c-Offset(tag.width/2,tag.height/2),tag)
+    val terracotta=hex("#a4472f")
+    drawRoundRect(if(finish)hex("#fff3df")else hex("#ffe9bf"),face.topLeft,face.size,CornerRadius(u*.045f))
+    drawRoundRect(if(finish)terracotta else hex("#d5ad73"),face.topLeft,face.size,CornerRadius(u*.045f),style=Stroke(if(finish)u*.022f else u*.01f))
+    if(finish) {
+        // A top-down checker threshold, aligned to the edge, with no raised arch.
+        val tangent=Offset(-outward.y,outward.x)
+        val bandCenter=c+outward*(if(horizontal)tag.height/2 else tag.width/2)-outward*u*.040f
+        for(i in 0..5)for(row in 0..1){
+            val center=bandCenter+tangent*((i-2.5f)*u*.068f)+outward*((row-.5f)*u*.030f)
+            if(horizontal)drawRect(if((i+row)%2==0)terracotta else hex("#fffaf0"),center-Offset(u*.034f,u*.015f),Size(u*.068f,u*.030f))
+            else drawRect(if((i+row)%2==0)terracotta else hex("#fffaf0"),center-Offset(u*.015f,u*.034f),Size(u*.030f,u*.068f))
         }
-        val tag=if(horizontal)Size(u*.57f,u*.29f)else Size(u*.30f,u*.52f)
-        drawRoundRect(hex("#8b653a").copy(alpha=.20f),c-Offset(tag.width/2,tag.height/2)+Offset(0f,u*.022f),tag,CornerRadius(u*.045f))
-        drawRoundRect(hex("#ffe9bf"),c-Offset(tag.width/2,tag.height/2),tag,CornerRadius(u*.045f))
-        drawContext.canvas.nativeCanvas.drawText(name,c.x,c.y+u*.078f,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.parseColor("#342718");textSize=u*.24f;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
+    }
+    drawContext.canvas.nativeCanvas.drawText(name,c.x,c.y+u*.078f,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.parseColor("#342718");textSize=u*.24f;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
+    if(start) {
+        // The arrow lives entirely outside the wooden frame and points to the letter.
+        val tip=c+outward*u*.20f;val tail=c+outward*u*.46f;val tangent=Offset(-outward.y,outward.x)
+        val path=Path().apply{
+            moveTo(tip.x,tip.y)
+            val left=tip+outward*u*.14f+tangent*u*.105f;lineTo(left.x,left.y)
+            val leftNeck=tip+outward*u*.14f+tangent*u*.045f;lineTo(leftNeck.x,leftNeck.y)
+            val stem=tail+tangent*u*.045f;lineTo(stem.x,stem.y)
+            val other=tail-tangent*u*.045f;lineTo(other.x,other.y)
+            val rightNeck=tip+outward*u*.14f-tangent*u*.045f;lineTo(rightNeck.x,rightNeck.y)
+            val right=tip+outward*u*.14f-tangent*u*.105f;lineTo(right.x,right.y);close()
+        }
+        drawPath(path,hex("#fffaf0"),style=Stroke(u*.045f,join=StrokeJoin.Round))
+        drawPath(path,Green)
     }
 }

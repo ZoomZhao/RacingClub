@@ -6,16 +6,17 @@
 
 项目仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。源代码、80 关数据、原始参考资料和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏保留在本地，克隆后按下方步骤重新构建。
 
-已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，实际界面见 [`design/android-native-home-80.png`](design/android-native-home-80.png) 和 [`design/android-native-play-80.png`](design/android-native-play-80.png)。
+已归档的 80 关回放与测试报告见 [`docs/validation/`](docs/validation/)，实际界面见 [`design/android-native-play-v4.png`](design/android-native-play-v4.png) 和 [`design/android-native-goals-v4.png`](design/android-native-goals-v4.png)，双向旋转按钮见 [`design/android-native-rotation-v4.png`](design/android-native-rotation-v4.png)。
 
 ## 当前功能
 
 - 按确认的 ImageGen 设计稿还原马场插画、木纹倒角、颗粒沙地、奶油色路线和障碍支柱；A–F 六个字母入口均留有围栏开口。
-- 横屏主布局：左侧 5 × 4 棋盘，右侧拼板工作台；标题与图标按钮放在同一行。
-- 拼板按编号升序排列；挑战条保留要求的障碍顺序。已放置拼板可从棋盘或工作台重新选中，旋转、移动、移回与撤销。
-- 共 10 块的库存视图，按关卡只展开需要的拼板；托盘支持分行与滚动。
-- ImageGen 八向马儿按路线切线切换视图；四向终点门根据棋盘边缘定位。起终点说明使用配套标牌，字母标识与围栏收尾柱错开。
-- 统一中文自然行高、字距、挑战卡片间距及路线箭头；六个围栏开口两端均有收尾柱。
+- 横屏主布局：左侧 5 × 4 棋盘，右侧拼板工作台；顶部五个紧凑工具图标，底部固定两个大旋转按钮。
+- 移除工作台标题、选中说明、放置教学和出发提示，只保留图标、选中描边与必要的重叠/越界错误反馈。
+- 拼板按编号升序排列；挑战条保留要求的障碍顺序。已放置拼板可从棋盘或工作台重新选中，旋转、移动、移回与撤销。右下角左键逆时针 90°、右键顺时针 90°，支持连续旋转。
+- 共 10 块的库存视图，按关卡只展开需要的拼板；超过 5 块时分为两排。
+- ImageGen 八向马儿按路线切线切换视图，在入口内侧待命。A–F 字母固定在木框原位置，框外绿色箭头指向起点，俯视棋格标记表示终点；同位起终点可同时识别，取消立体拱门与大标牌。
+- 统一中文自然行高、字距、挑战卡片间距及路线箭头；六个围栏开口两端均有收尾柱。顶部、托盘和棋盘编号采用深底白字/浅底黑字，计算对比度均不低于 4.5:1。
 - 棋盘显示起点、终点门和马儿；实际连接与障碍顺序均正确时自动停止计时、播放沿路跑动与跳跃，再显示通关。
 - 关卡计时与可持久保存的本机排行榜；提示成绩标为练习，独立完成成绩优先。离开应用或查看弹窗时暂停计时。
 - 未完成关卡的摆放与时间会保留。完成关卡再次进入会开始新一轮。
@@ -23,8 +24,8 @@
 已接入 **01–80 全部关卡和 10 块完整道路拼板**。关卡按 5 页、每页 16 关浏览，全部可选择；完成标记、未完成摆放、起终点选择及每关最佳成绩保存在本机。
 
 - 实际道路允许重复跨障、无障碍支路、7 号双路，以及 8–10 号的合法平顺分岔；不会把任意两个分支误连，也不会按访问拼板次数计障碍。
-- 长指令可横向滑动；跑动时按真实跨障进度高亮、滚动。托盘只展示不重复的实体拼板，超过 5 块时用等宽两排展示。
-- 第 65–80 关开局不预设马和门的位置。点击棋盘下方的起点、终点标牌选择 A–F，可选择相同字母；完整路线与所选端点都正确才自动跑动。
+- 长指令优先两行折返、按箭头阅读，全部目标始终可见，没有滚动或省略；跑动时按真实跨障进度高亮。托盘只展示不重复的实体拼板，超过 5 块时用等宽两排展示，卡片以勾选标记表示已放置。
+- 第 65–80 关开局不预设马和门的位置。直接点入口字母选择设为起点或终点，也保留底部紧凑状态入口，可选择相同字母；完整路线与所选端点都正确才自动跑动。
 - 第 1–76 关提示来自核对后的解答照片；77–80 没有解答照片，其提示摆法由真实端口和已确认题面计算，并通过独立的参考路线模型复核。计算摆法保存在 `shared/generated-hints.json`，没有回填或冒充原始照片资料。
 - 本机排行榜每关保留前 10 名，完成后面的关卡不会挤掉前面关卡的最佳成绩。
 
@@ -39,11 +40,11 @@ cd native/android
 ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
-需配置本机 `JAVA_HOME` 与 Android SDK。生成的 APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。已在独立的 `RacingClub_API35` 模拟器（Android 15 / API 35，arm64，1920 × 1080 横屏）验证 80 关的原生规则、真实端口与动画端点。原有选中旋转、撤销、越界保留原位、03/04 自动跑动流程通过；新增 80 关导航、两排九块托盘、长指令滑动、65+ 起终点选择与恢复、80 关完整自动跑动和每关成绩保留检查。本轮 6 项 Android 集成/界面检查与 6 项 Kotlin 单元测试全部通过。设备范围仍为该模拟器，尚未进行实体手机适配。
+需配置本机 `JAVA_HOME` 与 Android SDK。生成的 APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。已在独立的 `RacingClub_API35` 模拟器（Android 15 / API 35，arm64，1920 × 1080 横屏）验证 80 关的原生规则、真实端口与动画端点。原有选中旋转、撤销、越界保留原位、03/04 自动跑动流程通过；新增 80 关导航、两排九块托盘、完整折行目标、65+ 字母入口的起终点选择与恢复、80 关完整自动跑动和每关成绩保留检查。当前 8 项 Android 集成/界面检查与 9 项 Kotlin 单元测试全部通过，包含全 80 关目标完整可见、六个入口坐标不偏移，以及 620dp/1.35 倍字号检查。设备范围仍为该模拟器，尚未进行实体手机适配。
 
 本机专用 AVD 已设为硬件图形模式；启动命令为 `~/Library/Android/sdk/emulator/emulator -avd RacingClub_API35 -gpu host -feature -Vulkan -no-snapshot`。默认软件图形模式在此机明显变慢，应使用本次验证的 host GPU 配置。
 
-设置 JDK 21 和 Android SDK 并启动模拟器后，可用 `bash tools/verify-android-emulator.sh` 复现（可通过 `ANDROID_SERIAL` 选择设备）。截图、03/04/80 原生录屏、80 关回放报告与日志在 `output/android-emulator-80/validation/` 和 `output/level-integration/`；当前画面见 `design/android-native-play-80.png`。v3 素材预览与旧验收文件继续保留。
+设置 JDK 21 和 Android SDK 并启动模拟器后，可用 `bash tools/verify-android-emulator.sh` 复现（可通过 `ANDROID_SERIAL` 选择设备）。截图、03/04/80 原生录屏、80 关回放报告与日志在 `output/android-entry-v4/validation/`；当前画面见 `design/android-native-play-v4.png` 和 `design/android-native-goals-v4.png`。v3 素材预览与旧验收文件继续保留。
 
 ## iOS
 
@@ -80,8 +81,8 @@ npm start
 ## 测试与设计
 
 - `npm test`：21 项 JavaScript 规则、动画端点与关卡资料检查。
-- `:app:testDebugUnitTest`：6 项 Kotlin 原生规则与八向/边界方向测试。
-- `EmulatorFlowTest`：2 项 Android UI Automator 流程测试，使用真实点击和墙钟动画；两关各采样 3 个不同的马儿位置与朝向，并验证计时冻结。另有 1 项方向素材与四边门预览，以及 `CatalogIntegrationTest` 的 3 项 80 关规则、完整操作和排行榜测试。
+- `:app:testDebugUnitTest`：9 项 Kotlin 原生规则、八向/边界方向、目标换行、配色对比度和入口坐标测试。
+- `EmulatorFlowTest`：2 项 Android UI Automator 流程测试，使用真实点击和墙钟动画；两关各采样 3 个不同的马儿位置与朝向，并验证计时冻结。另有 1 项方向素材与四边门预览，以及 `CatalogIntegrationTest` 的 3 项 80 关规则、完整操作和排行榜测试。`EntryAndGoalsTest` 的 2 项检查覆盖全部 80 关目标可见、窄屏大字号、六个同位入口的稳定坐标。
 - `tests/SwiftCoreTests.swift`：读取共用数据验证 Swift 路线、非法摆法、边界和动画端点。
 - `design/`：ImageGen 页面设计及浏览器验证截图。`design/imagegen-prompts.txt` 记录早期素材提示词；`design/native-v2-imagegen-prompts.json` 保存场景与材质提示词；`design/native-v3-imagegen-prompts.json` 保存八向马儿、四向门和两张标牌共 14 张素材的完整提示词、路径和校验值。
 - `public/assets/`：共用 ImageGen 插画原件。两端原生资源中各有相同副本。

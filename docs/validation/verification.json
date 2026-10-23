@@ -2,7 +2,7 @@
   "date": "2026-10-23",
   "android": {
     "build": "assembleDebug passed",
-    "unit_tests": 6,
+    "unit_tests": 9,
     "failures": 0,
     "device_validation": true,
     "validation_date": "2026-10-23",
@@ -16,67 +16,70 @@
       "renderer": "Apple M1 host GPU, OpenGL ES 3; Vulkan disabled"
     },
     "native_ui_tests": {
-      "tests": 6,
+      "tests": 8,
       "failures": 0,
-      "runtime_seconds": 100.769,
+      "runtime_seconds": 117.119,
       "framework": "Android UI Automator, real input and wall-clock animation",
       "checks": [
-        "landscape board and single-row compact toolbar",
+        "landscape board and five compact toolbar icons in one row",
+        "two large bottom-right buttons: counterclockwise and clockwise 90 degrees",
         "numeric tray order and all 10 inventory IDs",
-        "select a placed piece, rotate, undo and keep angle label synchronized",
-        "reject out-of-bounds rotation without moving the piece",
+        "select unplaced and placed pieces, rotate both directions, undo and verify actual board angles",
+        "reject both directions of out-of-bounds rotation without changing position or angle",
         "move, remove and replace pieces",
-        "challenges 03 and 04 automatically run and finish",
-        "three distinct horse positions per level; timer frozen",
+        "challenges 03 and 04 automatically run and finish; three distinct horse positions and frozen timer",
         "independent and assisted local leaderboard entries",
-        "eight separate horse views rendered; route turning changes heading in native accessibility snapshots",
-        "four gate-edge views rendered at A, B, C and F",
-        "north-edge sprites clear the heading; end posts and letter badges visually reviewed",
-        "all 80 levels replay complete obstacle sequences in Kotlin, with real path-specific animation endpoints",
-        "all 80 chapter cards reachable, level80 nine unique tiles in uniform two rows",
-        "unknown endpoints stay unset, explicit A/B wrong finish cannot win, A/A loop finishes automatically",
-        "level80 full wall-clock animation and win recorded",
+        "eight horse views rendered; turning changes heading in native accessibility snapshots",
+        "flat entry markers rendered at A, B, C and F; letters stay at original frame positions",
+        "all 80 levels replay complete obstacle sequences with real path-specific animation endpoints",
+        "all 80 chapter cards reachable; level80 nine unique tiles in two rows",
+        "unknown endpoints stay unset; A/B wrong finish cannot win; A/A loop automatically runs and finishes",
         "level65 placements and endpoint choices survive Activity recreation",
-        "ten best entries per level survive completing every other level"
+        "ten best entries per level survive completing every other level",
+        "all 80 levels show every target simultaneously without scrolling; long goals use two serpentine rows",
+        "620dp width and 1.35 font scale keep every target visible; original six letter positions stay fixed for shared endpoints",
+        "removed workbench heading, selection instructions and route-success message stay absent"
       ],
       "reports": [
-        "output/level-integration/flows-emulator.log",
-        "output/level-integration/directions-emulator.log",
-        "output/level-integration/catalog-emulator.log"
+        "docs/validation/android-flows.log",
+        "docs/validation/android-directions.log",
+        "docs/validation/android-catalog.log",
+        "docs/validation/android-entry-goals.log",
+        "docs/validation/goals-visibility-report.json"
       ]
     },
-    "visual_review": "Native 80-level chapter list, uniform two-row tray, unknown endpoint selection, and level80 running screenshots inspected; v3 horse/gate assets preserved",
+    "visual_review": "Fresh 03 selected-piece rotation, level80 running, level76 goals and 620dp/1.35-font screenshots inspected. Bottom-right rotation buttons, two-row tray, flat entry markers and full targets fit.",
     "runtime_crashes": 0,
     "directional_animation_samples": [
       {
         "name": "challenge-3-animation",
         "value": {
-          "timer": "00:08.46",
+          "timer": "00:09.19",
           "horseBounds": [
-            "161 753 299 881",
-            "293 746 431 874",
-            "401 677 539 805"
+            "287 781 374 883",
+            "400 781 508 883",
+            "430 644 538 746"
           ],
           "headings": [
-            "朝向东",
-            "朝向东",
-            "朝向北"
+            "朝向东，跑动中",
+            "朝向东，跑动中",
+            "朝向北，跑动中"
           ]
         }
       },
       {
         "name": "challenge-4-animation",
         "value": {
-          "timer": "00:01.28",
+          "timer": "00:01.36",
           "horseBounds": [
-            "966 425 1104 553",
-            "893 493 1031 621",
-            "812 585 950 713"
+            "890 490 998 592",
+            "852 599 960 701",
+            "725 631 833 733"
           ],
           "headings": [
-            "朝向西",
-            "朝向南",
-            "朝向西"
+            "朝向西，跑动中",
+            "朝向南，跑动中",
+            "朝向西，跑动中"
           ]
         }
       }
@@ -85,13 +88,14 @@
     "runtime_levels": 80,
     "runtime_pieces": 10,
     "rules_schema": 2,
-    "level_report": "output/android-emulator-80/validation/catalog-rules-report.json"
+    "level_report": "docs/validation/catalog-rules-report.json",
+    "ui_revision": "entry-goals-v4, two large bottom-right quarter-turn controls"
   },
   "ios": {
     "native_platform": "IOS",
     "architecture": "arm64",
     "minimum_os": "17.0",
-    "compile_and_link": "passed, schema v2 and native branching/endpoint UI",
+    "compile_and_link": "passed, native full target rows, flat entry markers, clean workbench and bidirectional rotation controls",
     "signed": false,
     "device_validation": false,
     "runtime_levels": 80,
@@ -111,27 +115,37 @@
     {
       "path": "output/RacingClub-Android-debug.apk",
       "bytes": 44630179,
-      "sha256": "6a82362024cec645c7054f2eee28710fbda6c2f4b05cc813b0567b27d07a657b"
+      "sha256": "1f47fd46242c20d3462e17851c6e09c9d3d8661811d7b91c295e1ec439a56106"
     },
     {
       "path": "native/ios/build/unsigned/RacingClub.app/RacingClub",
-      "bytes": 1251848,
-      "sha256": "e358189f249ddd86c00ae24a1deb53dbc2fe3a2766f3f316cb55342cace66469"
+      "bytes": 1532648,
+      "sha256": "9b90f14e9ee46c874ede84c86130c18a6ff263fefdeef27d1178bc8a84db443d"
     },
     {
-      "path": "design/android-native-home-80.png",
-      "bytes": 1578764,
-      "sha256": "5d5cd3dd687df48aeac5b42430a8dc569da5fb5a67e0612cfaebe0a11eea67bf"
+      "path": "design/android-native-play-v4.png",
+      "bytes": 1694682,
+      "sha256": "9c599c437764a55a7feb60f6b33c37bd47d67ecbb3094934e139998fc9bb17ff"
     },
     {
-      "path": "design/android-native-play-80.png",
-      "bytes": 1831300,
-      "sha256": "a1d12a8775ab8f22fad0a8145a7dfeab32ef43d79fb0ec905b4f64234f48ef94"
+      "path": "design/android-native-goals-v4.png",
+      "bytes": 1748902,
+      "sha256": "2dd63110a21f1234d2cfa58b0218b4b70a098cfe688aa86b920d7b26b04fd91a"
     },
     {
-      "path": "output/android-emulator-80/validation/challenge-80.mp4",
-      "bytes": 14187811,
-      "sha256": "a19b9911d6f3d01604682417a7c5920d953f24fd0f19514a1e95cbf63ca50d5e"
+      "path": "design/android-native-large-font-v4.png",
+      "bytes": 1538764,
+      "sha256": "9de5cf8fec624dbea418ab3820ba96930d65cd1c2fad7ff01767a9a845e79797"
+    },
+    {
+      "path": "design/android-native-rotation-v4.png",
+      "bytes": 1809591,
+      "sha256": "55a1a2d93e91603e7a967afc56ba86e60091e62bb9f0e0c891ba1426c1f3ff7f"
+    },
+    {
+      "path": "output/android-entry-v4/validation/challenge-80.mp4",
+      "bytes": 12502126,
+      "sha256": "217fe8596a9df15171777c93606d7553d27ae46fc89577b73fe4dccfc3a15bf0"
     }
   ],
   "last_four_hints": "Computed offline from verified topology and instructions; independent reference replay passed. No solution photos claimed; original referenceLayout remains null."

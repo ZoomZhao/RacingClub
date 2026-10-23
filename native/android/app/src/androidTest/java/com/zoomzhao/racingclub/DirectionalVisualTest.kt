@@ -44,7 +44,7 @@ class DirectionalVisualTest {
             scenario.onActivity { activity -> activity.setContent {
                 MaterialTheme(typography=ClubTypography){Surface(color=Paper){DirectionalGallery()}}
             } }
-            assertNotNull(awaitText("八向马儿与四向门"))
+            assertNotNull(awaitText("八向马儿与平面入口"))
             capture("14-directional-assets")
             for((gate,opposite)in listOf("A" to "D","B" to "E","C" to "A","F" to "B")) {
                 scenario.onActivity { activity ->
@@ -74,7 +74,7 @@ class DirectionalVisualTest {
 @Composable private fun DirectionalGallery() {
     val sprites=gameSprites()
     Column(Modifier.fillMaxSize().padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
-        Text("八向马儿与四向门",fontSize=20.sp,lineHeight=26.sp,fontWeight=FontWeight.Bold,color=Green)
+        Text("八向马儿与平面入口",fontSize=20.sp,lineHeight=26.sp,fontWeight=FontWeight.Bold,color=Green)
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
             HorseHeading.entries.forEach { heading ->
                 Column(Modifier.weight(1f).background(Color(0xfffffaf0),RoundedCornerShape(10.dp)).border(1.dp,Color(0xffe8d4b8),RoundedCornerShape(10.dp)).padding(6.dp),horizontalAlignment=Alignment.CenterHorizontally) {
@@ -83,11 +83,11 @@ class DirectionalVisualTest {
                 }
             }
         }
-        Text("门按棋盘边缘选用独立视图",fontSize=13.sp,lineHeight=19.sp,color=Brown)
+        Text("原字母位置 · 外侧起点箭头与俯视终点棋格",fontSize=13.sp,lineHeight=19.sp,color=Brown)
         Row(Modifier.fillMaxWidth().weight(1f),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             BoundarySide.entries.forEach { side ->
                 Column(Modifier.weight(1f).fillMaxHeight().background(Color(0xfffffaf0),RoundedCornerShape(10.dp)).border(1.dp,Color(0xffe8d4b8),RoundedCornerShape(10.dp)).padding(9.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-                    Canvas(Modifier.fillMaxWidth().weight(1f)){paintSprite(sprites.gates.getValue(side),Rect(Offset.Zero,size))}
+                    Canvas(Modifier.fillMaxWidth().weight(1f)){val outward=when(side){BoundarySide.N->Offset(0f,-1f);BoundarySide.E->Offset(1f,0f);BoundarySide.S->Offset(0f,1f);BoundarySide.W->Offset(-1f,0f)};paintEntryMarker("A",size.let{Offset(it.width/2,it.height/2)},outward,kotlin.math.min(size.width,size.height)*.8f,true,true)}
                     Text(when(side){BoundarySide.N->"上边 · A";BoundarySide.E->"右边 · B";BoundarySide.S->"下边 · C / D";BoundarySide.W->"左边 · E / F"},fontSize=11.sp,lineHeight=18.sp,color=Green,modifier=Modifier.padding(top=6.dp))
                 }
             }

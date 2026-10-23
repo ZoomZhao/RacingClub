@@ -2,27 +2,27 @@
 > racingclub@0.1.0 test
 > node --test tests/*.test.mjs
 
-✔ both photographed solutions form a continuous ordered route (1.766667ms)
-✔ rotating symmetric straight piece accepts equivalent physical solution (0.573416ms)
-✔ rotation rejects overlap and board boundary; moving ignores own previous footprint (0.078708ms)
-✔ missing, disconnected, overlapping, duplicated and wrong-order pieces cannot win (0.140959ms)
-✔ restore sanitizes invalid, duplicate, overlapping and foreign pieces (0.132083ms)
-✔ rotated endpoints remain on the actual piece boundary (0.081583ms)
-✔ animation samples begin and end at the route ports (0.210459ms)
-✔ all original photos and both kinds of crops match the manifests (77.641125ms)
-✔ 76 reference layouts fit the board and have reproducible orientations (2.223416ms)
-✔ every published candidate replays real ports and only counts obstacles (2.573ms)
-✔ levels 1–16 reproduce the independently reviewed photo sequences (0.152667ms)
-✔ new challenge photos resolve levels 17–24 including repeated jumps (0.237291ms)
-✔ edge-adjacent obstacle 8 is not a B gate in levels 57, 59, 72 (0.107666ms)
-✔ forks prohibit leaf-to-leaf turns and piece 7 has disconnected paths (0.178959ms)
-✔ the level 46 photo resolves a repeatable lap without erasing its ambiguity evidence (0.199916ms)
-✔ 65 onward keeps player-determined endpoints after the challenge photos are confirmed (0.123458ms)
-✔ challenge facts, inference, and unresolved data stay distinct (0.262167ms)
-✔ all 76 complete reference traces replay ports, repeated obstacles, and empty branches (4.2185ms)
-✔ consolidated transcripts retain original evidence and full multi-row instructions (2.443959ms)
-✔ 80 native levels retain every instruction, endpoint mode, and unique physical tile (7.847333ms)
-✔ all native road paths preserve reviewed legal turns and exact animation endpoints (0.295292ms)
+✔ both photographed solutions form a continuous ordered route (2.922792ms)
+✔ rotating symmetric straight piece accepts equivalent physical solution (1.37725ms)
+✔ rotation rejects overlap and board boundary; moving ignores own previous footprint (0.12ms)
+✔ missing, disconnected, overlapping, duplicated and wrong-order pieces cannot win (0.164375ms)
+✔ restore sanitizes invalid, duplicate, overlapping and foreign pieces (0.147584ms)
+✔ rotated endpoints remain on the actual piece boundary (0.086042ms)
+✔ animation samples begin and end at the route ports (0.242542ms)
+✔ all original photos and both kinds of crops match the manifests (114.768917ms)
+✔ 76 reference layouts fit the board and have reproducible orientations (2.607084ms)
+✔ every published candidate replays real ports and only counts obstacles (3.948ms)
+✔ levels 1–16 reproduce the independently reviewed photo sequences (0.237042ms)
+✔ new challenge photos resolve levels 17–24 including repeated jumps (0.369834ms)
+✔ edge-adjacent obstacle 8 is not a B gate in levels 57, 59, 72 (0.2595ms)
+✔ forks prohibit leaf-to-leaf turns and piece 7 has disconnected paths (0.493417ms)
+✔ the level 46 photo resolves a repeatable lap without erasing its ambiguity evidence (0.599958ms)
+✔ 65 onward keeps player-determined endpoints after the challenge photos are confirmed (0.266334ms)
+✔ challenge facts, inference, and unresolved data stay distinct (0.433042ms)
+✔ all 76 complete reference traces replay ports, repeated obstacles, and empty branches (5.113708ms)
+✔ consolidated transcripts retain original evidence and full multi-row instructions (3.062791ms)
+✔ 80 native levels retain every instruction, endpoint mode, and unique physical tile (10.532083ms)
+✔ all native road paths preserve reviewed legal turns and exact animation endpoints (0.338042ms)
 ℹ tests 21
 ℹ suites 0
 ℹ pass 21
@@ -30,4 +30,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 190.326833
+ℹ duration_ms 294.343875

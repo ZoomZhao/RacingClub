@@ -29,7 +29,7 @@ INSTRUMENTATION_STATUS: test=manualSelectionRotationAndBothAutoCompletions
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 35.603
+Time: 36.528
 
 OK (2 tests)
 

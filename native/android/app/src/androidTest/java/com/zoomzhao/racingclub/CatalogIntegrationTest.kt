@@ -25,7 +25,13 @@ class CatalogIntegrationTest {
   device.takeScreenshot(File(dir,"catalog-failure.png"));throw AssertionError("Missing $selector")
  }
  private fun tap(label:String){find(By.desc(label)).click()}
- private fun choose(label:String,letter:String){tap(label);find(By.text(label));val c=find(By.text(letter)).visibleCenter;device.click(c.x,c.y);find(By.text("${if(label=="选择起点")"起点"else"终点"} $letter"))}
+ private fun choose(label:String,letter:String){tap("入口 $letter");find(By.text("入口 $letter"));val c=find(By.text(if(label=="选择起点")"设为起点"else"设为终点")).visibleCenter;device.click(c.x,c.y);find(By.text("${if(label=="选择起点")"起点"else"终点"} $letter"))}
+ private fun nodeState(description:String):String {
+  fresh()
+  fun walk(n:android.view.accessibility.AccessibilityNodeInfo?):String?{if(n==null)return null;if(n.contentDescription?.toString()==description)return n.stateDescription?.toString();for(i in 0 until n.childCount)walk(n.getChild(i))?.let{return it};return null}
+  return walk(instrumentation.uiAutomation.rootInActiveWindow).orEmpty()
+ }
+ private fun awaitRunning(){val end=SystemClock.uptimeMillis()+5000;while(SystemClock.uptimeMillis()<end){if(nodeState("马儿").contains("跑动中"))return;SystemClock.sleep(50)};fail("Horse must start automatically")}
  private fun capture(name:String){assertTrue(device.takeScreenshot(File(dir,"$name.png")))}
  @Test fun all80NativeRulesReplayIncludingLoopsAndUnknownEndpoints() {
   val rules=loadRules(context);assertEquals(80,rules.levels.size);assertEquals((1..10).toList(),rules.pieces.keys.sorted())
@@ -64,9 +70,10 @@ class CatalogIntegrationTest {
    }
    capture("21-catalog-final-chapter");tap("进入挑战 80")
    find(By.text("起点 ?"));find(By.text("终点 ?"));capture("22-level80-empty")
-   val sequence=find(By.desc("障碍顺序"));val b=sequence.visibleBounds
-   device.swipe(b.right-8,b.centerY(),b.left+8,b.centerY(),20);SystemClock.sleep(200)
-   capture("23-level80-sequence-end")
+   val sequence=find(By.desc("障碍顺序"));assertFalse(sequence.isScrollable)
+   val level=loadRules(context).levels.last()
+   level.sequence.forEachIndexed{i,id->assertTrue(sequence.visibleBounds.contains(find(By.desc("目标 ${i+1}：${id}号")).visibleBounds))}
+   capture("23-level80-complete-goals")
    val ids=listOf(1,2,3,4,5,6,8,9,10);val bounds=ids.map{find(By.desc("拼板 $it")).visibleBounds}
    assertTrue("Second tray row must be reachable",bounds.last().bottom<device.displayHeight)
    bounds.take(5).zipWithNext().forEach{(a,b)->assertTrue(a.centerX()<b.centerX())}
@@ -81,15 +88,15 @@ class CatalogIntegrationTest {
    val movie=File(dir,"challenge-80.mp4")
    val recording=Thread({device.executeShellCommand("screenrecord --time-limit 45 --size 1280x720 --bit-rate 4000000 ${movie.absolutePath}")},"level80-recording").apply{isDaemon=true;start()}
    SystemClock.sleep(250)
-   choose("选择起点","A");choose("选择终点","B");SystemClock.sleep(500);assertFalse(device.hasObject(By.text("路线正确，马儿出发！")));choose("选择终点","A")
-   find(By.text("路线正确，马儿出发！"));capture("26-level80-running")
+   choose("选择起点","A");choose("选择终点","B");SystemClock.sleep(500);assertFalse(nodeState("马儿").contains("跑动中"));choose("选择终点","A")
+   awaitRunning();assertFalse(device.hasObject(By.text("路线正确，马儿出发！")));capture("26-level80-running")
    SystemClock.sleep(2000);capture("26-level80-turning")
    find(By.text("漂亮，顺利通关！"),45000);device.executeShellCommand("pkill -2 screenrecord");recording.join(2000);assertTrue(movie.length()>1000);capture("27-level80-win")
    find(By.text("返回训练场")).click();find(By.text("1 / 80 已完成"));capture("28-level80-completed")
    tap("进入挑战 65");tap("提示");choose("选择起点","C")
    choose("选择终点","D");tap("返回")
    scenario.recreate();find(By.text("马术训练场"));SystemClock.sleep(300);tap("关卡 65–80");tap("进入挑战 65")
-   find(By.text("起点 C"));find(By.text("终点 D"));find(By.text("已放置"));capture("29-level65-restored")
+   find(By.text("起点 C"));find(By.text("终点 D"));assertTrue(nodeState("棋盘").contains("号"));capture("29-level65-restored")
   }
  }
  @Test fun laterLevelScoresDoNotEvictEarlyLevelBests() {

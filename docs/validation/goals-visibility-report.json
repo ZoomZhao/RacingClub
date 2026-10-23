@@ -1,0 +1,487 @@
+{
+  "passed": true,
+  "levels": [
+    {
+      "level": 1,
+      "visibleGoals": 1,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 2,
+      "visibleGoals": 2,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 3,
+      "visibleGoals": 3,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 4,
+      "visibleGoals": 4,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 5,
+      "visibleGoals": 3,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 6,
+      "visibleGoals": 3,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 7,
+      "visibleGoals": 5,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 8,
+      "visibleGoals": 5,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 9,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 10,
+      "visibleGoals": 5,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 11,
+      "visibleGoals": 5,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 12,
+      "visibleGoals": 5,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 13,
+      "visibleGoals": 5,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 14,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 15,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 16,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 17,
+      "visibleGoals": 4,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 18,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 19,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 20,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 21,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 22,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 23,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 24,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 25,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 26,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 27,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 28,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 29,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 30,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 31,
+      "visibleGoals": 4,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 32,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 33,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 34,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 35,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 36,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 37,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 38,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 39,
+      "visibleGoals": 12,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 40,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 41,
+      "visibleGoals": 5,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 42,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 43,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 44,
+      "visibleGoals": 11,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 45,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 46,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 47,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 48,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 49,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 50,
+      "visibleGoals": 12,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 51,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 52,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 53,
+      "visibleGoals": 14,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 54,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 55,
+      "visibleGoals": 17,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 56,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 57,
+      "visibleGoals": 13,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 58,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 59,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 60,
+      "visibleGoals": 11,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 61,
+      "visibleGoals": 13,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 62,
+      "visibleGoals": 12,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 63,
+      "visibleGoals": 9,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 64,
+      "visibleGoals": 15,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 65,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 66,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 67,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 68,
+      "visibleGoals": 6,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 69,
+      "visibleGoals": 11,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 70,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 71,
+      "visibleGoals": 10,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 72,
+      "visibleGoals": 10,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 73,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 74,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 75,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 76,
+      "visibleGoals": 18,
+      "rows": 2,
+      "scrollable": false
+    },
+    {
+      "level": 77,
+      "visibleGoals": 7,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 78,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 79,
+      "visibleGoals": 8,
+      "rows": 1,
+      "scrollable": false
+    },
+    {
+      "level": 80,
+      "visibleGoals": 14,
+      "rows": 2,
+      "scrollable": false
+    }
+  ],
+  "largeFontScale": 1.35,
+  "narrowWidthDp": 620
+}

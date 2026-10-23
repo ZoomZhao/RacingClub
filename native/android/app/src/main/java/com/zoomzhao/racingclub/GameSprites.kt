@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.IntSize
 import kotlin.math.*
 
 internal data class GameSprite(val bitmap:ImageBitmap,val source:IntOffset,val size:IntSize)
-internal data class GameSprites(val horses:Map<HorseHeading,GameSprite>,val gates:Map<BoundarySide,GameSprite>,val start:GameSprite,val finish:GameSprite)
+internal data class GameSprites(val horses:Map<HorseHeading,GameSprite>)
 
 private fun loadSprite(resources:Resources,id:Int):GameSprite {
     val bitmap=BitmapFactory.decodeResource(resources,id,BitmapFactory.Options().apply{inScaled=false;inSampleSize=4})
@@ -38,10 +38,7 @@ private fun loadSprite(resources:Resources,id:Int):GameSprite {
             HorseHeading.S to R.drawable.horse_s_v3,HorseHeading.SW to R.drawable.horse_sw_v3,
             HorseHeading.W to R.drawable.horse_w_v3,HorseHeading.NW to R.drawable.horse_nw_v3,
             HorseHeading.N to R.drawable.horse_n_v3,HorseHeading.NE to R.drawable.horse_ne_v3
-        ).mapValues{loadSprite(resources,it.value)},mapOf(
-            BoundarySide.N to R.drawable.gate_n_v3,BoundarySide.E to R.drawable.gate_e_v3,
-            BoundarySide.S to R.drawable.gate_s_v3,BoundarySide.W to R.drawable.gate_w_v3
-        ).mapValues{loadSprite(resources,it.value)},loadSprite(resources,R.drawable.start_marker_v3),loadSprite(resources,R.drawable.finish_marker_v3))
+        ).mapValues{loadSprite(resources,it.value)})
     }
 }
 

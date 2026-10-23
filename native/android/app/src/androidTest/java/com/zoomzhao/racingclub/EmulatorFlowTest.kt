@@ -55,16 +55,17 @@ class EmulatorFlowTest {
     }
     private fun text(value:String)=find(By.textContains(value))
     private fun tap(label:String) { find(By.desc(label)).click() }
-    private fun boardState():String {
+    private fun nodeState(description:String):String {
         fun search(node:AccessibilityNodeInfo?):String? {
             if(node==null)return null
-            if(node.contentDescription?.toString()=="棋盘")return node.stateDescription?.toString()
+            if(node.contentDescription?.toString()==description)return node.stateDescription?.toString()
             for(i in 0 until node.childCount)search(node.getChild(i))?.let{return it}
             return null
         }
         freshAccessibility()
         return search(instrumentation.uiAutomation.rootInActiveWindow).orEmpty()
     }
+    private fun boardState()=nodeState("棋盘")
     private fun cell(x:Int,y:Int) {
         val b=find(By.desc("棋盘")).visibleBounds
         val unit=b.width()/5.7f
@@ -96,10 +97,14 @@ class EmulatorFlowTest {
             start03()
             val b=find(By.desc("棋盘")).visibleBounds
             assertTrue("Board must fit screen",b.left>=0&&b.top>=0&&b.right<=device.displayWidth&&b.bottom<=device.displayHeight)
-            val labels=listOf("旋转","移回","撤销","提示","重置","全部 10 块")
+            val labels=listOf("移回","撤销","提示","重置","全部 10 块")
             val bounds=labels.map {find(By.desc(it)).visibleBounds}
             bounds.forEach {r->assertTrue("Tool must be to right of board: $r vs $b",r.centerX()>b.right);assertTrue(r.width()>0&&r.right<=device.displayWidth)}
             assertTrue("All tools must share a row",bounds.maxOf{it.centerY()}-bounds.minOf{it.centerY()}<8)
+            val rotateBounds=listOf("逆时针旋转90度","顺时针旋转90度").map{find(By.desc(it)).visibleBounds}
+            rotateBounds.forEach{r->assertTrue("Large rotate target",r.width()>=120&&r.height()>=120);assertTrue("Rotate must be at bottom right",r.centerX()>b.right&&r.top>bounds.first().bottom)}
+            assertTrue(rotateBounds[0].right<=rotateBounds[1].left)
+            assertTrue(kotlin.math.abs(rotateBounds[0].centerY()-rotateBounds[1].centerY())<8)
             val rack=listOf(1,5,6).map{find(By.desc("拼板 $it")).visibleBounds.centerX()}
             assertEquals("Tray must be sorted by number",rack.sorted(),rack)
             assertFalse("No trial-run button",device.hasObject(By.textContains("出发试跑")))
@@ -113,20 +118,23 @@ class EmulatorFlowTest {
     @Test fun manualSelectionRotationAndBothAutoCompletions() {
         ActivityScenario.launch(MainActivity::class.java).use {
             start03()
-            tap("拼板 1");text("已选中 1 号 · 0°")
-            tap("旋转");text("已选中 1 号 · 90°");cell(1,1)
+            tap("拼板 5");tap("拼板 1")
+            tap("逆时针旋转90度");cell(1,1)
+            expectBoard("1号，第2行第2列，270度")
+            tap("顺时针旋转90度");expectBoard("1号，第2行第2列，0度")
+            tap("顺时针旋转90度")
             expectBoard("1号，第2行第2列，90度")
             capture("04-native-selected-90")
 
-            cell(1,1);tap("旋转")
+            cell(1,1);tap("逆时针旋转90度");expectBoard("1号，第2行第2列，0度")
+            tap("顺时针旋转90度");expectBoard("1号，第2行第2列，90度");tap("顺时针旋转90度")
             expectBoard("1号，第2行第2列，180度")
-            text("已选中 1 号 · 180°");capture("05-native-rotated-placed")
+            capture("05-native-rotated-placed")
             tap("撤销");expectBoard("1号，第2行第2列，90度")
-            text("已选中 1 号 · 90°")
 
             tap("拼板 5");cell(0,3);expectBoard("5号，第4行第1列，0度")
-            cell(0,3);tap("旋转");text("旋转后重叠或越界，已保留原位")
-            expectBoard("5号，第4行第1列，0度");capture("06-native-invalid-rotation")
+            cell(0,3);tap("顺时针旋转90度");text("旋转后重叠或越界，已保留原位")
+            tap("逆时针旋转90度");expectBoard("5号，第4行第1列，0度");capture("06-native-invalid-rotation")
             cell(3,3);expectBoard("5号，第4行第4列，0度")
             cell(0,3);expectBoard("5号，第4行第1列，0度")
             tap("移回");assertFalse(boardState().contains("5号"))
