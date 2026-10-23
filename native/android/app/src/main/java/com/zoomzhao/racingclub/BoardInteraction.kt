@@ -5,7 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import kotlin.math.roundToInt
 
-/** A drag is a preview transaction. The model only changes after a valid drop. */
+/** A drag previews geometry until a valid drop; selection may raise its tile first. */
 internal class BoardDrag {
     var board by mutableStateOf(Rect.Zero)
     var piece by mutableStateOf<Placement?>(null)
@@ -25,7 +25,13 @@ internal class BoardDrag {
     fun problem(s:GameState):String {
         val p=candidate()?:return ""
         if(!board.contains(pointer))return "拖入棋盘内放置"
-        return placementProblem(s.rules,p,s.placed)
+        return placementProblem(s.rules,p)
+    }
+    fun feedback(s:GameState):String {
+        val error=problem(s);if(error.isNotEmpty())return error
+        val p=candidate()?:return ""
+        val ids=s.placed.filter{s.rules.overlaps(p,it)}.map{it.id}.sorted()
+        return if(ids.isEmpty())"" else "将叠放在 ${ids.joinToString("、")} 号上方"
     }
     fun finish(s:GameState) {
         val p=candidate()?:return
@@ -37,11 +43,8 @@ internal class BoardDrag {
     fun cancel(){piece=null}
 }
 
-internal fun placementProblem(rules:Rules,p:Placement,all:List<Placement>):String {
-    val(w,h)=rules.dimensions(p.r)
-    if(p.x<0||p.y<0||p.x+w>5||p.y+h>4)return "超出棋盘边界"
-    val ids=all.filter{o->val(ow,oh)=rules.dimensions(o.r);o.id!=p.id&&p.x<o.x+ow&&o.x<p.x+w&&p.y<o.y+oh&&o.y<p.y+h}.map{it.id}.sorted()
-    return if(ids.isEmpty())"" else "与 ${ids.joinToString("、")} 号拼板重叠"
+internal fun placementProblem(rules:Rules,p:Placement):String {
+    return if(rules.fits(p))"" else "超出棋盘边界"
 }
 
 internal data class PieceActionAnchor(val left:Float,val top:Float,val tipX:Float,val below:Boolean)

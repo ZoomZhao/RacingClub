@@ -93,6 +93,19 @@ internal fun DrawScope.paintBoard(s:GameState,m:BoardMaterials) {
     }
     drawRoundRect(hex("#f9e2b2"),inset.topLeft,inset.size,CornerRadius(u*.14f),style=Stroke(u*.028f))
     s.placed.forEach {paintTile(s.rules,it,u,origin,m,s.selected==it.id,true)}
+    // Only exposed top faces get a badge. Fully covered pieces remain reachable in the rack.
+    s.placed.forEach {p->
+        val below=s.rules.beneath(p,s.placed).size
+        if(below>0)s.rules.stackMarker(p,s.placed)?.let{point->
+            val right=origin+Offset(point.x*u,point.y*u)
+            val rect=Rect(right-Offset(u*.80f,u*.16f),Size(u*.80f,u*.31f))
+            drawRoundRect(hex("#fff3d8"),rect.topLeft,rect.size,CornerRadius(u*.08f))
+            drawRoundRect(hex("#b47a2d"),rect.topLeft,rect.size,CornerRadius(u*.08f),style=Stroke(u*.012f))
+            val icon=rect.topLeft+Offset(u*.09f,u*.09f)
+            repeat(2){i->drawRoundRect(hex("#a96b1e"),icon+Offset(i*u*.025f,-i*u*.035f),Size(u*.14f,u*.10f),CornerRadius(u*.02f),style=Stroke(u*.016f))}
+            drawContext.canvas.nativeCanvas.drawText("叠 ${below+1}",rect.left+u*.49f,rect.top+u*.215f,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=0xff925b1c.toInt();textSize=u*.17f;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
+        }
+    }
 
     val cream=hex("#fff4d7");val fenceShade=hex("#ac804b").copy(alpha=.35f)
     val edges=listOf(Offset(u*.46f,u*.18f) to Offset(u*5.22f,u*.18f),Offset(u*.46f,u*4.50f) to Offset(u*5.22f,u*4.50f),Offset(u*.18f,u*.46f) to Offset(u*.18f,u*4.24f),Offset(u*5.50f,u*.46f) to Offset(u*5.50f,u*4.24f))

@@ -6,13 +6,27 @@ import org.junit.Test
 class BoardInteractionTest {
     private val pieces=(1..10).associateWith{Piece(it,"#ffffff",emptyList(),emptyList(),emptyList())}
     private val rules=Rules(pieces,emptyMap(),emptyList(),emptyMap())
-    @Test fun feedbackIdentifiesAllConflictingPiecesAndAllowsMovingSelf() {
-        val all=listOf(Placement(1,0,0,0),Placement(5,2,0,0))
-        assertEquals("与 1、5 号拼板重叠",placementProblem(rules,Placement(6,1,0,0),all))
-        assertEquals("",placementProblem(rules,all[0],all))
-        assertEquals("",placementProblem(rules,Placement(1,0,2,1),all))
-        assertEquals("超出棋盘边界",placementProblem(rules,Placement(1,4,0,0),all))
-        assertEquals("超出棋盘边界",placementProblem(rules,Placement(1,0,3,1),all))
+    @Test fun temporaryStacksAreValidButOutOfBoundsDropsAreRejected() {
+        assertEquals("",placementProblem(rules,Placement(6,1,0,0)))
+        assertEquals("",placementProblem(rules,Placement(1,0,2,1)))
+        assertEquals("超出棋盘边界",placementProblem(rules,Placement(1,4,0,0)))
+        assertEquals("超出棋盘边界",placementProblem(rules,Placement(1,0,3,1)))
+    }
+    @Test fun stacksUseTopmostHitAndOnlyExposedFacesGetMarkers() {
+        val a=Placement(1,0,0,0);val b=Placement(5,1,0,0);val c=Placement(6,0,0,0)
+        val all=listOf(a,b,c)
+        assertEquals(c,rules.hit(all,1,0))
+        assertEquals(b,rules.hit(all,2,0))
+        assertNull(rules.hit(all,4,3))
+        assertEquals(listOf(b,c),rules.coveredBy(a,all))
+        assertEquals(listOf(a,b),rules.beneath(c,all))
+        assertNull(rules.stackMarker(a,all))
+        for(p in listOf(b,c)){
+            val marker=rules.stackMarker(p,all)!!
+            assertEquals(p.id,rules.hit(all,marker.x.toInt(),marker.y.toInt())?.id)
+        }
+        assertTrue(rules.hasOverlap(all))
+        assertFalse(rules.hasOverlap(listOf(a,Placement(5,2,0,0))))
     }
     @Test fun boardActionsStayNearTileAndAvoidEntriesAcrossEdgesAndRotations() {
         val gates=listOf(Point(2.85f,.18f),Point(5.5f,1.85f),Point(4.85f,4.5f),Point(1.85f,4.5f),Point(.18f,3.85f),Point(.18f,.85f))

@@ -8,7 +8,7 @@ struct Difficulty:Decodable,Identifiable {let id:String;let label:String;let ori
 struct Level:Decodable,Identifiable {
  let id:Int;let title:String;let difficultyId:String;let start:String;let finish:String;let sequence:[Int];let solution:[Placement];let solutionStart:String;let solutionFinish:String
  var number:String {String(format:"%02d",id)}
- var requiredPieces:[Int] {Set(sequence).sorted()}
+ var requiredPieces:[Int] {var seen=Set<Int>();return sequence.filter{seen.insert($0).inserted}}
  var solveEndpoints:Bool {start.isEmpty && finish.isEmpty}
  enum CodingKeys:String,CodingKey {case id,title,difficultyId,start,finish,sequence,solution,solutionStart,solutionFinish}
  init(from decoder:Decoder)throws {
@@ -24,9 +24,16 @@ struct GameData:Decodable {
  func rotate(_ p:[Double],_ r:Int)->[Double] {switch r {case 1:return[1-p[1],p[0]];case 2:return[2-p[0],1-p[1]];case 3:return[p[1],2-p[0]];default:return p}}
  func dimensions(_ r:Int)->(Int,Int) {r%2==0 ? (2,1):(1,2)}
  func ports(_ p:Placement)->[[Double]] {pieces.first{$0.id==p.id}!.ports.map{let q=rotate($0,p.r);return[q[0]+Double(p.x),q[1]+Double(p.y)]}}
- func fits(_ p:Placement,_ placed:[Placement])->Bool {guard pieces.contains(where:{$0.id==p.id}),(0...3).contains(p.r)else{return false};let(w,h)=dimensions(p.r);guard p.x>=0,p.y>=0,p.x+w<=5,p.y+h<=4 else{return false};return placed.allSatisfy{o in let(ow,oh)=dimensions(o.r);return o.id==p.id || p.x+w<=o.x || o.x+ow<=p.x || p.y+h<=o.y || o.y+oh<=p.y}}
+ func fits(_ p:Placement)->Bool {guard pieces.contains(where:{$0.id==p.id}),(0...3).contains(p.r)else{return false};let(w,h)=dimensions(p.r);return p.x>=0 && p.y>=0 && p.x+w<=5 && p.y+h<=4}
+ func overlaps(_ p:Placement,_ o:Placement)->Bool {let(w,h)=dimensions(p.r),(ow,oh)=dimensions(o.r);return p.id != o.id && p.x<o.x+ow && o.x<p.x+w && p.y<o.y+oh && o.y<p.y+h}
+ func hasOverlap(_ all:[Placement])->Bool {all.enumerated().contains{i,p in all.dropFirst(i+1).contains{overlaps(p,$0)}}}
+ func turnedInside(_ p:Placement,_ turns:Int)->Placement {let r=((p.r+turns)%4+4)%4,(w,h)=dimensions(r);return Placement(id:p.id,x:min(max(0,p.x),5-w),y:min(max(0,p.y),4-h),r:r)}
+ func hit(_ all:[Placement],_ x:Int,_ y:Int)->Placement? {all.last{p in let(w,h)=dimensions(p.r);return(p.x..<p.x+w).contains(x) && (p.y..<p.y+h).contains(y)}}
+ func coveredBy(_ p:Placement,_ all:[Placement])->[Placement] {guard let i=all.firstIndex(where:{$0.id==p.id})else{return[]};return all.dropFirst(i+1).filter{overlaps(p,$0)}}
+ func beneath(_ p:Placement,_ all:[Placement])->[Placement] {all.prefix(while:{$0.id != p.id}).filter{overlaps(p,$0)}}
+ func stackMarker(_ p:Placement,_ all:[Placement])->[Double]? {let(w,h)=dimensions(p.r);for y in p.y..<p.y+h{for x in stride(from:p.x+w-1,through:p.x,by:-1){if hit(all,x,y)?.id==p.id{return[Double(x)+0.92,Double(y)+0.82]}}};return nil}
  func trace(_ level:Level,_ placed:[Placement],start:String="",finish:String="")->[RouteStep]? {
-  guard placed.count==level.requiredPieces.count,Set(placed.map(\.id)).count==placed.count,placed.allSatisfy({level.sequence.contains($0.id)&&fits($0,placed)})else{return nil}
+  guard placed.count==level.requiredPieces.count,Set(placed.map(\.id)).count==placed.count,placed.allSatisfy({level.sequence.contains($0.id)&&fits($0)}),!hasOverlap(placed)else{return nil}
   let fromGate=level.start.isEmpty ? start:level.start,toGate=level.finish.isEmpty ? finish:level.finish
   for gate in fromGate.isEmpty ? gates.keys.sorted():[fromGate] {
    guard let pt=gates[gate],let p=placed.first(where:{ports($0).contains(pt)}),let entry=ports(p).firstIndex(of:pt)else{continue}
@@ -49,6 +56,14 @@ struct GameData:Decodable {
   return nil
  }
  func road(_ step:RouteStep)->RoadPath {pieces.first{$0.id==step.piece.id}!.paths[step.pathIndex]}
+ func crossingFeedback(_ route:[RouteStep],_ progress:Double)->(crossed:Int,pulse:Double) {
+  let cursor=min(1,max(0,progress))*Double(route.count);var count=0;var last:Double?
+  for(i,step)in route.enumerated() where step.jump != nil {
+   let path=road(step),at=path.jumpAt ?? 0.5,crossing=Double(i)+(step.from==path.from ? at:1-at)
+   if cursor>=crossing{count+=1;last=crossing}
+  }
+  return(count,last.map{max(0,sin(Double.pi*min(1,max(0,(cursor-$0)*1350/600))))} ?? 0)
+ }
  func position(_ step:RouteStep,_ progress:Double)->[Double] {let path=road(step),samples=path.samples;let t=min(1,max(0,step.from==path.from ? progress:1-progress))*Double(samples.count-1);let i=min(Int(t),samples.count-2),f=t-Double(i),a=samples[i],b=samples[i+1];let pt=rotate([a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f],step.piece.r);return[pt[0]+Double(step.piece.x),pt[1]+Double(step.piece.y)]}
 }
 struct RouteStep {let piece:Placement;let from:Int;let to:Int;let pathIndex:Int;let jump:Int?}

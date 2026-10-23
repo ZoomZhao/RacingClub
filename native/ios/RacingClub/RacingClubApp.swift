@@ -25,18 +25,19 @@ private struct ProgressRecord:Codable {let placed:[Placement];let moves:Int;let 
  func resume(){if started==nil && screen=="game" && !running && dialog.isEmpty {started=ProcessInfo.processInfo.systemUptime}}
  func pause(){if let start=started{elapsed+=ProcessInfo.processInfo.systemUptime-start};started=nil;save()}
  func save(){guard screen != "home" else{return};let r=ProgressRecord(placed:placed,moves:moves,hints:hints,elapsed:time,finished:running||screen=="win",start:chosenStart,finish:chosenFinish);if let d=try?JSONEncoder().encode(r){UserDefaults.standard.set(d,forKey:"level-\(level.id)")}}
- func start(_ l:Level){pause();runTask?.cancel();level=l;selectedDifficultyId=l.difficultyId;screen="game";running=false;placed=[];moves=0;hints=0;elapsed=0;history=[];route=[];chosenStart="";chosenFinish="";if let d=UserDefaults.standard.data(forKey:"level-\(l.id)"),let p=try?JSONDecoder().decode(ProgressRecord.self,from:d),!p.finished{for tile in p.placed where l.sequence.contains(tile.id)&&data.fits(tile,placed){placed.removeAll{$0.id==tile.id};placed.append(tile)};moves=p.moves;hints=p.hints;elapsed=p.elapsed;chosenStart=p.start ?? "";chosenFinish=p.finish ?? ""};selected=l.requiredPieces.first{n in !placed.contains{$0.id==n}};rotation=0;message="";resume()}
+ func start(_ l:Level){pause();runTask?.cancel();level=l;selectedDifficultyId=l.difficultyId;screen="game";running=false;placed=[];moves=0;hints=0;elapsed=0;history=[];route=[];chosenStart="";chosenFinish="";if let d=UserDefaults.standard.data(forKey:"level-\(l.id)"),let p=try?JSONDecoder().decode(ProgressRecord.self,from:d),!p.finished{for tile in p.placed where l.sequence.contains(tile.id)&&data.fits(tile){placed.removeAll{$0.id==tile.id};placed.append(tile)};moves=p.moves;hints=p.hints;elapsed=p.elapsed;chosenStart=p.start ?? "";chosenFinish=p.finish ?? ""};selected=l.requiredPieces.first{n in !placed.contains{$0.id==n}};rotation=0;message="";resume()}
  func home(){pause();runTask?.cancel();screen="home";running=false}
- func select(_ id:Int){guard !running else{return};selected=id;rotation=placed.first{$0.id==id}?.r ?? 0;message=""}
+ func select(_ id:Int){guard !running else{return};selected=id;let p=placed.first{$0.id==id};rotation=p?.r ?? 0;if let p,placed.last?.id != id{placed.removeAll{$0.id==id};placed.append(p);save()};message=""}
  private func remember(){history.append((placed,moves,hints,chosenStart,chosenFinish))}
- func place(_ x:Int,_ y:Int){guard !running,let id=selected else{return};let p=Placement(id:id,x:x,y:y,r:rotation);guard data.fits(p,placed) else{message="这里重叠或越界，已保留原位";return};remember();placed.removeAll{$0.id==id};placed.append(p);moves+=1;changed()}
- func rotate(_ quarterTurns:Int=1){guard !running,let id=selected else{return};let next=((rotation+quarterTurns)%4+4)%4;if let i=placed.firstIndex(where:{$0.id==id}){var p=placed[i];p.r=next;guard data.fits(p,placed) else{message="旋转后重叠或越界，已保留原位";return};remember();placed[i]=p;moves+=1};rotation=next;changed()}
+ func place(_ x:Int,_ y:Int){guard !running,let id=selected else{return};let p=Placement(id:id,x:x,y:y,r:rotation);guard data.fits(p) else{message="超出棋盘边界，已保留原位";return};remember();placed.removeAll{$0.id==id};placed.append(p);moves+=1;changed()}
+ func rotate(_ quarterTurns:Int=1){guard !running,let id=selected else{return};var next=((rotation+quarterTurns)%4+4)%4;if let i=placed.firstIndex(where:{$0.id==id}){let p=data.turnedInside(placed[i],quarterTurns);next=p.r;remember();placed.removeAll{$0.id==id};placed.append(p);moves+=1};rotation=next;changed()}
  func remove(){guard !running,let id=selected,placed.contains(where:{$0.id==id}) else{return};remember();placed.removeAll{$0.id==id};moves+=1;changed()}
- func undo(){guard !running,let last=history.popLast() else{return};placed=last.0;moves=last.1;hints=max(hints,last.2);chosenStart=last.3;chosenFinish=last.4;changed()}
+ func undo(){guard !running,let last=history.popLast() else{return};placed=last.0;moves=last.1;hints=max(hints,last.2);chosenStart=last.3;chosenFinish=last.4;rotation=placed.first{$0.id==selected}?.r ?? rotation;changed()}
  func reset(){guard !running else{return};remember();placed=[];chosenStart="";chosenFinish="";moves+=1;changed()}
- func hint(){guard !running else{return};guard let p=level.solution.first(where:{!placed.contains($0)}) else{if level.solveEndpoints{chosenStart=level.solutionStart;chosenFinish=level.solutionFinish;hints+=1;moves+=1;changed()};return};remember();placed=placed.filter{$0.id != p.id&&data.fits(p,[$0])}+[p];selected=p.id;rotation=p.r;moves+=1;hints+=1;message="";changed()}
+ func hint(){guard !running else{return};guard let p=level.solution.first(where:{!placed.contains($0)}) else{if level.solveEndpoints{chosenStart=level.solutionStart;chosenFinish=level.solutionFinish;hints+=1;moves+=1;changed()};return};remember();placed=placed.filter{$0.id != p.id && !data.overlaps(p,$0)}+[p];selected=p.id;rotation=p.r;moves+=1;hints+=1;message="";changed()}
  func changed(){message="";save();checkRoute()}
- func checkRoute(){runTask?.cancel();guard screen=="game",!running,!dragging,dialog.isEmpty else{return};guard !level.solveEndpoints || (!startGate.isEmpty && !finishGate.isEmpty),let valid=data.trace(level,placed,start:startGate,finish:finishGate) else{return};runTask=Task{try? await Task.sleep(for:.milliseconds(250));guard !Task.isCancelled else{return};pause();running=true;route=valid;progress=0;repository.save(Score(level:level.id,millis:Int(elapsed*1000),moves:moves,hints:hints,timestamp:Date()));save();let start=ProcessInfo.processInfo.systemUptime;while progress<1{guard !Task.isCancelled else{return};progress=min(1,(ProcessInfo.processInfo.systemUptime-start)/(Double(valid.count)*1.35));try? await Task.sleep(for:.milliseconds(16))};running=false;screen="win";save()}}
+ func checkRoute(){runTask?.cancel();guard screen=="game",!running,!dragging,dialog.isEmpty else{return};guard !level.solveEndpoints || (!startGate.isEmpty && !finishGate.isEmpty),let valid=data.trace(level,placed,start:startGate,finish:finishGate) else{return};runTask=Task{try? await Task.sleep(for:.milliseconds(250));guard !Task.isCancelled else{return};pause();running=true;route=valid;progress=0;repository.save(Score(level:level.id,millis:Int(elapsed*1000),moves:moves,hints:hints,timestamp:Date()));save();let start=ProcessInfo.processInfo.systemUptime;while progress<1{guard !Task.isCancelled else{return};progress=min(1,(ProcessInfo.processInfo.systemUptime-start)/(Double(valid.count)*1.35));try? await Task.sleep(for:.milliseconds(16))};finishRun()}}
+ func finishRun(){guard running else{return};runTask?.cancel();running=false;screen="win";save()}
  func choose(_ letter:String,finish:Bool?=nil){remember();if finish ?? (dialog=="finish"){chosenFinish=letter}else{chosenStart=letter};moves+=1;close();changed()}
  func show(_ type:String){guard !running else{return};pause();dialog=type}
  func close(){dialog="";resume()}
@@ -52,7 +53,8 @@ private func timeString(_ seconds:Double)->String {let ms=Int(seconds*1000);retu
  var unit:CGFloat {board.width/5.7}
  func begin(_ game:Game,_ p:Placement,_ at:CGPoint,_ anchor:CGPoint?=nil){guard !game.running,unit>0 else{return};game.beginDrag();game.select(p.id);game.rotation=p.r;piece=p;pointer=at;let(w,h)=game.data.dimensions(p.r);grab=anchor ?? CGPoint(x:Double(w)/2,y:Double(h)/2)}
  var candidate:Placement? {guard let p=piece,unit>0 else{return nil};return Placement(id:p.id,x:Int(((pointer.x-board.minX)/unit-0.35-grab.x).rounded()),y:Int(((pointer.y-board.minY)/unit-0.35-grab.y).rounded()),r:p.r)}
- func problem(_ game:Game)->String {guard let p=candidate else{return ""};if !board.contains(pointer){return "拖入棋盘内放置"};let(w,h)=game.data.dimensions(p.r);if p.x<0 || p.y<0 || p.x+w>5 || p.y+h>4{return "超出棋盘边界"};let ids=game.placed.filter{o in let(ow,oh)=game.data.dimensions(o.r);return o.id != p.id && p.x<o.x+ow && o.x<p.x+w && p.y<o.y+oh && o.y<p.y+h}.map(\.id).sorted();return ids.isEmpty ? "":"与 \(ids.map(String.init).joined(separator:"、")) 号拼板重叠"}
+ func problem(_ game:Game)->String {guard let p=candidate else{return ""};if !board.contains(pointer){return "拖入棋盘内放置"};let(w,h)=game.data.dimensions(p.r);if p.x<0 || p.y<0 || p.x+w>5 || p.y+h>4{return "超出棋盘边界"};return ""}
+ func feedback(_ game:Game)->String {let error=problem(game);if !error.isEmpty{return error};guard let p=candidate else{return ""};let ids=game.placed.filter{game.data.overlaps(p,$0)}.map(\.id).sorted();return ids.isEmpty ? "":"将叠放在 \(ids.map(String.init).joined(separator:"、")) 号上方"}
  func cancel(_ game:Game){piece=nil;game.endDrag()}
  func finish(_ game:Game){defer{piece=nil;game.endDrag()};guard let p=candidate else{return};let error=problem(game);if error.isEmpty{if game.placed.first(where:{$0.id==p.id}) != p{game.rotation=p.r;game.place(p.x,p.y)}}else{game.message=error=="拖入棋盘内放置" ? "未放入棋盘，已保留原位":"\(error)，已保留原位"}}
 }
@@ -124,17 +126,20 @@ struct ClubView:View {
    NativeCourseSequence(game:game,level:game.level)
    HStack{Button{if game.level.solveEndpoints{game.show("start")}}label:{Label("起点 \(game.startGate.isEmpty ? "?":game.startGate)",systemImage:"arrow.right")};Spacer(minLength:0);Button{if game.level.solveEndpoints{game.show("finish")}}label:{Label("终点 \(game.finishGate.isEmpty ? "?":game.finishGate)",systemImage:"flag.checkered")}}.font(.system(size:9,weight:.bold)).padding(.vertical,2)
    NativeTileRack(game:game,drag:drag)
-   Text(drag.piece != nil ? drag.problem(game):game.message).font(.system(size:10)).foregroundStyle(ink("#a9442b")).lineLimit(2).frame(maxWidth:.infinity,minHeight:22,maxHeight:22,alignment:.leading)
+   let coveredCount=game.placed.filter{!game.data.coveredBy($0,game.placed).isEmpty}.count
+   let error=drag.piece != nil ? drag.problem(game):game.message
+   let feedback=drag.piece != nil ? drag.feedback(game):error.isEmpty && coveredCount>0 ? "\(coveredCount) 块被遮挡 · 点右侧编号置顶":error
+   HStack(spacing:4){if !feedback.isEmpty && error.isEmpty{Image(systemName:"square.3.layers.3d")};Text(feedback)}.font(.system(size:10)).foregroundStyle(ink(error.isEmpty ? "#925b1c":"#a9442b")).lineLimit(2).frame(maxWidth:.infinity,minHeight:28,maxHeight:28,alignment:.leading)
    Divider()
-   HStack(spacing:0){
+   if game.running{Button{game.finishRun()}label:{Label("跳过动画",systemImage:"forward.end.fill").font(.system(size:13,weight:.bold)).foregroundStyle(forest).frame(maxWidth:.infinity,minHeight:42)}.buttonStyle(GameControlStyle()).accessibilityLabel("跳过动画").frame(height:48)}else{HStack(spacing:0){
     tool("arrow.uturn.backward","撤销"){game.undo()}.frame(maxWidth:.infinity)
     tool("lightbulb","提示"){game.hint()}.frame(maxWidth:.infinity)
     tool("arrow.clockwise","重置"){game.reset()}.frame(maxWidth:.infinity)
-   }.disabled(game.running).frame(height:48)
+   }.frame(height:48)}
   }.foregroundStyle(forest).padding(.vertical,2)
  }
  private var win:some View {HStack(spacing:25){Image("horse-arena").resizable().scaledToFill().frame(maxWidth:.infinity,maxHeight:.infinity).clipped().clipShape(RoundedRectangle(cornerRadius:18));VStack(spacing:14){Text("漂亮，顺利通关！").font(.title.bold());Text(timeString(game.elapsed)).font(.system(size:32,design:.serif));Text("\(game.moves) 步 · \(game.hints==0 ? "独立完成":"使用提示")").font(.caption);Button(game.level.id<game.data.levels.last!.id ? "挑战下一关":"返回训练场"){if let next=game.data.levels.first(where:{$0.id>game.level.id}){game.start(next)}else{game.home()}}.buttonStyle(.borderedProminent).tint(forest);Button("查看本关排行榜"){game.show("rank")}}.frame(maxWidth:.infinity).foregroundStyle(forest)}}
- private var dialog:some View {NavigationStack{ScrollView{VStack(alignment:.leading,spacing:16){if game.dialog=="rank"{Text("挑战 \(game.level.number) · 本机排行榜").font(.title2.bold());let records=game.repository.list(level:game.level.id);if records.isEmpty{Text("还没有成绩，完成一次训练就会记录。")};ForEach(Array(records.enumerated()),id:\.element.id){i,r in HStack{Text("\(i+1)");Text(timeString(Double(r.millis)/1000)).monospacedDigit();Spacer();Text("\(r.moves) 步");Text(r.hints==0 ? "独立完成":"使用提示").font(.caption)}};Text("记录保存在此设备；线上服务尚未接入。").font(.caption)}else if game.dialog=="start" || game.dialog=="finish"{Text(game.dialog=="start" ? "选择起点":"选择终点").font(.title2.bold());HStack{ForEach(game.data.gates.keys.sorted(),id:\.self){letter in Button(letter){game.choose(letter)}.buttonStyle(.bordered)}}}else if game.dialog.hasPrefix("gate:"){let letter=String(game.dialog.dropFirst(5));Text("入口 \(letter)").font(.title2.bold());Text("设置起终点；两端可以使用同一入口。");HStack{Button("设为起点"){game.choose(letter,finish:false)}.buttonStyle(.borderedProminent);Button("设为终点"){game.choose(letter,finish:true)}.buttonStyle(.bordered)}}else{Text("一条路，刚刚好的顺序").font(.title2.bold());Text("看右上方障碍顺序。点右侧编号，再点棋盘左上格放置。\n\n从右侧拖入棋盘，或拖动棋盘上的拼板。点棋盘上的拼板后，附近按钮可双向旋转或移回拼板区。重叠时落点标红，松手保留原位。\n\n正确后自动停止计时，马儿沿路跑到终点。岔路须平顺转弯，无障碍支路不计跨障。同一障碍可多次跨越。第65关起，点入口字母设置起终点；两端可相同。绿色箭头指向起点，棋格标记代表终点。右上顺序按箭头折行，全部直接展示。")}}.padding(25)}.foregroundStyle(forest).background(paper).toolbar{ToolbarItem(placement:.confirmationAction){Button("完成"){game.close()}}}}}
+ private var dialog:some View {NavigationStack{ScrollView{VStack(alignment:.leading,spacing:16){if game.dialog=="rank"{Text("挑战 \(game.level.number) · 本机排行榜").font(.title2.bold());let records=game.repository.list(level:game.level.id);if records.isEmpty{Text("还没有成绩，完成一次训练就会记录。")};ForEach(Array(records.enumerated()),id:\.element.id){i,r in HStack{Text("\(i+1)");Text(timeString(Double(r.millis)/1000)).monospacedDigit();Spacer();Text("\(r.moves) 步");Text(r.hints==0 ? "独立完成":"使用提示").font(.caption)}};Text("记录保存在此设备；线上服务尚未接入。").font(.caption)}else if game.dialog=="start" || game.dialog=="finish"{Text(game.dialog=="start" ? "选择起点":"选择终点").font(.title2.bold());HStack{ForEach(game.data.gates.keys.sorted(),id:\.self){letter in Button(letter){game.choose(letter)}.buttonStyle(.bordered)}}}else if game.dialog.hasPrefix("gate:"){let letter=String(game.dialog.dropFirst(5));Text("入口 \(letter)").font(.title2.bold());Text("设置起终点；两端可以使用同一入口。");HStack{Button("设为起点"){game.choose(letter,finish:false)}.buttonStyle(.borderedProminent);Button("设为终点"){game.choose(letter,finish:true)}.buttonStyle(.bordered)}}else{Text("一条路，刚刚好的顺序").font(.title2.bold());Text("看右上方障碍顺序。点右侧编号，再点棋盘左上格放置。\n\n从右侧拖入棋盘，或拖动棋盘上的拼板。点棋盘上的拼板后，附近按钮可双向旋转或移回拼板区。棋盘内允许临时叠放，琥珀标记提示下层拼板。点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n正确后自动停止计时，马儿沿路跑到终点。岔路须平顺转弯，无障碍支路不计跨障。同一障碍可多次跨越。第65关起，点入口字母设置起终点；两端可相同。绿色箭头指向起点，棋格标记代表终点。右上顺序按箭头折行，全部直接展示。")}}.padding(25)}.foregroundStyle(forest).background(paper).toolbar{ToolbarItem(placement:.confirmationAction){Button("完成"){game.close()}}}}}
  private func tool(_ icon:String,_ label:String,_ action:@escaping()->Void)->some View {Button(action:action){Image(systemName:icon).font(.system(size:19)).foregroundStyle(label=="提示" ? ink("#9b641b"):forest).frame(width:34,height:34)}.buttonStyle(GameControlStyle()).accessibilityLabel(label)}
  private func badge(_ id:Int)->some View {Text("\(id)").font(.system(size:12,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:23,height:23).background(numberFill(id),in:Circle())}
  private func sequence(_ level:Level)->some View {NativeCourseSequence(game:game,level:level)}
@@ -184,15 +189,18 @@ private struct NativeTileRack:View {
   VStack(spacing:6){ForEach(rows.indices,id:\.self){index in
    let row=rows[index],columns=rows.count>1 ? 5:row.count,cardWidth=(geo.size.width-CGFloat(columns-1)*5)/CGFloat(columns)
    HStack(spacing:5){ForEach(row,id:\.self){id in
+    let placed=game.placed.first{$0.id==id},covered=placed.map{!game.data.coveredBy($0,game.placed).isEmpty} ?? false
     Button{game.select(id)}label:{ZStack(alignment:.topLeading){
-     TilePreview(game:game,id:id).padding(.top,12).padding(.bottom,2)
+     TilePreview(game:game,id:id).padding(.top,12).padding(.bottom,placed != nil ? 17:2)
      Text("\(id)").font(.system(size:11,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:18,height:18).background(numberFill(id),in:Circle())
-     if game.placed.contains(where:{$0.id==id}){Image(systemName:"checkmark.circle.fill").font(.system(size:8)).foregroundStyle(forest).frame(maxWidth:.infinity,alignment:.trailing)}
-    }.padding(3).frame(width:cardWidth,height:height).background(game.selected==id ? ink("#fff1d2"):ink("#fcf3e2"),in:RoundedRectangle(cornerRadius:8)).overlay{RoundedRectangle(cornerRadius:8).stroke(game.selected==id ? forest:ink("#ebd9bc"),lineWidth:1)}}.buttonStyle(.plain).disabled(game.running)
+     if placed != nil{Image(systemName:covered ? "square.3.layers.3d":"checkmark.circle.fill").font(.system(size:12)).foregroundStyle(covered ? ink("#a96b1e"):forest).frame(maxWidth:.infinity,alignment:.trailing)
+      Text(covered ? "被遮挡":"已放置").font(.system(size:8,weight:.bold)).foregroundStyle(.white).padding(.horizontal,3).padding(.vertical,2).background(covered ? ink("#a96b1e"):forest,in:RoundedRectangle(cornerRadius:3)).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.bottom)
+     }
+    }.padding(3).frame(width:cardWidth,height:height).background(game.selected==id ? ink("#fff1d2"):placed != nil ? ink("#e6eee3"):ink("#fcf3e2"),in:RoundedRectangle(cornerRadius:8)).overlay{RoundedRectangle(cornerRadius:8).stroke(game.selected==id || placed != nil ? forest:ink("#ebd9bc"),lineWidth:game.selected==id ? 2:1)}}.buttonStyle(.plain).disabled(game.running)
     .simultaneousGesture(DragGesture(minimumDistance:6,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
      if drag.piece==nil{let p=game.placed.first{$0.id==id} ?? Placement(id:id,x:0,y:0,r:game.selected==id ? game.rotation:0);drag.begin(game,p,value.startLocation)}
      drag.pointer=value.location
-    }.onEnded{_ in drag.finish(game)}).onChange(of:touching){_,active in if !active,drag.piece != nil{drag.cancel(game)}}.accessibilityLabel("拼板 \(id)")
+    }.onEnded{_ in drag.finish(game)}).onChange(of:touching){_,active in if !active,drag.piece != nil{drag.cancel(game)}}.accessibilityLabel("拼板 \(id)").accessibilityValue(placed == nil ? "待放置":covered ? "下层被遮挡，点按置顶":"已放置")
    };if row.count<columns{ForEach(0..<(columns-row.count),id:\.self){_ in Color.clear.frame(width:cardWidth,height:height)}}}
   }}
  }}
@@ -215,7 +223,7 @@ private struct HomePlaqueBackground:View {
  }}
 }
 private func drawTile(_ c:inout GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ origin:CGPoint){let(w,h)=data.dimensions(p.r);let top=CGPoint(x:origin.x+CGFloat(p.x)*u,y:origin.y+CGFloat(p.y)*u);c.fill(Path(roundedRect:CGRect(x:top.x,y:top.y,width:CGFloat(w)*u,height:CGFloat(h)*u),cornerRadius:7),with:.color(ink("#d7b68a")));let piece=data.pieces.first{$0.id==p.id}!;for road in piece.paths {var path=Path();for(i,pt)in road.samples.enumerated(){let q=data.rotate(pt,p.r);let point=CGPoint(x:top.x+q[0]*u,y:top.y+q[1]*u);if i==0{path.move(to:point)}else{path.addLine(to:point)}};c.stroke(path,with:.color(ink("#fff2d6")),lineWidth:u*0.36)};let g=piece.gate;let q=data.rotate([g[0]/100,g[1]/100],p.r);let a=(g[2]+Double(p.r*90)) * .pi/180;let center=CGPoint(x:top.x+q[0]*u,y:top.y+q[1]*u);let dx = -sin(a)*u*0.23,dy=cos(a)*u*0.23;var gate=Path();gate.move(to:CGPoint(x:center.x-dx,y:center.y-dy));gate.addLine(to:CGPoint(x:center.x+dx,y:center.y+dy));c.stroke(gate,with:.color(ink(piece.color)),lineWidth:u*0.09)}
-struct TilePreview:View {@ObservedObject var game:Game;let id:Int;var body:some View{Canvas{context,size in var c=context;let r=game.selected==id ? game.rotation:0;let(w,h)=game.data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(&c,game.data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2))}}}
+struct TilePreview:View {@ObservedObject var game:Game;let id:Int;var body:some View{Canvas{context,size in var c=context;let r=game.selected==id ? game.rotation:game.placed.first{$0.id==id}?.r ?? 0;let(w,h)=game.data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(&c,game.data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2))}}}
 private struct NativeCourseSequence:View {
  @ObservedObject var game:Game
  let level:Level
@@ -255,8 +263,9 @@ private struct NativeCourseSequence:View {
     let color=finish ? ink("#a95837"):forest
     Text(value.isEmpty ? "?":value).font(.system(size:diameter*0.56,weight:.bold)).foregroundStyle(color).frame(width:diameter,height:diameter).background(color.opacity(0.1),in:Circle()).overlay{Circle().stroke(color,lineWidth:1)}
    }else{
-    let id=level.sequence[index-1]
-    Text("\(id)").font(.system(size:diameter*0.57,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:diameter,height:diameter).background(numberFill(id),in:Circle()).overlay{Circle().stroke(ink("#f9e8c8"),lineWidth:1)}.accessibilityLabel("目标 \(index)：\(id)号")
+    let id=level.sequence[index-1],feedback=game.data.crossingFeedback(game.route,game.progress)
+    let passed=game.running && index<=feedback.crossed,pulse=game.running && index==feedback.crossed ? feedback.pulse:0
+    Text("\(id)").font(.system(size:diameter*0.57,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:diameter,height:diameter).background(numberFill(id),in:Circle()).overlay{Circle().stroke(passed ? ink("#d9a442"):ink("#f9e8c8"),lineWidth:passed ? 2:1)}.overlay(alignment:.bottomTrailing){if passed{Image(systemName:"checkmark").font(.system(size:6,weight:.bold)).foregroundStyle(.white).frame(width:9,height:9).background(forest,in:Circle())}}.scaleEffect(1+pulse*0.14).shadow(color:ink("#efbc54").opacity(pulse*0.7),radius:5).accessibilityLabel("目标 \(index)：\(id)号").accessibilityValue(passed ? "已跨越":"等待跨越")
    }
   }
  }
@@ -308,15 +317,21 @@ struct NativeBoard:View {
         c.fill(Path(ellipseIn:CGRect(x:center.x-u*0.16,y:center.y-u*0.16,width:u*0.32,height:u*0.32)),with:.color(numberFill(p.id)))
         c.draw(Text("\(p.id)").font(.system(size:u*0.2,weight:.bold)).foregroundColor(numberInk(p.id)),at:center)
        }
-       if let p=drag.candidate{let(tw,th)=game.data.dimensions(p.r);let rect=CGRect(x:pad+CGFloat(p.x)*u,y:pad+CGFloat(p.y)*u,width:CGFloat(tw)*u,height:CGFloat(th)*u),color=drag.problem(game).isEmpty ? forest:ink("#c04835");var preview=c;preview.clip(to:Path(CGRect(x:pad,y:pad,width:5*u,height:4*u)));preview.fill(Path(roundedRect:rect,cornerRadius:6),with:.color(color.opacity(0.28)));preview.stroke(Path(roundedRect:rect,cornerRadius:6),with:.color(color),lineWidth:3)}
+       for p in game.placed{let below=game.data.beneath(p,game.placed).count
+        if below>0,let pt=game.data.stackMarker(p,game.placed){let right=CGPoint(x:pad+pt[0]*u,y:pad+pt[1]*u),rect=CGRect(x:right.x-u*0.80,y:right.y-u*0.16,width:u*0.80,height:u*0.31),path=Path(roundedRect:rect,cornerRadius:u*0.08)
+         c.fill(path,with:.color(ink("#fff3d8")));c.stroke(path,with:.color(ink("#b47a2d")),lineWidth:u*0.012)
+         c.draw(Text("▱ 叠 \(below+1)").font(.system(size:u*0.17,weight:.bold)).foregroundColor(ink("#925b1c")),at:CGPoint(x:rect.midX,y:rect.midY))
+        }
+       }
+       if let p=drag.candidate{let(tw,th)=game.data.dimensions(p.r);let rect=CGRect(x:pad+CGFloat(p.x)*u,y:pad+CGFloat(p.y)*u,width:CGFloat(tw)*u,height:CGFloat(th)*u),color = !drag.problem(game).isEmpty ? ink("#c04835"):game.placed.contains{game.data.overlaps(p,$0)} ? ink("#a96b1e"):forest;var preview=c;preview.clip(to:Path(CGRect(x:pad,y:pad,width:5*u,height:4*u)));preview.fill(Path(roundedRect:rect,cornerRadius:6),with:.color(color.opacity(0.28)));preview.stroke(Path(roundedRect:rect,cornerRadius:6),with:.color(color),lineWidth:3)}
        for(name,p)in game.data.gates{drawEntry(&c,name,p,u,name==game.startGate,name==game.finishGate)}
       }.contentShape(Rectangle()).simultaneousGesture(SpatialTapGesture().onEnded{tap in
        guard !game.running else{return};let x=Int(floor((tap.location.x-pad)/u)),y=Int(floor((tap.location.y-pad)/u))
        guard(0..<5).contains(x),(0..<4).contains(y)else{return}
-       if let p=game.placed.first(where:{p in let(w,h)=game.data.dimensions(p.r);return(p.x..<p.x+w).contains(x)&&(p.y..<p.y+h).contains(y)}){game.select(p.id)}else{game.place(x,y)}
+       if let p=game.data.hit(game.placed,x,y){game.select(p.id)}else{game.place(x,y)}
       }).gesture(DragGesture(minimumDistance:6,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
        guard !game.running else{return}
-       if drag.piece==nil{let at=CGPoint(x:value.startLocation.x-drag.board.minX,y:value.startLocation.y-drag.board.minY),x=Int(floor(at.x/u-0.35)),y=Int(floor(at.y/u-0.35));if let p=game.placed.first(where:{p in let(w,h)=game.data.dimensions(p.r);return(p.x..<p.x+w).contains(x)&&(p.y..<p.y+h).contains(y)}){drag.begin(game,p,value.startLocation,CGPoint(x:at.x/u-0.35-CGFloat(p.x),y:at.y/u-0.35-CGFloat(p.y)))}}
+       if drag.piece==nil{let at=CGPoint(x:value.startLocation.x-drag.board.minX,y:value.startLocation.y-drag.board.minY),x=Int(floor(at.x/u-0.35)),y=Int(floor(at.y/u-0.35));if let p=game.data.hit(game.placed,x,y){drag.begin(game,p,value.startLocation,CGPoint(x:at.x/u-0.35-CGFloat(p.x),y:at.y/u-0.35-CGFloat(p.y)))}}
        drag.pointer=value.location
       }.onEnded{_ in drag.finish(game)}).onChange(of:touching){_,active in if !active,drag.piece != nil{drag.cancel(game)}}
       if !game.startGate.isEmpty{

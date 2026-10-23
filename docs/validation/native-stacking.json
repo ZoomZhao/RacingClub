@@ -1,0 +1,1 @@
+{"passed":true,"checks":["topmost board hit","covered tile rack status","tap rack to raise hidden piece","stack save and restore","removing top reveals lower piece","undo restores stack order","ten overlapping tiles","bottom and right edge rotations in both directions","edge undo restores exact anchor","overlap blocks automatic completion"]}

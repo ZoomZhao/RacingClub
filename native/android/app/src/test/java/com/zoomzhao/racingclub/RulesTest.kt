@@ -13,6 +13,21 @@ class RulesTest {
  private val rules=Rules(pieces,gates,listOf(l3,l4),emptyMap())
  @Test fun bothPhotoSolutionsConnectInOrder(){for(l in listOf(l3,l4))assertEquals(l.sequence,rules.trace(l,l.solution)?.map{it.p.id})}
  @Test fun rejectsBrokenAndWrongOrder(){assertNull(rules.trace(l3,l3.solution.dropLast(1)));assertNull(rules.trace(l3.copy(sequence=listOf(6,1,5)),l3.solution));assertNull(rules.trace(l3,l3.solution.map{if(it.id==1)it.copy(x=2)else it}))}
- @Test fun rotatedTileCannotOverlapOrLeaveBoard(){assertFalse(rules.fits(Placement(5,0,3,1),l3.solution));assertFalse(rules.fits(Placement(1,0,0,0),listOf(Placement(5,1,0,0))))}
+ @Test fun temporaryOverlapCannotWinAndPlacementsStayInsideBoard(){
+  assertFalse(rules.fits(Placement(5,0,3,1)))
+  val stacked=l3.solution.map{if(it.id==1)it.copy(x=0,y=0,r=0)else it}
+  assertTrue(stacked.all{rules.fits(it)})
+  assertTrue(rules.hasOverlap(stacked));assertNull(rules.trace(l3,stacked))
+ }
+ @Test fun eitherRotationSucceedsAtEveryBoardEdge(){
+  for(r in 0..3){val(w,h)=rules.dimensions(r)
+   for(x in 0..5-w)for(y in 0..4-h)for(turn in listOf(-1,1)){
+    val p=Placement(1,x,y,r);val next=rules.turnedInside(p,turn);val(nw,nh)=rules.dimensions(next.r)
+    assertTrue(rules.fits(next));assertEquals((r+turn+4)%4,next.r)
+    assertEquals(x.coerceAtMost(5-nw),next.x);assertEquals(y.coerceAtMost(4-nh),next.y)
+   }
+  }
+ }
+ @Test fun rackFollowsFirstAppearanceAndDeduplicatesRepeatedObstacles(){assertEquals(listOf(5,1,6),l3.copy(sequence=listOf(5,1,5,6,1)).requiredPieces)}
  @Test fun straightTileSymmetryAccepted(){assertNotNull(rules.trace(l3,l3.solution.map{if(it.id==1)it.copy(r=3)else it}))}
 }

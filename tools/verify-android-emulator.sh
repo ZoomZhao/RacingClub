@@ -21,8 +21,10 @@ rg -q 'OK \(3 tests\)' emulator-catalog-80.log
 "$adb_bin" -s "$serial" shell am instrument -w -r -e class com.zoomzhao.racingclub.EntryAndGoalsTest com.zoomzhao.racingclub.test/androidx.test.runner.AndroidJUnitRunner | tee emulator-entry-goals-v4.log
 rg -q 'OK \(2 tests\)' emulator-entry-goals-v4.log
 "$adb_bin" -s "$serial" shell am instrument -w -r -e class com.zoomzhao.racingclub.DragInteractionTest com.zoomzhao.racingclub.test/androidx.test.runner.AndroidJUnitRunner | tee emulator-drag.log
-rg -q 'OK \(2 tests\)' emulator-drag.log
+rg -q 'OK \(4 tests\)' emulator-drag.log
+"$adb_bin" -s "$serial" shell am instrument -w -r -e class com.zoomzhao.racingclub.RunAnimationTest com.zoomzhao.racingclub.test/androidx.test.runner.AndroidJUnitRunner | tee emulator-animation.log
+rg -q 'OK \(1 test\)' emulator-animation.log
 mkdir -p "$validation_dir"
-cp emulator-flow-80.log emulator-directions-80.log emulator-catalog-80.log emulator-entry-goals-v4.log emulator-drag.log "$validation_dir/"
+cp emulator-flow-80.log emulator-directions-80.log emulator-catalog-80.log emulator-entry-goals-v4.log emulator-drag.log emulator-animation.log "$validation_dir/"
 "$adb_bin" -s "$serial" pull /sdcard/Android/data/com.zoomzhao.racingclub/files/validation/. "$validation_dir/"
 cp app/build/outputs/apk/debug/app-debug.apk "$project_dir/output/RacingClub-Android-debug.apk"

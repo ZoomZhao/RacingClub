@@ -28,4 +28,20 @@ class PresentationTest {
         assertEquals(Point(.18f,3.85f),entryCenter(gates.getValue("E")))
         for(p in gates.values){val c=entryCenter(p);val o=entryOutward(p);assertEquals(1f,abs(o.x)+abs(o.y),.0001f);assertTrue(c.x in 0f..5.7f&&c.y in 0f..4.7f)}
     }
+    @Test fun goalFeedbackFollowsActualJumpTimesAndRepeatedOccurrences() {
+        val path=RoadPath(0,1,5,listOf(Point(0f,0f),Point(1f,0f)),.25f)
+        val piece=Piece(5,"#fff",emptyList(),emptyList(),emptyList(),listOf(path))
+        val rules=Rules(mapOf(5 to piece),emptyMap(),emptyList(),emptyMap())
+        val p=Placement(5,0,0,0)
+        val route=listOf(RouteStep(p,0,1,0,5),RouteStep(p,1,0,0,null),RouteStep(p,1,0,0,5))
+        assertEquals(0,crossingFeedback(rules,route,.24f/3).crossed)
+        assertEquals(1,crossingFeedback(rules,route,.25f/3).crossed)
+        assertTrue(crossingFeedback(rules,route,.45f/3).pulse>.9f)
+        assertEquals(1,crossingFeedback(rules,route,2.74f/3).crossed)
+        assertEquals(2,crossingFeedback(rules,route,2.75f/3).crossed)
+        assertTrue(crossingFeedback(rules,route,2.95f/3).pulse>.9f)
+        assertEquals(2,crossingFeedback(rules,route,1f).crossed)
+        assertEquals(CrossingFeedback(0,0f),crossingFeedback(rules,emptyList(),1f))
+    }
+
 }

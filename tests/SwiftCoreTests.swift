@@ -15,7 +15,25 @@ import Foundation
     precondition(zip(b,pp[step.to]).allSatisfy{abs($0-$1)<0.0001})
    }
   }
-  precondition(!data.fits(Placement(id:5,x:0,y:3,r:1),data.levels[0].solution))
+  precondition(!data.fits(Placement(id:5,x:0,y:3,r:1)))
+  for l in data.levels{
+   let route=data.trace(l,l.solution,start:l.solutionStart,finish:l.solutionFinish)!;var count=0
+   for(i,step)in route.enumerated() where step.jump != nil{
+    let path=data.road(step),at=path.jumpAt ?? 0.5,t=(Double(i)+(step.from==path.from ? at:1-at))/Double(route.count)
+    precondition(data.crossingFeedback(route,t-0.00001).crossed==count)
+    count+=1;precondition(data.crossingFeedback(route,t+0.00001).crossed==count)
+   }
+   precondition(data.crossingFeedback(route,1).crossed==l.sequence.count)
+  }
+  precondition(data.levels[2].requiredPieces == [5,1,6])
+  let bottom=Placement(id:1,x:0,y:0,r:0),top=Placement(id:5,x:0,y:0,r:0),stack=[bottom,top]
+  precondition(data.fits(top) && data.hasOverlap(stack))
+  precondition(data.hit(stack,0,0)==top && data.stackMarker(bottom,stack)==nil)
+  precondition(data.coveredBy(bottom,stack)==[top] && data.beneath(top,stack)==[bottom])
+  for r in 0..<4{let(w,h)=data.dimensions(r);for x in 0...5-w{for y in 0...4-h{for turn in [-1,1]{
+   let p=data.turnedInside(Placement(id:1,x:x,y:y,r:r),turn),(nw,nh)=data.dimensions(p.r)
+   precondition(data.fits(p) && p.r==(r+turn+4)%4 && p.x==min(x,5-nw) && p.y==min(y,4-nh))
+  }}}}
   precondition(data.inventory.count==10 && data.pieces.count==10 && data.levels.count==80)
   print("Swift native core: 80 levels, repeated jumps, branches, unknown endpoints, invalid layouts and animation endpoints passed.")
  }

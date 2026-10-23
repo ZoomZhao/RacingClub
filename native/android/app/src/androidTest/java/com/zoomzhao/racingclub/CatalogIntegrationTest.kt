@@ -47,6 +47,7 @@ class CatalogIntegrationTest {
   assertEquals(listOf("STARTER","JUNIOR","EXPERT","MASTER","PUNDIT"),rules.difficulties.map{it.originalLabel})
   val rows=JSONArray()
   for(l in rules.levels){
+   assertEquals(l.sequence.distinct(),l.requiredPieces)
    val difficulty=rules.difficulties.single{it.id==l.difficultyId}
    assertTrue(l.id in difficulty.firstLevel..difficulty.lastLevel)
    val route=rules.trace(l,l.solution,l.solutionStart,l.solutionFinish)
@@ -94,7 +95,7 @@ class CatalogIntegrationTest {
    val level=loadRules(context).levels.last()
    level.sequence.forEachIndexed{i,id->assertTrue(sequence.visibleBounds.contains(find(By.desc("目标 ${i+1}：${id}号")).visibleBounds))}
    capture("23-level80-complete-goals")
-   val ids=listOf(1,2,3,4,5,6,8,9,10);val bounds=ids.map{find(By.desc("拼板 $it")).visibleBounds}
+   val ids=level.requiredPieces;assertEquals(level.sequence.distinct(),ids);val bounds=ids.map{find(By.desc("拼板 $it")).visibleBounds}
    assertTrue("Second tray row must be reachable",bounds.last().bottom<device.displayHeight)
    bounds.take(5).zipWithNext().forEach{(a,b)->assertTrue(a.centerX()<b.centerX())}
    bounds.drop(5).zipWithNext().forEach{(a,b)->assertTrue(a.centerX()<b.centerX())}

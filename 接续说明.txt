@@ -136,3 +136,5 @@ ImageGen 已生成设计图、hero 与透明棋子。最新 UI 按用户后续�
 - 11项release单元测试与R8/lintVital构建通过。独立RacingClub_Release_API35模拟器安装原始签名release包，使用tools/verify-release-ui.py外部ADB/UIAutomator验证启动、棋盘选中、双向旋转、移回隐藏操作、03自动通关及练习榜。两帧马儿东向/北向移动且计时冻结00:13.52已目视检查。
 - 旧debug instrumentation依赖未混淆Kotlin类，无法直接用于压缩release；采用外部UI工具，未为测试向release增加keep规则或debug能力。日志与公开摘要归档docs/validation/android-release*，截图位于output/release/ui/。
 - Debug与release签名不同，首次切换无法覆盖旧Debug；卸载会清本机进度。未触碰已安装的用户手机/原debug模拟器。后续release可用同一固定签名升级。
+
+2026-10-23：原生 0.1.2（Android versionCode 3）。棋盘内允许临时重叠，数组底到顶顺序渲染/命中，点右侧编号置顶；可见上层显示“叠 N”，右侧浅绿/绿色已放置和琥珀被遮挡状态，长期保留必要叠放反馈。双向旋转按实际方向更新，靠边最少向内移，选中拼板置顶且数量不减；十块堆叠124组合法位置/方向回归通过。重叠未消除不触发通关；Hint仍会清除挡住目标解答的拼板。托盘按题目首次出现去重排序。成功动画支持右下跳过；按真实跨障时点（含反向/重复编号）600ms金色光晕/14%缩放/小勾，跳过不改时间步数不重复记分。Kotlin15单元用例、Android13界面/集成用例、Swift80关和逐次跨障检查通过，iOS arm64编译通过；签名Release独立模拟器覆盖升级及外部UI通过。证据 docs/validation/native-stacking-validation.json、android-release-012*.json；截图 design/gameplay-redesign/*-v3.png。固定发布签名沿用原身份，勿删除本机.signing。后续以当前Git状态与CI构建为准。

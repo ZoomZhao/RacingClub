@@ -82,6 +82,42 @@ root = snapshot()
 assert find(root, '拼板操作') is None
 capture('04-returned')
 print('Release launch, board selection, both rotations and removal passed.', flush=True)
+
+def cell(x, y):
+    adb('shell', 'input', 'tap', str(round(x1+(x+.35)*unit)), str(round(y1+(y+.35)*unit)))
+
+# Exercise the production APK's stack UI and edge rotations with real touch input.
+tap(find(root, '拼板 1'))
+cell(3.5, 3.5)
+root = snapshot()
+rack = bounds(find(root, '拼板 5'))
+adb('shell', 'input', 'swipe', str((rack[0]+rack[2])//2), str((rack[1]+rack[3])//2),
+    str(round(x1+4.35*unit)), str(round(y1+3.85*unit)), '700')
+root = snapshot()
+assert find(root, '被遮挡', 'text') is not None, 'Stacked tile must remain identifiable in the rack'
+assert find(root, '已放置', 'text') is not None
+capture('09-release-stack')
+tap(find(root, '拼板 1'))
+root = snapshot()
+capture('10-release-raised')
+tap(find(root, '顺时针旋转90度'))
+root = snapshot()
+assert find(root, '被遮挡', 'text') is not None, 'Bottom edge rotation must succeed and keep the overlap'
+capture('11-release-bottom-edge-rotation')
+tap(find(root, '逆时针旋转90度'))
+root = snapshot()
+tap(find(root, '顺时针旋转90度'))
+root = snapshot()
+tap(find(root, '移回'))
+root = snapshot()
+assert find(root, '被遮挡', 'text') is None, 'Removing the top must reveal the lower tile'
+tap(find(root, '撤销'))
+root = snapshot()
+assert find(root, '被遮挡', 'text') is not None
+capture('12-release-stack-undo')
+tap(find(root, '重置'))
+root = snapshot()
+print('Release drag stacking, hidden-piece selection, bottom-edge rotations, reveal and undo passed.', flush=True)
 hint = find(root, '提示')
 for _ in range(3):
     tap(hint)
@@ -95,11 +131,22 @@ capture('07-win')
 tap(find(root, '查看本关排行榜', 'text'))
 root = wait_text('使用提示')
 capture('08-ranking')
+tap(find(root, '知道了', 'text'))
+root = snapshot()
+tap(find(root, '挑战下一关', 'text'))
+root = snapshot()
+for _ in range(4):
+    tap(find(root, '提示'))
+    time.sleep(.12)
+root = snapshot()
+tap(find(root, '跳过动画'))
+root = wait_text('漂亮，顺利通关！')
+capture('13-release-skipped-animation')
 report = {
     'passed': True,
     'serial': args.serial,
     'method': 'External ADB/UIAutomator, no application instrumentation or release keep rules',
-    'checks': ['normal release launch', 'selected board controls', 'clockwise and counterclockwise rotation', 'return removes selected tile and controls', 'automatic challenge03 win after hints', 'persistent practice score'],
+    'checks': ['normal release launch', 'selected board controls', 'clockwise and counterclockwise rotation', 'return removes selected tile and controls', 'drag to occupied board cells', 'covered and placed rack states', 'tap hidden tile to raise', 'bottom edge rotation with overlap', 'removal reveals lower tile', 'stack undo', 'automatic challenge03 win after hints', 'persistent practice score', 'skip completed route animation to settlement'],
     'animation_frames': ['05-running.png', '06-running.png'],
 }
 (args.output / 'release-ui-report.json').write_text(json.dumps(report, indent=2) + '\n')

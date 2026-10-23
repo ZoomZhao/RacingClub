@@ -90,19 +90,28 @@ class GameState(private val context:Context,val rules:Rules,val repository:Leade
  fun pause(){started?.let{elapsed+=SystemClock.elapsedRealtime()-it};started=null;save()}
  fun resume(){if(screen=="game" && !running && dialog.isEmpty() && started==null)started=SystemClock.elapsedRealtime()}
  fun save(){if(screen=="home")return;val a=JSONArray();placed.forEach{a.put(encode(it))};prefs.edit().putString("level-${level.id}",JSONObject().put("placed",a).put("moves",moves).put("hints",hints).put("elapsed",time()).put("start",chosenStart).put("finish",chosenFinish).put("finished",running||screen=="win").toString()).apply()}
- fun start(l:Level){pause();level=l;screen="game";running=false;placed=emptyList();moves=0;hints=0;elapsed=0;history.clear();activeRoute=emptyList();chosenStart="";chosenFinish="";selectedDifficultyId=l.difficultyId;runCatching{val o=JSONObject(prefs.getString("level-${l.id}","{}")?:"{}");if(!o.optBoolean("finished")){placements(o.optJSONArray("placed")?:JSONArray()).forEach{p->if(p.id in l.sequence && rules.fits(p,placed))placed=placed.filter{it.id!=p.id}+p};moves=o.optInt("moves");hints=o.optInt("hints");elapsed=o.optLong("elapsed");chosenStart=o.optString("start").takeIf{it in rules.gates}.orEmpty();chosenFinish=o.optString("finish").takeIf{it in rules.gates}.orEmpty()}};selected=l.requiredPieces.firstOrNull{ id->placed.none{it.id==id} };rotation=0;message="";resume()}
+ fun start(l:Level){pause();level=l;screen="game";running=false;placed=emptyList();moves=0;hints=0;elapsed=0;history.clear();activeRoute=emptyList();chosenStart="";chosenFinish="";selectedDifficultyId=l.difficultyId;runCatching{val o=JSONObject(prefs.getString("level-${l.id}","{}")?:"{}");if(!o.optBoolean("finished")){placements(o.optJSONArray("placed")?:JSONArray()).forEach{p->if(p.id in l.sequence && rules.fits(p))placed=placed.filter{it.id!=p.id}+p};moves=o.optInt("moves");hints=o.optInt("hints");elapsed=o.optLong("elapsed");chosenStart=o.optString("start").takeIf{it in rules.gates}.orEmpty();chosenFinish=o.optString("finish").takeIf{it in rules.gates}.orEmpty()}};selected=l.requiredPieces.firstOrNull{ id->placed.none{it.id==id} };rotation=0;message="";resume()}
  fun home(){pause();screen="home";running=false;dialog=""}
- fun select(id:Int){if(running)return;selected=id;rotation=placed.find{it.id==id}?.r?:0;message=""}
+ fun select(id:Int){if(running)return;selected=id;val p=placed.find{it.id==id};rotation=p?.r?:0;if(p!=null&&placed.lastOrNull()?.id!=id){placed=placed.filter{it.id!=id}+p;save()};message=""}
  private fun remember(){history+=Snapshot(placed,moves,hints,chosenStart,chosenFinish)}
- fun place(x:Int,y:Int){val id=selected?:return;if(running)return;val p=Placement(id,x,y,rotation);if(!rules.fits(p,placed)){message="这里重叠或越界，已保留原位";return};remember();placed=placed.filter{it.id!=id}+p;moves++;message="";save()}
- fun rotate(quarterTurns:Int=1){if(running)return;val id=selected?:return;val nr=((rotation+quarterTurns)%4+4)%4;val old=placed.find{it.id==id};if(old!=null){val p=old.copy(r=nr);if(!rules.fits(p,placed)){message="旋转后重叠或越界，已保留原位";return};remember();placed=placed.map{if(it.id==id)p else it};moves++};rotation=nr;message="";save()}
+ fun place(x:Int,y:Int){val id=selected?:return;if(running)return;val p=Placement(id,x,y,rotation);if(!rules.fits(p)){message="超出棋盘边界，已保留原位";return};remember();placed=placed.filter{it.id!=id}+p;moves++;message="";save()}
+ fun rotate(quarterTurns:Int=1){
+  if(running)return
+  val id=selected?:return;val old=placed.find{it.id==id}
+  if(old!=null){
+   val p=rules.turnedInside(old,quarterTurns)
+   remember();placed=placed.filter{it.id!=id}+p;rotation=p.r;moves++
+  }else rotation=((rotation+quarterTurns)%4+4)%4
+  message="";save()
+ }
  fun remove(){if(running)return;val id=selected?:return;if(placed.none{it.id==id})return;remember();placed=placed.filter{it.id!=id};moves++;message="";save()}
  fun undo(){if(running||history.isEmpty())return;val s=history.removeAt(history.lastIndex);placed=s.pieces;moves=s.moves;hints=maxOf(hints,s.hints);chosenStart=s.start;chosenFinish=s.finish;rotation=placed.firstOrNull{it.id==selected}?.r?:rotation;message="";save()}
  fun reset(){if(running)return;remember();placed=emptyList();chosenStart="";chosenFinish="";moves++;message="";save()}
- fun hint(){if(running)return;val p=level.solution.firstOrNull{it !in placed};if(p==null){if(level.solveEndpoints&&(chosenStart!=level.solutionStart||chosenFinish!=level.solutionFinish)){remember();chosenStart=level.solutionStart;chosenFinish=level.solutionFinish;moves++;hints++;message="";save()};return};remember();placed=placed.filter{it.id!=p.id&&rules.fits(p,listOf(it))}+p;selected=p.id;rotation=p.r;moves++;hints++;message="";save()}
+ fun hint(){if(running)return;val p=level.solution.firstOrNull{it !in placed};if(p==null){if(level.solveEndpoints&&(chosenStart!=level.solutionStart||chosenFinish!=level.solutionFinish)){remember();chosenStart=level.solutionStart;chosenFinish=level.solutionFinish;moves++;hints++;message="";save()};return};remember();placed=placed.filter{it.id!=p.id&&!rules.overlaps(p,it)}+p;selected=p.id;rotation=p.r;moves++;hints++;message="";save()}
  fun chooseEndpoint(letter:String,finish:Boolean=dialog=="finish"){if(running||!level.solveEndpoints||letter !in rules.gates)return;remember();if(finish)chosenFinish=letter else chosenStart=letter;moves++;message="";closeDialog();save()}
  fun trace():List<RouteStep>? {if(level.solveEndpoints&&(startGate.isEmpty()||finishGate.isEmpty()))return null;return rules.trace(level,placed,startGate,finishGate)}
  fun beginRun(route:List<RouteStep>){pause();running=true;activeRoute=route;message="";repository.save(Score(level.id,elapsed,moves,hints));prefs.edit().putBoolean("completed-${level.id}",true).apply();progressVersion++;save()}
+ fun finishRun(){if(!running)return;running=false;screen="win";save()}
  fun showDialog(which:String){if(running)return;pause();dialog=which}
  fun closeDialog(){dialog="";resume()}
 }

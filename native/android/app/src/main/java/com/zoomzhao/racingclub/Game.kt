@@ -6,7 +6,7 @@ data class RoadPath(val from:Int,val to:Int,val jump:Int?,val samples:List<Point
 data class Piece(val id:Int,val color:String,val ports:List<Point>,val samples:List<Point>,val gate:List<Float>,val paths:List<RoadPath> = listOf(RoadPath(0,1,id,samples)))
 data class Difficulty(val id:String,val label:String,val originalLabel:String,val color:String,val firstLevel:Int,val lastLevel:Int)
 data class Level(val id:Int,val title:String,val start:String,val finish:String,val sequence:List<Int>,val solution:List<Placement>,val group:String="green",val solutionStart:String=start,val solutionFinish:String=finish,val difficultyId:String="") {
-    val requiredPieces get()=sequence.distinct().sorted()
+    val requiredPieces get()=sequence.distinct()
     val solveEndpoints get()=start.isEmpty() && finish.isEmpty()
     val number get()=id.toString().padStart(2,'0')
 }
@@ -17,17 +17,37 @@ class Rules(val pieces:Map<Int,Piece>,val gates:Map<String,Point>,val levels:Lis
     fun rotate(pt:Point,r:Int):Point = when(r) {1->Point(1-pt.y,pt.x);2->Point(2-pt.x,1-pt.y);3->Point(pt.y,2-pt.x);else->pt}
     fun dimensions(r:Int)=if(r%2==0)2 to 1 else 1 to 2
     fun ports(p:Placement)=pieces.getValue(p.id).ports.map {rotate(it,p.r).let{q->Point(q.x+p.x,q.y+p.y)}}
-    fun fits(p:Placement,all:List<Placement>):Boolean {
+    /** Placement permits temporary stacks; route validation still requires a flat board. */
+    fun fits(p:Placement):Boolean {
         if(p.id !in pieces || p.r !in 0..3)return false
         val(w,h)=dimensions(p.r)
-        if(p.x<0||p.y<0||p.x+w>5||p.y+h>4)return false
-        return all.all{o->val(ow,oh)=dimensions(o.r);o.id==p.id||p.x+w<=o.x||o.x+ow<=p.x||p.y+h<=o.y||o.y+oh<=p.y}
+        return p.x>=0&&p.y>=0&&p.x+w<=5&&p.y+h<=4
+    }
+    fun overlaps(p:Placement,o:Placement):Boolean {
+        val(w,h)=dimensions(p.r);val(ow,oh)=dimensions(o.r)
+        return p.id!=o.id&&p.x<o.x+ow&&o.x<p.x+w&&p.y<o.y+oh&&o.y<p.y+h
+    }
+    fun hasOverlap(all:List<Placement>)=all.indices.any{i->all.drop(i+1).any{overlaps(all[i],it)}}
+    /** Rotate about the current anchor, shifting only as far as the edge requires. */
+    fun turnedInside(p:Placement,quarterTurns:Int):Placement {
+        val r=((p.r+quarterTurns)%4+4)%4;val(w,h)=dimensions(r)
+        return p.copy(x=p.x.coerceIn(0,5-w),y=p.y.coerceIn(0,4-h),r=r)
+    }
+    /** Lists are stored bottom to top, including saved progress and undo snapshots. */
+    fun hit(all:List<Placement>,x:Int,y:Int)=all.lastOrNull{val(w,h)=dimensions(it.r);x in it.x until it.x+w&&y in it.y until it.y+h}
+    fun coveredBy(p:Placement,all:List<Placement>)=all.dropWhile{it.id!=p.id}.drop(1).filter{overlaps(p,it)}
+    fun beneath(p:Placement,all:List<Placement>)=all.takeWhile{it.id!=p.id}.filter{overlaps(p,it)}
+    fun stackMarker(p:Placement,all:List<Placement>):Point? {
+        val(w,h)=dimensions(p.r)
+        for(y in p.y until p.y+h)for(x in p.x+w-1 downTo p.x)
+            if(hit(all,x,y)?.id==p.id)return Point(x+.92f,y+.82f)
+        return null
     }
     /** Search only legal smooth port pairs, tracking printed obstacle progress.
      * A tile can be entered repeatedly or traversed without crossing its rail.
      * No saved solution or reference endpoint participates in this decision. */
     fun trace(level:Level,all:List<Placement>,start:String?=null,finish:String?=null):List<RouteStep>? {
-        if(all.size!=level.requiredPieces.size||all.map{it.id}.distinct().size!=all.size||all.any{it.id !in level.sequence||!fits(it,all)})return null
+        if(all.size!=level.requiredPieces.size||all.map{it.id}.distinct().size!=all.size||all.any{it.id !in level.sequence||!fits(it)}||hasOverlap(all))return null
         val startGate=level.start.ifEmpty{start.orEmpty()};val finishGate=level.finish.ifEmpty{finish.orEmpty()}
         val starts=if(startGate.isEmpty())gates.keys.toList()else listOf(startGate)
         val byPoint=mutableMapOf<Point,MutableList<Pair<Placement,Int>>>()

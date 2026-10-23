@@ -1,6 +1,7 @@
 node_modules/
 dist/
 native/android/.gradle/
+native/android/.kotlin/
 native/android/**/build/
 native/android/local.properties
 native/ios/build/

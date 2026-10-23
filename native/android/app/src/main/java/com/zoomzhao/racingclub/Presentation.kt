@@ -35,3 +35,17 @@ internal fun entryOutward(pt:Point):Point=when(boundarySide(pt)) {
     BoundarySide.N->Point(0f,-1f);BoundarySide.E->Point(1f,0f)
     BoundarySide.S->Point(0f,1f);BoundarySide.W->Point(-1f,0f)
 }
+
+internal data class CrossingFeedback(val crossed:Int,val pulse:Float)
+/** Progress follows actual rail crossings, including repeated numbers and reverse paths. */
+internal fun crossingFeedback(rules:Rules,route:List<RouteStep>,progress:Float):CrossingFeedback {
+    val cursor=progress.coerceIn(0f,1f)*route.size
+    var crossed=0;var lastCrossing:Float?=null
+    route.forEachIndexed{i,step->if(step.jump!=null){
+        val road=rules.road(step);val at=road.jumpAt?:.5f
+        val crossing=i+if(step.from==road.from)at else 1-at
+        if(cursor>=crossing){crossed++;lastCrossing=crossing}
+    }}
+    val pulse=lastCrossing?.let{sin(PI.toFloat()*((cursor-it)*1350f/600f).coerceIn(0f,1f)).coerceAtLeast(0f)}?:0f
+    return CrossingFeedback(crossed,pulse)
+}

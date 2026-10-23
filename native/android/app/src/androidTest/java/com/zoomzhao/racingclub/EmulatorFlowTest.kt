@@ -107,8 +107,8 @@ class EmulatorFlowTest {
             assertTrue("Board uses full height",b.height()>device.displayHeight*0.8)
             assertFalse("No piece actions before placement",device.hasObject(By.desc("移回")))
             assertFalse("No inventory entry",device.hasObject(By.desc("全部 10 块")))
-            val rack=listOf(1,5,6).map{find(By.desc("拼板 $it")).visibleBounds.centerX()}
-            assertEquals("Tray must be sorted by number",rack.sorted(),rack)
+            val rack=listOf(5,1,6).map{find(By.desc("拼板 $it")).visibleBounds.centerX()}
+            assertEquals("Tray follows first appearance in the challenge",rack.sorted(),rack)
             assertFalse("No trial-run button",device.hasObject(By.textContains("出发试跑")))
             capture("02-native-landscape")
             note("landscape",JSONObject().put("width",device.displayWidth).put("height",device.displayHeight).put("board",b.flattenToString()).put("toolbar",JSONArray(bounds.map{it.flattenToString()})))
@@ -145,8 +145,8 @@ class EmulatorFlowTest {
             tap("撤销");expectBoard("1号，第2行第2列，90度")
 
             tap("拼板 5");cell(0,3);expectBoard("5号，第4行第1列，0度")
-            cell(0,3);tap("顺时针旋转90度");text("旋转后重叠或越界，已保留原位")
-            tap("逆时针旋转90度");expectBoard("5号，第4行第1列，0度");capture("06-native-invalid-rotation")
+            cell(0,3);tap("顺时针旋转90度");expectBoard("5号，第3行第1列，90度")
+            tap("逆时针旋转90度");expectBoard("5号，第3行第1列，0度");capture("06-native-edge-rotation")
             cell(3,3);expectBoard("5号，第4行第4列，0度")
             cell(0,3);expectBoard("5号，第4行第1列，0度")
             tap("移回");assertFalse(boardState().contains("5号"))
@@ -158,7 +158,7 @@ class EmulatorFlowTest {
             text("查看本关排行榜").click();text("独立完成");capture("10-native-ranking03");text("知道了").click()
 
             text("挑战下一关").click();text("挑战 04")
-            val rack=listOf(1,2,3,5).map{find(By.desc("拼板 $it")).visibleBounds.centerX()}
+            val rack=listOf(2,1,5,3).map{find(By.desc("拼板 $it")).visibleBounds.centerX()}
             assertEquals(rack.sorted(),rack)
             repeat(3){tap("提示")}
             beginRecording("challenge-04")
