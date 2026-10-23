@@ -9,6 +9,9 @@ import subprocess
 import time
 import xml.etree.ElementTree as ET
 
+if not __debug__:
+    raise SystemExit('Release UI verification requires enabled assertions; remove -O or PYTHONOPTIMIZE.')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--serial', required=True)
 parser.add_argument('--output', type=Path, default=Path('output/release/ui'))

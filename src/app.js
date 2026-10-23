@@ -4,6 +4,7 @@ const app = document.querySelector('#app');
 const STORE = 'racingclub:v1';
 let saved = {};
 try { saved = JSON.parse(localStorage.getItem(STORE)) || {}; } catch { /* A private browser can still play. */ }
+if (typeof saved !== 'object' || Array.isArray(saved)) saved = {};
 const sessions = Object.fromEntries(LEVELS.map(level => {
   const record = saved[level.id] || {};
   return [level.id, { placements: restorePlacements(level, record.placements), moves: Number.isInteger(record.moves) && record.moves >= 0 ? record.moves : 0, completed: record.completed === true, elapsed: Number.isFinite(record.elapsed) && record.elapsed >= 0 ? record.elapsed : 0, hints: Number.isInteger(record.hints) && record.hints >= 0 ? record.hints : 0, finished: record.finished === true, history: [] }];
@@ -20,7 +21,7 @@ let drag = null;
 let suppressClickUntil = 0;
 let clockStarted = null;
 let autoCheck = null;
-const scores = Array.isArray(saved.__scores) ? saved.__scores.filter(s => LEVELS.some(l => l.id === s.level) && Number.isFinite(s.time) && s.time >= 0 && Number.isInteger(s.moves) && Number.isInteger(s.hints)).slice(-200) : [];
+const scores = Array.isArray(saved.__scores) ? saved.__scores.filter(s => s && typeof s === 'object' && !Array.isArray(s) && LEVELS.some(l => l.id === s.level) && Number.isFinite(s.time) && s.time >= 0 && Number.isInteger(s.moves) && s.moves >= 0 && Number.isInteger(s.hints) && s.hints >= 0).slice(-200) : [];
 
 const icons = {
   back: '<path d="m14 6-6 6 6 6"/>',
@@ -94,15 +95,19 @@ function formatTime(ms, precise = false) {
   return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}${precise ? '.' + String(Math.floor(ms%1000/10)).padStart(2,'0') : ''}`;
 }
 function elapsedTime() { return session().elapsed + (clockStarted === null ? 0 : performance.now() - clockStarted); }
-function startClock() { if (clockStarted === null && screen === 'game' && !busy && !document.hidden && !session().finished) clockStarted = performance.now(); }
+function modalOpen() { return document.querySelector('dialog[open]') !== null; }
+function startClock() { if (clockStarted === null && screen === 'game' && !busy && !document.hidden && !modalOpen() && !session().finished) clockStarted = performance.now(); }
 function stopClock() { if (clockStarted !== null) { session().elapsed += performance.now() - clockStarted; clockStarted = null; persist(); } }
 setInterval(() => { const el = document.querySelector('#elapsed-time'); if (el) el.textContent = formatTime(elapsedTime()); }, 200);
-document.addEventListener('visibilitychange', () => document.hidden ? stopClock() : startClock());
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { stopClock(); clearTimeout(autoCheck); }
+  else { startClock(); if (screen === 'game') scheduleCheck(); }
+});
 window.addEventListener('pagehide', () => { stopClock(); persist(); });
 
 function scheduleCheck() {
   clearTimeout(autoCheck);
-  if (!busy && !session().finished && validate(level,session().placements).ok) autoCheck = setTimeout(() => run(), 300);
+  if (screen === 'game' && !busy && !document.hidden && !modalOpen() && !session().finished && validate(level,session().placements).ok) autoCheck = setTimeout(() => run(), 300);
 }
 
 function render() {
@@ -218,7 +223,7 @@ function positionHorseAtStart() {
 }
 
 async function run(replay = false) {
-  if (busy) return;
+  if (busy || screen !== 'game' || document.hidden || modalOpen()) return;
   const result = validate(level,session().placements);
   if (!result.ok) { setStatus(result.message, 'error'); return; }
   clearTimeout(autoCheck);

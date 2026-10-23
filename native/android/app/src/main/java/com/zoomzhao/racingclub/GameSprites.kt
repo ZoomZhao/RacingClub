@@ -3,13 +3,11 @@ package com.zoomzhao.racingclub
 import android.content.res.Resources
 import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import kotlin.math.*
@@ -30,17 +28,15 @@ private fun loadSprite(resources:Resources,id:Int):GameSprite {
     return GameSprite(bitmap.asImageBitmap(),IntOffset(left,top),IntSize(right-left,bottom-top))
 }
 
-@Composable internal fun gameSprites():GameSprites {
-    val resources=LocalContext.current.resources
-    return remember(resources) {
-        GameSprites(mapOf(
-            HorseHeading.E to R.drawable.horse_e_v3,HorseHeading.SE to R.drawable.horse_se_v3,
-            HorseHeading.S to R.drawable.horse_s_v3,HorseHeading.SW to R.drawable.horse_sw_v3,
-            HorseHeading.W to R.drawable.horse_w_v3,HorseHeading.NW to R.drawable.horse_nw_v3,
-            HorseHeading.N to R.drawable.horse_n_v3,HorseHeading.NE to R.drawable.horse_ne_v3
-        ).mapValues{loadSprite(resources,it.value)})
-    }
-}
+/** Called only from [GameArt], so each view is decoded and scanned once per process. */
+internal fun loadSprites(resources:Resources)=GameSprites(mapOf(
+    HorseHeading.E to R.drawable.horse_e_v3,HorseHeading.SE to R.drawable.horse_se_v3,
+    HorseHeading.S to R.drawable.horse_s_v3,HorseHeading.SW to R.drawable.horse_sw_v3,
+    HorseHeading.W to R.drawable.horse_w_v3,HorseHeading.NW to R.drawable.horse_nw_v3,
+    HorseHeading.N to R.drawable.horse_n_v3,HorseHeading.NE to R.drawable.horse_ne_v3
+).mapValues{loadSprite(resources,it.value)})
+
+@Composable internal fun gameSprites()=gameArt().sprites
 
 internal fun DrawScope.paintSprite(sprite:GameSprite,box:Rect) {
     val scale=min(box.width/sprite.size.width,box.height/sprite.size.height)

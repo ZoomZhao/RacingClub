@@ -49,8 +49,10 @@ internal fun Modifier.gameControlFace(pressed:Boolean=false)=drawBehind {
                 val interaction=remember{MutableInteractionSource()};val pressed by interaction.collectIsPressedAsState()
                 var origin by remember{mutableStateOf(Offset.Zero)}
                 Box(Modifier.size(anchor.button.dp).onGloballyPositioned{origin=it.positionInRoot()}.gameControlFace(pressed).clip(RoundedCornerShape(7.dp)).pointerInput(piece,s.running){
-                    detectDragGestures(onDragStart={at->val pointer=origin+at;drag.begin(s,piece,pointer,(pointer-drag.board.topLeft)/drag.unit-Offset(piece.x+.35f,piece.y+.35f),fromControl=true)},onDrag={change,delta->if(drag.piece!=null){change.consume();drag.pointer+=delta}},onDragEnd={drag.finish(s)},onDragCancel={drag.cancel()})
-                }.clickable(enabled=!s.running,interactionSource=interaction,indication=null,role=Role.Button){if(action==0)s.remove()else s.rotate(action)}.semantics{contentDescription=when(action){-1->"逆时针旋转90度";1->"顺时针旋转90度";else->"移回"}},contentAlignment=Alignment.Center){
+                    // Dragging off a control moves its tile; the token keeps that gesture exclusive.
+                    var token:Any?=null
+                    detectDragGestures(onDragStart={at->val t=Any();val pointer=origin+at;if(drag.begin(s,t,piece,pointer,(pointer-drag.board.topLeft)/drag.unit-Offset(piece.x+.35f,piece.y+.35f),fromControl=true))token=t},onDrag={change,delta->token?.let{t->change.consume();drag.moveTo(t,drag.pointer+delta)}},onDragEnd={token?.let{drag.finish(s,it)};token=null},onDragCancel={token?.let{drag.release(it)};token=null})
+                }.clickable(enabled=!s.running&&!drag.busy,interactionSource=interaction,indication=null,role=Role.Button){if(action==0)s.removePiece(piece.id)else s.rotatePiece(piece.id,action)}.semantics{contentDescription=when(action){-1->"逆时针旋转90度";1->"顺时针旋转90度";else->"移回"}},contentAlignment=Alignment.Center){
                     if(action==0)Icon(Icons.Default.Unarchive,null,Modifier.size(24.dp),tint=Green)
                     else QuarterTurnGlyph(action)
                 }

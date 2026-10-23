@@ -19,7 +19,7 @@ val releaseSigningReady = releaseStoreFile?.isFile == true &&
 android {
     namespace = "com.zoomzhao.racingclub"
     compileSdk = 36
-    defaultConfig { applicationId = "com.zoomzhao.racingclub"; minSdk = 26; targetSdk = 36; versionCode = 4; versionName = "0.1.3"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    defaultConfig { applicationId = "com.zoomzhao.racingclub"; minSdk = 26; targetSdk = 36; versionCode = 5; versionName = "0.1.4"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     signingConfigs {
         if (releaseSigningReady) create("release") {
             storeFile = releaseStoreFile
@@ -53,7 +53,10 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
     testImplementation("junit:junit:4.13.2")
+    // Real org.json for JVM tests; android.jar only ships throwing stubs.
+    testImplementation("org.json:json:20250517")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

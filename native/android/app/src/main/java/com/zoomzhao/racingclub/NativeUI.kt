@@ -29,13 +29,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.drawBehind
@@ -44,11 +41,13 @@ import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.delay
 import kotlin.math.*
 
+internal val Green=Color(0xff254c3b);internal val Paper=Color(0xfff8f5ed);internal val Brown=Color(0xff78543b)
 private fun nativeColor(s:String)=Color(android.graphics.Color.parseColor(s))
+private fun readable(s:String,vararg on:Long)=Color(readableInk(android.graphics.Color.parseColor(s).toLong() and 0xffffffffL,*on))
 private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/10)
 
 @Composable private fun DifficultyBadge(d:Difficulty) {
-    val tint=nativeColor(d.color)
+    val tint=readable(d.color,PaperFace)
     Text(d.label,fontSize=10.sp,fontWeight=FontWeight.Bold,color=tint,maxLines=1,modifier=Modifier.background(Paper.copy(alpha=.96f),RoundedCornerShape(50)).border(.6.dp,Color(0xffd5b486),RoundedCornerShape(50)).padding(horizontal=8.dp,vertical=3.dp).semantics{contentDescription="难度：${d.label} ${d.originalLabel}"})
 }
 
@@ -103,18 +102,22 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 @Composable fun RacingApp(s:GameState) {
     var tick by remember { mutableLongStateOf(0) }
     LaunchedEffect(Unit) { while(true) { tick++;delay(100) } }
-    val progress=remember { Animatable(0f) }
     val drag=remember(s.level.id,s.screen){BoardDrag()}
-    LaunchedEffect(s.level.id,s.placed,s.screen,s.dialog,s.chosenStart,s.chosenFinish,drag.piece,drag.pressing) {
-        if(s.screen=="game" && !s.running && s.dialog.isEmpty() && drag.piece==null&&!drag.pressing) {
-            s.trace()?.let { route ->
-                delay(250);s.beginRun(route);progress.snapTo(0f)
-                progress.animateTo(1f,tween(route.size*1350,easing=LinearEasing))
-                s.finishRun()
-            }
-        }
+    val art=gameArt()
+    // A solved board starts the run after a short settle; every guard is re-checked then.
+    LaunchedEffect(s.level.id,s.placed,s.screen,s.dialog,s.chosenStart,s.chosenFinish,s.foreground,drag.busy) {
+        if(s.canAutoRun()&&!drag.busy&&s.trace()!=null){delay(250);s.beginRunIfSolved()}
     }
+    // The run follows the session: it halts in the background and resumes after recreation.
+    LaunchedEffect(s.running,s.foreground) {
+        if(!s.running||!s.foreground)return@LaunchedEffect
+        val from=s.runProgress.coerceIn(0f,1f)
+        Animatable(from).animateTo(1f,tween(((1f-from)*s.activeRoute.size*1350).roundToInt(),easing=LinearEasing)){s.runProgress=value}
+        s.finishRun()
+    }
+    val progress=s.runProgress
     BackHandler(s.screen!="home") { s.home() }
+    CompositionLocalProvider(LocalGameArt provides art) {
     Surface(color=Paper,modifier=Modifier.fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
         Image(painterResource(R.drawable.arena_backdrop),null,Modifier.fillMaxSize(),contentScale=ContentScale.FillBounds)
@@ -127,23 +130,25 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 else -> BoxWithConstraints(Modifier.fillMaxSize()) {
                     val boardWidth=min(maxHeight.value*6.3f/5.3f,(maxWidth.value-250f).coerceAtLeast(maxWidth.value*.54f)).dp
                     Row(Modifier.fillMaxSize(),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
-                        NativeBoard(s,progress.value,Modifier.width(boardWidth).fillMaxHeight(),drag)
-                        Workbench(s,progress.value,tick,drag,Modifier.weight(1f).fillMaxHeight())
+                        NativeBoard(s,progress,Modifier.width(boardWidth).fillMaxHeight(),drag)
+                        Workbench(s,progress,tick,drag,Modifier.weight(1f).fillMaxHeight())
                     }
                 }
             }
         }
-        // Root coordinates let a single native gesture travel from tray to board.
+        // Root coordinates let a single native gesture travel from tray to board. The finger
+        // only moves this layer; the tile is re-recorded when its validity flips.
         drag.piece?.let{p->
-            Canvas(Modifier.fillMaxSize()) {
+            val invalid by remember(drag,p){derivedStateOf{drag.problem(s).isNotEmpty()}}
+            Canvas(Modifier.fillMaxSize().graphicsLayer{val origin=drag.liftOrigin;translationX=origin.x;translationY=origin.y-18.dp.toPx()}) {
                 val(w,h)=s.rules.dimensions(p.r);val u=drag.unit
-                val origin=drag.liftOrigin-Offset(0f,18.dp.toPx())
-                withTransform({translate(origin.x,origin.y)}){drawContext.canvas.saveLayer(Rect(Offset.Zero,Size(w*u,h*u)),Paint().apply{alpha=.86f});paintTile(s.rules,p.copy(x=0,y=0),u,Offset.Zero,materials,selected=true,number=true);if(drag.problem(s).isNotEmpty())drawRoundRect(Color(0xffc04835),Offset.Zero,Size(w*u,h*u),CornerRadius(u*.06f),style=Stroke(2.dp.toPx()));drawContext.canvas.restore()}
+                drawContext.canvas.saveLayer(Rect(Offset.Zero,Size(w*u,h*u)),Paint().apply{alpha=.86f});paintTile(s.rules,p.copy(x=0,y=0),u,Offset.Zero,materials,selected=true,number=true);if(invalid)drawRoundRect(Color(0xffc04835),Offset.Zero,Size(w*u,h*u),CornerRadius(u*.06f),style=Stroke(2.dp.toPx()));drawContext.canvas.restore()
             }
         }
         }
     }
     if(s.dialog.isNotEmpty()) ClubDialog(s)
+    }
 }
 
 @Composable private fun TrainingHome(s:GameState) {
@@ -166,7 +171,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
         Column(Modifier.weight(.73f),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth().height(22.dp),verticalAlignment=Alignment.CenterVertically) {
                 Text("马术训练场",fontSize=19.sp,color=Green,fontWeight=FontWeight.Bold)
-                Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=nativeColor(difficulty.color))
+                Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=readable(difficulty.color,PaperFace))
             }
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
                 s.rules.difficulties.forEachIndexed{index,d->
@@ -228,26 +233,37 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                             Box(Modifier.weight(1f).height(cardHeight).onGloballyPositioned{origin=it.positionInRoot()}.background(if(active)Color(0xfffff1d2)else if(placed!=null)Color(0xffe6eee3)else Color(0xfffcf3e2),RoundedCornerShape(8.dp)).border(if(active)2.dp else 1.dp,if(active||placed!=null)Green else Color(0xffebd9bc),RoundedCornerShape(8.dp)).pointerInput(id,s.running){
                                 awaitEachGesture{
                                     val down=awaitFirstDown(requireUnconsumed=false);if(s.running)return@awaitEachGesture
-                                    s.select(id);drag.pressing=true
-                                    val p=s.placed.firstOrNull{it.id==id}?:Placement(id,0,0,s.rotation)
+                                    // Another finger already owns a tile: this press changes nothing.
+                                    val token=Any();if(!drag.claim(token))return@awaitEachGesture
+                                    val wasSelected=s.pressTile(id)
+                                    val p=s.rackPiece(id)
                                     val slop=max(viewConfiguration.touchSlop,12.dp.toPx());var moving=false
                                     try{while(true){
                                         val change=awaitPointerEvent().changes.firstOrNull{it.id==down.id}?:break
                                         if(change.isConsumed)break
-                                        if(!moving&&(change.position-down.position).getDistance()>slop){drag.begin(s,p,origin+down.position);moving=true}
-                                        if(moving){drag.pointer=origin+change.position;change.consume()}
-                                        if(!change.pressed){if(moving)drag.finish(s);break}
-                                    }}finally{drag.cancel()}
+                                        if(!moving&&(change.position-down.position).getDistance()>slop)moving=drag.begin(s,token,p,origin+down.position)
+                                        if(moving){drag.moveTo(token,origin+change.position);change.consume()}
+                                        if(!change.pressed){if(moving)drag.finish(s,token)else s.releaseRackTap(id,wasSelected);break}
+                                    }}finally{drag.release(token)}
                                 }
-                            }.clickable(enabled=!s.running){s.select(id)}.semantics{contentDescription="拼板 $id";selected=active;stateDescription="${if(active)"已选中"else"未选中"}，${if(s.placed.any{it.id==id})"已放置"else"待放置"}，${(if(active)s.rotation else s.placed.firstOrNull{it.id==id}?.r?:0)*90}度${if(covered)"，下层被遮挡，点按置顶"else""}"}.padding(3.dp),contentAlignment=Alignment.Center) {
-                                Canvas(Modifier.fillMaxSize().padding(top=12.dp,bottom=if(placed!=null)17.dp else 2.dp)){
+                            }.clearAndSetSemantics {
+                                role=Role.Button
+                                if(s.running)disabled()
+                                onClick(if(active&&placed!=null)"收起拼板操作" else "选中"){if(s.running)false else{s.tapTile(id);true}}
+                                contentDescription="拼板 $id"
+                                selected=active
+                                // Keep the visible status discoverable on this one actionable node.
+                                if(placed!=null)text=AnnotatedString(if(covered)"被遮挡"else"已放置")
+                                stateDescription="${if(active)"已选中"else"未选中"}，${if(placed!=null)"已放置"else"待放置"}，${(if(active)s.rotation else placed?.r?:0)*90}度${if(covered)"，下层被遮挡，点按置顶"else""}"
+                            }.padding(3.dp),contentAlignment=Alignment.Center) {
+                                Canvas(Modifier.fillMaxSize().padding(top=12.dp,bottom=if(placed!=null)18.dp else 2.dp)){
                                     val r=1;val(w,h)=s.rules.dimensions(r);val u=min(size.width/w,size.height/h)
                                     paintTile(s.rules,Placement(id,0,0,r),u,Offset((size.width-w*u)/2,(size.height-h*u)/2),materials,selected=active)
                                 }
                                 Box(Modifier.align(Alignment.TopStart)){NumberBadge(id,s,18.dp)}
                                 if(covered)Icon(Icons.Default.Layers,null,Modifier.size(13.dp).align(Alignment.TopEnd),tint=Color(0xffa96b1e))
                                 else if(placed!=null)Icon(Icons.Default.CheckCircle,null,Modifier.size(12.dp).align(Alignment.TopEnd),tint=Green)
-                                if(placed!=null)Text(if(covered)"被遮挡"else"已放置",fontSize=8.sp,lineHeight=10.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=1,modifier=Modifier.align(Alignment.BottomCenter).background(if(covered)Color(0xffa96b1e)else Green,RoundedCornerShape(3.dp)).padding(horizontal=3.dp,vertical=2.dp))
+                                if(placed!=null)Text(if(covered)"被遮挡"else"已放置",fontSize=9.sp,lineHeight=11.sp,fontWeight=FontWeight.Bold,color=Color.White,maxLines=1,modifier=Modifier.align(Alignment.BottomCenter).background(if(covered)Color(CoveredTag)else Green,RoundedCornerShape(3.dp)).padding(horizontal=3.dp,vertical=2.dp))
                             }
                         }
                         if(rows.size>1)repeat(5-row.size){Spacer(Modifier.weight(1f))}
@@ -255,16 +271,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 }
             }
         }
-        val coveredCount=s.placed.count{s.rules.coveredBy(it,s.placed).isNotEmpty()}
-        val error=if(drag.piece!=null)drag.problem(s)else s.message
-        val feedback=if(drag.piece!=null)drag.feedback(s)else error.ifEmpty{if(coveredCount>0)"$coveredCount 块被遮挡 · 点右侧编号置顶"else""}
-        // Persistent amber feedback survives the gesture until every overlap is resolved.
-        Box(Modifier.fillMaxWidth().height(28.dp),contentAlignment=Alignment.CenterStart){
-            if(feedback.isNotEmpty())Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(4.dp)){
-                if(error.isEmpty())Icon(Icons.Default.Layers,null,Modifier.size(14.dp),tint=Color(0xffa96b1e))
-                Text(feedback,fontSize=10.sp,lineHeight=13.sp,color=if(error.isNotEmpty())Color(0xffa9442b)else Color(0xff925b1c),maxLines=2,modifier=Modifier.semantics{contentDescription="放置提示";stateDescription=feedback})
-            }
-        }
+        PlacementFeedback(s,drag)
         HorizontalDivider(color=Color(0xffead7ba))
         if(s.running)Box(Modifier.fillMaxWidth().height(48.dp),contentAlignment=Alignment.Center){
             Box(Modifier.fillMaxWidth().height(42.dp).gameControlFace().clip(RoundedCornerShape(7.dp)).clickable(role=Role.Button){s.finishRun()}.semantics{contentDescription="跳过动画"},contentAlignment=Alignment.Center){
@@ -280,6 +287,23 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
             Action(Icons.Default.Refresh,"重置",!s.running,toolSlot){s.reset()}
         }
     }
+    }
+}
+
+/** Isolated so a moving finger recomposes this line only, and only when its text changes. */
+@Composable private fun PlacementFeedback(s:GameState,drag:BoardDrag) {
+    val message by remember(s,drag){derivedStateOf{
+        val error=if(drag.piece!=null)drag.problem(s)else s.message
+        val coveredCount=s.placed.count{s.rules.coveredBy(it,s.placed).isNotEmpty()}
+        error to if(drag.piece!=null)drag.feedback(s)else error.ifEmpty{if(coveredCount>0)"$coveredCount 块被遮挡 · 点右侧编号置顶"else""}
+    }}
+    val(error,feedback)=message
+    // Persistent amber feedback survives the gesture until every overlap is resolved.
+    Box(Modifier.fillMaxWidth().height(28.dp),contentAlignment=Alignment.CenterStart){
+        if(feedback.isNotEmpty())Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(4.dp)){
+            if(error.isEmpty())Icon(Icons.Default.Layers,null,Modifier.size(14.dp),tint=Color(0xffa96b1e))
+            Text(feedback,fontSize=10.sp,lineHeight=13.sp,color=if(error.isNotEmpty())Color(0xffa9442b)else Color(0xff925b1c),maxLines=2,modifier=Modifier.semantics{contentDescription="放置提示";stateDescription=feedback})
+        }
     }
 }
 
@@ -320,7 +344,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     val letter=s.dialog.substringAfter(":")
                     Text("将 $letter 设为起点或终点；两端可以使用同一入口。",fontSize=12.sp,color=Brown)
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){Button(onClick={s.chooseEndpoint(letter,false)}){Text("设为起点")};OutlinedButton(onClick={s.chooseEndpoint(letter,true)}){Text("设为终点")}}
-                }else Text("看右上方障碍顺序。点右侧编号选择拼板，再点棋盘左上格放置。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。点棋盘上的拼板后，附近的按钮可双向旋转 90°，或移回拼板区。棋盘内允许临时叠放，琥珀标记提示下层拼板。点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。右上方目标按箭头折行，始终完整展示。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
+                }else Text("看右上方障碍顺序。点右侧编号选择拼板，再点棋盘左上格放置。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。点棋盘上的拼板后，附近的按钮可双向旋转 90°，或移回拼板区；再点一次这块拼板、它的编号或木框即可收起按钮。棋盘内允许临时叠放，琥珀标记提示下层拼板。点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。右上方目标按箭头折行，始终完整展示。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
             }
         }},confirmButton={TextButton(onClick={s.closeDialog()}) {Text("知道了")}})
 }
@@ -338,13 +362,14 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 }.pointerInput(s.running) {
                     awaitEachGesture {
                         val down=awaitFirstDown();if(s.running)return@awaitEachGesture
+                        // Another finger already owns a tile: this press changes nothing.
+                        val token=Any();if(!drag.claim(token))return@awaitEachGesture
                         val u=size.width/5.7f;val at=down.position
                         val x=floor(at.x/u-.35f).toInt();val y=floor(at.y/u-.35f).toInt()
                         val hit=s.rules.hit(s.placed,x,y)
                         val slop=max(viewConfiguration.touchSlop,12.dp.toPx())
                         var moved=false;var dragging=false
-                        drag.pressing=true
-                        if(hit!=null)s.select(hit.id)
+                        val wasSelected=hit!=null&&s.pressTile(hit.id)
                         try {
                             while(true){
                                 val event=awaitPointerEvent()
@@ -352,22 +377,39 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                                 if(change.isConsumed)break
                                 if((change.position-at).getDistance()>slop)moved=true
                                 if(moved&&!dragging&&hit!=null){
-                                    drag.begin(s,hit,drag.board.topLeft+at,Offset(at.x/u-.35f-hit.x,at.y/u-.35f-hit.y));dragging=true
+                                    dragging=drag.begin(s,token,hit,drag.board.topLeft+at,Offset(at.x/u-.35f-hit.x,at.y/u-.35f-hit.y))
                                 }
-                                if(dragging){drag.pointer=drag.board.topLeft+change.position;change.consume()}
+                                if(dragging){drag.moveTo(token,drag.board.topLeft+change.position);change.consume()}
                                 if(!change.pressed){
-                                    if(dragging)drag.finish(s)
-                                    else if(!moved&&hit==null&&x in 0..4&&y in 0..3)s.place(x,y)
+                                    if(dragging)drag.finish(s,token)
+                                    else if(!moved)s.releaseBoardTap(hit,wasSelected,x,y,onEntryLetter(s.rules,at.x/u,at.y/u))
                                     break
                                 }
                             }
-                        }finally{drag.cancel()}
+                        }finally{drag.release(token)}
                     }
-                }){paintBoard(s,materials)
+                }.graphicsLayer()){paintBoard(s,materials)}
+                // Drop highlight in its own layer: finger moves never re-record the board and tiles.
+                Canvas(Modifier.fillMaxSize().graphicsLayer()){
                     drag.candidate()?.let{p->
+                        RenderStats.dropHighlightDraws++
                         val(w,h)=s.rules.dimensions(p.r);val u=size.width/5.7f;val color=if(drag.problem(s).isNotEmpty())Color(0xffc04835)else if(s.placed.any{s.rules.overlaps(p,it)})Color(0xffa96b1e)else Green
                         clipRect(u*.35f,u*.35f,u*5.35f,u*4.35f){drawRoundRect(color.copy(alpha=.28f),Offset((p.x+.35f)*u,(p.y+.35f)*u),Size(w*u,h*u),CornerRadius(u*.06f));drawRoundRect(color,Offset((p.x+.35f)*u,(p.y+.35f)*u),Size(w*u,h*u),CornerRadius(u*.06f),style=Stroke(3.dp.toPx()))}
                     }
+                }
+                // Semantics-only nodes let TalkBack pick and act on each visible tile. They have no
+                // pointer input, so every real touch still reaches the board Canvas below.
+                if(!s.running)s.placed.filter{s.rules.stackMarker(it,s.placed)!=null}.forEach{p->
+                    val(w,h)=s.rules.dimensions(p.r);val chosen=s.selected==p.id
+                    Box(Modifier.offset((pad+p.x*unit).dp,(pad+p.y*unit).dp).size((w*unit).dp,(h*unit).dp).semantics{
+                        contentDescription="棋盘上 ${p.id}号拼板";selected=chosen
+                        stateDescription="${if(chosen)"已选中" else "未选中"}，第${p.y+1}行第${p.x+1}列，${p.r*90}度${if(s.rules.coveredBy(p,s.placed).isNotEmpty())"，部分被遮挡" else ""}"
+                        onClick(if(chosen)"收起拼板操作" else "选中"){s.tapTile(p.id);true}
+                        customActions=listOf(
+                            CustomAccessibilityAction("逆时针旋转90度"){s.rotatePiece(p.id,-1);true},
+                            CustomAccessibilityAction("顺时针旋转90度"){s.rotatePiece(p.id,1);true},
+                            CustomAccessibilityAction("移回"){s.removePiece(p.id);true})
+                    })
                 }
                 val route=s.activeRoute;val cursor=if(route.isEmpty())0f else(progress*route.size).coerceAtMost(route.size-.0001f);val step=route.getOrNull(cursor.toInt())
                 val raw=if(s.running&&step!=null)s.rules.position(step,cursor%1)else s.rules.gates[s.startGate]?:Point(-1f,-1f)
@@ -400,6 +442,6 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 @Composable private fun EndpointLabel(finish:Boolean,letter:String,onClick:(()->Unit)?) {
     Row(Modifier.background(Paper.copy(alpha=.92f),RoundedCornerShape(50)).padding(horizontal=4.dp,vertical=2.dp).then(if(onClick!=null)Modifier.clickable(onClick=onClick).semantics{contentDescription=if(finish)"选择终点"else"选择起点"}else Modifier),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(3.dp)){
         Icon(if(finish)Icons.Default.SportsScore else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.size(12.dp),tint=if(finish)Brown else Green)
-        Text("${if(finish)"终点"else"起点"} ${letter.ifEmpty{"?"}}",fontSize=9.sp,fontWeight=FontWeight.Bold,color=if(finish)Brown else Green,maxLines=1)
+        Text("${if(finish)"终点"else"起点"} ${letter.ifEmpty{"?"}}",fontSize=10.sp,fontWeight=FontWeight.Bold,color=if(finish)Brown else Green,maxLines=1)
     }
 }

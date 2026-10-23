@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "id": "pause-resume-clock",
+      "level": 65,
+      "actions": [
+        { "op": "advance", "ms": 1000 },
+        { "op": "pause" },
+        { "op": "advance", "ms": 2000 },
+        { "op": "resume" },
+        { "op": "advance", "ms": 500 }
+      ],
+      "expect": { "millis": 1500, "moves": 0, "hints": 0, "start": "", "finish": "" }
+    },
+    {
+      "id": "endpoint-hint-is-undoable-and-idempotent",
+      "level": 65,
+      "fixture": "solution-pieces",
+      "actions": [
+        { "op": "hint" },
+        { "op": "hint" },
+        { "op": "hint" },
+        { "op": "undo" }
+      ],
+      "expect": { "moves": 0, "hints": 1, "start": "", "finish": "" }
+    },
+    {
+      "id": "invalid-endpoints-are-ignored",
+      "level": 65,
+      "actions": [
+        { "op": "choose-start", "letter": "Z" },
+        { "op": "choose-finish", "letter": "" }
+      ],
+      "expect": { "moves": 0, "hints": 0, "start": "", "finish": "" }
+    }
+  ]
+}

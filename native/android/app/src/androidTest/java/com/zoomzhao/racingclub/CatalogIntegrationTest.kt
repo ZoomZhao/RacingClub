@@ -115,8 +115,11 @@ class CatalogIntegrationTest {
    find(By.text("漂亮，顺利通关！"),45000);device.executeShellCommand("pkill -2 screenrecord");recording.join(2000);assertTrue(movie.length()>1000);capture("27-level80-win")
    find(By.text("返回训练场")).click();find(By.text("1 / 80 已完成"));capture("28-level80-completed")
    tap("进入挑战 65");tap("提示");choose("选择起点","C")
-   choose("选择终点","D");tap("返回");expectState("进入挑战 65","进行中");expectState("进入挑战 80","已完成");capture("52-list-progress")
-   scenario.recreate();find(By.text("马术训练场"));SystemClock.sleep(300);tap("难度 宗师 PUNDIT");tap("进入挑战 65")
+   choose("选择终点","D")
+   // Recreation (night mode, font or display size, locale, window size) keeps the player in the level.
+   scenario.recreate();find(By.text("挑战 65"));find(By.text("起点 C"));find(By.text("终点 D"));assertTrue(nodeState("棋盘").contains("号"));capture("29-level65-recreated")
+   tap("返回");expectState("进入挑战 65","进行中");expectState("进入挑战 80","已完成");capture("52-list-progress")
+   scenario.recreate();find(By.text("马术训练场"));expectState("进入挑战 65","进行中");tap("进入挑战 65")
    find(By.text("起点 C"));find(By.text("终点 D"));assertTrue(nodeState("棋盘").contains("号"));capture("29-level65-restored")
   }
  }

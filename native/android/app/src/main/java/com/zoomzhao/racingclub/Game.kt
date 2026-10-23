@@ -97,3 +97,13 @@ class Rules(val pieces:Map<Int,Piece>,val gates:Map<String,Point>,val levels:Lis
 
 /** Native storage boundary; can be replaced with an authenticated service. */
 interface LeaderboardRepository {fun list(level:Int):List<Score>;fun save(score:Score)}
+
+/** Raw saved progress. The session validates pieces and gates before using it. */
+data class SavedProgress(val placed:List<Placement>,val moves:Int,val hints:Int,val elapsed:Long,val start:String,val finish:String,val finished:Boolean)
+/** Per-level progress boundary, so sessions can run against memory in JVM tests. */
+interface ProgressStore {
+    fun load(level:Int):SavedProgress?
+    fun save(level:Int,progress:SavedProgress)
+    fun completed(level:Int):Boolean
+    fun markCompleted(level:Int)
+}

@@ -27,6 +27,8 @@ import kotlin.math.*
 
 private val Gold=Color(0xffd2a157)
 private fun tint(d:Difficulty)=Color(android.graphics.Color.parseColor(d.color))
+/** Difficulty hue darkened just enough to read at 4.5:1 across the cream plaque face. */
+private fun ink(d:Difficulty)=Color(readableInk(android.graphics.Color.parseColor(d.color).toLong() and 0xffffffffL,PlaqueFaceLight,PlaqueFaceDeep))
 
 /** The frame is drawn natively, leaving all content and hit targets accessible. */
 private fun DrawScope.plaque(top:Float=0f,active:Color?=null) {
@@ -62,8 +64,8 @@ private fun DrawScope.plaque(top:Float=0f,active:Color?=null) {
         }
         Box(Modifier.align(Alignment.TopCenter).size(20.dp),contentAlignment=Alignment.Center){Text(listOf("I","II","III","IV","V")[index],fontSize=(11/LocalDensity.current.fontScale).sp,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,color=Color(0xffffedbc))}
         Column(Modifier.align(Alignment.BottomCenter).padding(bottom=5.dp),horizontalAlignment=Alignment.CenterHorizontally){
-            Text(d.label,fontSize=11.sp,lineHeight=13.sp,fontWeight=FontWeight.Bold,color=if(active)Color.White else color,maxLines=1)
-            Text(range,fontSize=8.sp,lineHeight=10.sp,color=if(active)Color(0xffffe8b8)else Brown,maxLines=1)
+            Text(d.label,fontSize=11.sp,lineHeight=13.sp,fontWeight=FontWeight.Bold,color=if(active)Color.White else ink(d),maxLines=1)
+            Text(range,fontSize=9.sp,lineHeight=11.sp,color=if(active)Color(0xffffe8b8)else Brown,maxLines=1)
         }
     }
 }
@@ -84,13 +86,17 @@ private fun DrawScope.plaque(top:Float=0f,active:Color?=null) {
             Row(Modifier.fillMaxWidth().weight(1f),verticalAlignment=Alignment.CenterVertically){
                 Text(l.number,fontSize=(26/fontScale.coerceAtMost(1.2f)).sp,lineHeight=29.sp,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,color=if(done)Color(0xfffff6df)else Green,maxLines=1)
                 Spacer(Modifier.weight(1f))
-                Icon(if(done)Icons.Default.CheckCircle else if(inProgress)Icons.Default.Schedule else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.size(if(done)19.dp else 12.dp),tint=if(done)Color(0xffffd783)else if(inProgress)Color(0xffad6a1e)else Brown)
+                Icon(if(done)Icons.Default.CheckCircle else if(inProgress)Icons.Default.Schedule else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.size(if(done)19.dp else 12.dp),tint=if(done)Color(0xffffd783)else if(inProgress)Color(InProgressInk)else Brown)
             }
             val details=if(best!=null)"%02d:%02d.%02d".format(best.millis/60000,best.millis/1000%60,best.millis%1000/10)else if(compact)"${l.requiredPieces.size}块 ·${l.sequence.size}跨"else"${l.requiredPieces.size} 块 · ${l.sequence.size} 跨"
             if(done)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(4.dp)){
-                Text("已完成",fontSize=8.sp,lineHeight=11.sp,fontWeight=FontWeight.Bold,color=Color(0xffffe0a0),maxLines=1)
-                Text(if(best!=null)details else "",fontSize=8.sp,lineHeight=11.sp,color=Color(0xfff8efdb),maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f),textAlign=androidx.compose.ui.text.style.TextAlign.End)
-            }else Text(if(compact)details else "${d.label} · $details",fontSize=8.sp,lineHeight=11.sp,color=Brown,maxLines=1,overflow=TextOverflow.Ellipsis)
+                Text("已完成",fontSize=9.sp,lineHeight=12.sp,fontWeight=FontWeight.Bold,color=Color(0xffffe0a0),maxLines=1)
+                Text(if(best!=null)details else "",fontSize=9.sp,lineHeight=12.sp,color=Color(0xfff8efdb),maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f),textAlign=androidx.compose.ui.text.style.TextAlign.End)
+            }else if(inProgress)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(4.dp)){
+                // Unfinished boards say so in words; the clock icon alone was easy to miss.
+                Text("进行中",fontSize=9.sp,lineHeight=12.sp,fontWeight=FontWeight.Bold,color=Color(InProgressInk),maxLines=1)
+                Text(details,fontSize=9.sp,lineHeight=12.sp,color=Brown,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f))
+            }else Text(if(compact)details else "${d.label} · $details",fontSize=9.sp,lineHeight=12.sp,color=Brown,maxLines=1,overflow=TextOverflow.Ellipsis)
         }
     }
 }

@@ -1,21 +1,53 @@
 package com.zoomzhao.racingclub
 
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.*
-import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import kotlin.math.*
 
 internal data class BoardMaterials(val wood:ImageBitmap,val sand:ImageBitmap)
-@Composable internal fun boardMaterials():BoardMaterials {
-    val wood=ImageBitmap.imageResource(R.drawable.wood_grain)
-    val sand=ImageBitmap.imageResource(R.drawable.sand_grain)
-    return remember(wood,sand){BoardMaterials(wood,sand)}
+internal class GameArtSet(val materials:BoardMaterials,val sprites:GameSprites)
+
+/** Board textures and the eight horse views, decoded once per process. The ViewModel
+ * preloads off the main thread; a caller arriving first waits rather than decoding twice. */
+internal object GameArt {
+    @Volatile private var art:GameArtSet?=null
+    @Volatile var loads=0;private set
+    fun get(resources:Resources):GameArtSet=art?:synchronized(this){art?:load(resources).also{art=it}}
+    fun preload(resources:Resources){get(resources)}
+    private fun load(resources:Resources):GameArtSet {
+        loads++
+        return GameArtSet(BoardMaterials(texture(resources,R.drawable.wood_grain),texture(resources,R.drawable.sand_grain)),loadSprites(resources))
+    }
 }
+/** The ImageGen PNGs stay untouched; only the runtime copy is reduced to [limit] px. */
+private fun texture(resources:Resources,id:Int,limit:Int=512):ImageBitmap {
+    val bounds=BitmapFactory.Options().apply{inJustDecodeBounds=true;inScaled=false}
+    BitmapFactory.decodeResource(resources,id,bounds)
+    var sample=1
+    while(max(bounds.outWidth,bounds.outHeight)/(sample*2)>=limit)sample*=2
+    val decoded=BitmapFactory.decodeResource(resources,id,BitmapFactory.Options().apply{inScaled=false;inSampleSize=sample})
+    val scale=limit.toFloat()/max(decoded.width,decoded.height)
+    val bitmap=if(scale>=1f)decoded else Bitmap.createScaledBitmap(decoded,(decoded.width*scale).roundToInt(),(decoded.height*scale).roundToInt(),true).also{if(it!==decoded)decoded.recycle()}
+    bitmap.prepareToDraw()
+    return bitmap.asImageBitmap()
+}
+internal val LocalGameArt=staticCompositionLocalOf<GameArtSet?>{null}
+@Composable internal fun gameArt():GameArtSet {
+    LocalGameArt.current?.let{return it}
+    val resources=LocalResources.current
+    return remember(resources){GameArt.get(resources)}
+}
+@Composable internal fun boardMaterials()=gameArt().materials
 private fun hex(s:String)=Color(android.graphics.Color.parseColor(s))
 private operator fun Size.minus(other:Size)=Size(width-other.width,height-other.height)
 private operator fun Size.plus(other:Size)=Size(width+other.width,height+other.height)
@@ -74,7 +106,11 @@ internal fun DrawScope.paintTile(rules:Rules,p:Placement,u:Float,origin:Offset,m
     }
 }
 
+/** Draw counters let instrumented tests prove that a finger move redraws only the overlay. */
+internal object RenderStats {@Volatile var boardDraws=0;@Volatile var dropHighlightDraws=0}
+
 internal fun DrawScope.paintBoard(s:GameState,m:BoardMaterials) {
+    RenderStats.boardDraws++
     val u=size.width/5.7f;val origin=Offset(u*.35f,u*.35f)
     val outer=Rect(Offset(u*.025f,u*.025f),Size(size.width-u*.05f,size.height-u*.065f));val rad=u*.28f
     drawRoundRect(hex("#76512e").copy(alpha=.17f),outer.topLeft+Offset(0f,u*.055f),outer.size,CornerRadius(rad))

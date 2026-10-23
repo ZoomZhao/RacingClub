@@ -12,6 +12,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  node:
+    name: Node data and prototype tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No dependencies to install; the runner's preinstalled Node (>= 20) runs node:test.
+      - name: Run npm test
+        run: |
+          node --version
+          npm test
+
+  ios-core:
+    name: Swift core, shared sessions and iOS SDK type check
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # macOS SDK executables only; no iOS simulator runtime is needed or used.
+      - name: Run Swift core replay and shared session scenarios
+        run: sh tools/verify-swift-core.sh
+
+      # Compiles the app sources against the iPhoneOS SDK (unsigned); nothing is launched.
+      - name: Type-check native iOS app against the iPhoneOS SDK
+        run: node tools/build-ios.mjs
+
   build:
     name: Test and build signed release APK
     runs-on: ubuntu-24.04

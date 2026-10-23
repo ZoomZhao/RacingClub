@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "serial": "emulator-5556",
+  "method": "External ADB/UIAutomator, no application instrumentation or release keep rules",
+  "checks": [
+    "normal release launch",
+    "selected board controls",
+    "clockwise and counterclockwise rotation",
+    "return removes selected tile and controls",
+    "drag to occupied board cells",
+    "covered and placed rack states",
+    "tap hidden tile to raise",
+    "bottom edge rotation with overlap",
+    "removal reveals lower tile",
+    "stack undo",
+    "automatic challenge03 win after hints",
+    "persistent practice score",
+    "skip completed route animation to settlement"
+  ],
+  "animation_frames": [
+    "05-running.png",
+    "06-running.png"
+  ]
+}

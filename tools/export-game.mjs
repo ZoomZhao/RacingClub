@@ -1,6 +1,7 @@
 import {readFile, writeFile, mkdir, copyFile} from 'node:fs/promises';
-import {INVENTORY} from '../src/game.js';
 const read = async path => JSON.parse(await readFile(path,'utf8'));
+// Piece colors come from shared data, not from the early browser prototype.
+const INVENTORY=(await read('shared/piece-palette.json')).pieces.map(({id,color})=>({id,color}));
 const catalog=await read('references/level-catalog.json');
 const topology=await read('references/piece-topology.json');
 const difficulties=await read('shared/difficulties.json');

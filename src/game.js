@@ -1,6 +1,8 @@
 export const COLS = 5;
 export const ROWS = 4;
 
+// Browser copy of shared/piece-palette.json. Static pages cannot rely on JSON
+// module imports in every browser; tests assert both lists stay identical.
 export const INVENTORY = [
   { id: 1, color: '#cf4f8a' }, { id: 2, color: '#d9ad32' },
   { id: 3, color: '#8a9d38' }, { id: 4, color: '#c54436' },

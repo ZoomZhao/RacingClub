@@ -11,3 +11,5 @@
 - Android 使用 Compose 和原生 Canvas；SwiftUI 同步牌面、徽章与按压反馈，仍需 iOS 设备验收。
 
 0.1.3 已完成区分优化：整张牌面改为深森林绿，编号米白，金色大勾并直接显示“已完成”；未开始和进行中仍使用奶油牌面。当前截图：[默认字号](android-completed-v2.png)、[620dp / 放大字号](android-completed-large-type-v2.png)。沿用已有 ImageGen 页面材质和原生牌框。
+
+2026-10-23 `android-progress-v3.png` 增加明确的“进行中”文字，保留已完成的深绿牌面；未选初级标签文字和遮挡标签使用满足4.5:1的颜色。字号与间距经API35、620dp/1.35倍字号回归，未恢复帮助按钮或拼板缩略图。

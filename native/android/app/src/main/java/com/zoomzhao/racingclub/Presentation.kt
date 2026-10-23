@@ -24,6 +24,24 @@ internal fun relativeLuminance(rgb:Long):Double {
     fun channel(shift:Int):Double {val v=((rgb shr shift)and 255)/255.0;return if(v<=.04045)v/12.92 else ((v+.055)/1.055).pow(2.4)}
     return .2126*channel(16)+.7152*channel(8)+.0722*channel(0)
 }
+internal fun contrast(a:Long,b:Long):Double {val x=relativeLuminance(a);val y=relativeLuminance(b);return (max(x,y)+.05)/(min(x,y)+.05)}
+// Cream surfaces behind small labels: plaque face top and bottom, and the page paper.
+internal const val PlaqueFaceLight=0xfffffbefL
+internal const val PlaqueFaceDeep=0xfff7e6c6L
+internal const val PaperFace=0xfff8f5edL
+/** White "被遮挡" text needs at least 4.5:1, so the amber tag uses a deeper bronze. */
+internal const val CoveredTag=0xff93591aL
+internal const val InProgressInk=0xff8a4f0fL
+/** Keeps a difficulty's hue but darkens it until it reads at 4.5:1 on every background. */
+internal fun readableInk(ink:Long,vararg backgrounds:Long):Long {
+    fun mix(t:Double):Long {
+        fun channel(shift:Int)=(((ink shr shift)and 255)*(1-t)).roundToInt().toLong()
+        return 0xff000000L or (channel(16) shl 16) or (channel(8) shl 8) or channel(0)
+    }
+    var t=0.0;var color=ink
+    while(backgrounds.any{contrast(color,it)<4.5}&&t<1.0){t+=.02;color=mix(t)}
+    return color
+}
 internal fun numberInk(id:Int):Long=if((relativeLuminance(numberFace(id))+.05)/.05 > 1.05/(relativeLuminance(numberFace(id))+.05))0xff000000 else 0xffffffff
 internal fun entryCenter(pt:Point):Point=when {
     pt.y==0f->Point(.35f+pt.x,.18f)

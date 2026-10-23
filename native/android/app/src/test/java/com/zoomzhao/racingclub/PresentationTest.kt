@@ -43,5 +43,17 @@ class PresentationTest {
         assertEquals(2,crossingFeedback(rules,route,1f).crossed)
         assertEquals(CrossingFeedback(0,0f),crossingFeedback(rules,emptyList(),1f))
     }
+    @Test fun smallLabelsMeetTextContrastOnTheirBackgrounds() {
+        assertTrue("White on covered tag",contrast(0xffffffff,CoveredTag)>=4.5)
+        for(face in listOf(PlaqueFaceLight,PlaqueFaceDeep))assertTrue("In-progress label",contrast(InProgressInk,face)>=4.5)
+        for(d in RepoData.rules.difficulties){
+            val color=java.lang.Long.parseLong(d.color.removePrefix("#"),16) or 0xff000000
+            val ink=readableInk(color,PlaqueFaceLight,PlaqueFaceDeep,PaperFace)
+            for(face in listOf(PlaqueFaceLight,PlaqueFaceDeep,PaperFace))assertTrue("${d.label} on ${face.toString(16)}",contrast(ink,face)>=4.5)
+            if(listOf(PlaqueFaceLight,PlaqueFaceDeep,PaperFace).all{contrast(color,it)>=4.5})assertEquals("Readable hues stay unchanged",color,ink)
+        }
+        val junior=RepoData.rules.difficulties.single{it.id=="junior"}
+        assertTrue("Junior's original hue was the 4.37:1 case",contrast(0xff965e14,PlaqueFaceDeep)<4.5);assertEquals("#965E14",junior.color)
+    }
 
 }

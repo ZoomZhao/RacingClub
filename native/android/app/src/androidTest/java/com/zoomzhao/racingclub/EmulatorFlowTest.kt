@@ -81,6 +81,11 @@ class EmulatorFlowTest {
         capture("failure-board")
         fail("Expected '$fragment', actual '${boardState()}'")
     }
+    private fun expectGone(label:String) {
+        val deadline=SystemClock.uptimeMillis()+3000
+        while(SystemClock.uptimeMillis()<deadline){freshAccessibility();if(!device.hasObject(By.desc(label)))return;SystemClock.sleep(80)}
+        capture("failure-visible");fail("$label should be hidden")
+    }
     private fun note(name:String,value:Any) {events.put(JSONObject().put("name",name).put("value",value))}
     private fun start03() {
         // Wait for Activity launch, orientation and first-frame input readiness.
@@ -138,6 +143,8 @@ class EmulatorFlowTest {
             for(r in listOf(left,right)){assertTrue("Comfortable rotation target",r.width()>=110&&r.height()>=110);assertTrue(r.right<=device.displayWidth)}
             capture("04-native-selected-90")
 
+            // Tapping the selected tile again dismisses its controls; the next tap brings them back.
+            cell(1,1);expectGone("拼板操作");expectBoard("1号，第2行第2列，90度")
             cell(1,1);tap("逆时针旋转90度");expectBoard("1号，第2行第2列，0度")
             tap("顺时针旋转90度");expectBoard("1号，第2行第2列，90度");tap("顺时针旋转90度")
             expectBoard("1号，第2行第2列，180度")
@@ -148,9 +155,9 @@ class EmulatorFlowTest {
             // This tile is already selected; its compact controls can occupy its face.
             tap("顺时针旋转90度");expectBoard("5号，第3行第1列，90度")
             tap("逆时针旋转90度");expectBoard("5号，第3行第1列，0度");capture("06-native-edge-rotation")
-            cell(3,3);expectBoard("5号，第4行第4列，0度")
-            cell(0,3);expectBoard("5号，第4行第1列，0度")
-            tap("移回");assertFalse(boardState().contains("5号"))
+            // An empty cell only dismisses a placed tile; it never relocates it.
+            cell(3,3);expectGone("拼板操作");expectBoard("5号，第3行第1列，0度")
+            cell(0,2);tap("移回");assertFalse(boardState().contains("5号"))
             tap("拼板 5");cell(0,3);tap("拼板 6")
             capture("07-native-ready")
             beginRecording("challenge-03")

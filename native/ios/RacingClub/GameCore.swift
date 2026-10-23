@@ -68,9 +68,24 @@ struct GameData:Decodable {
 }
 struct RouteStep {let piece:Placement;let from:Int;let to:Int;let pathIndex:Int;let jump:Int?}
 struct Score:Codable,Identifiable {var id=UUID();let level:Int;let millis:Int;let moves:Int;let hints:Int;let timestamp:Date}
-protocol LeaderboardRepository {func list(level:Int)->[Score];func save(_ score:Score)}
+protocol LeaderboardRepository:AnyObject {func list(level:Int)->[Score];func save(_ score:Score)}
+/// Scores are decoded once; reads come from memory and only writes touch UserDefaults.
 final class LocalLeaderboard:LeaderboardRepository {
- private var scores:[Score] {get{guard let d=UserDefaults.standard.data(forKey:"scores-v1")else{return[]};return(try?JSONDecoder().decode([Score].self,from:d)) ?? []}set{if let d=try?JSONEncoder().encode(newValue){UserDefaults.standard.set(d,forKey:"scores-v1")}}}
+ private let defaults:UserDefaults;private let key="scores-v1";private var scores:[Score]
+ init(defaults:UserDefaults = .standard){self.defaults=defaults;scores=defaults.data(forKey:key).flatMap{try?JSONDecoder().decode([Score].self,from:$0)} ?? []}
  func list(level:Int)->[Score] {Array(scores.filter{$0.level==level}.sorted{a,b in if(a.hints==0) != (b.hints==0){return a.hints==0};if a.millis != b.millis{return a.millis<b.millis};return a.moves<b.moves}.prefix(10))}
- func save(_ score:Score) {scores.append(score);scores=scores.filter{$0.level != score.level}+list(level:score.level)}
+ func save(_ score:Score) {scores.append(score);scores=scores.filter{$0.level != score.level}+list(level:score.level);if let d=try?JSONEncoder().encode(scores){defaults.set(d,forKey:key)}}
+}
+struct ProgressRecord:Codable,Equatable {let placed:[Placement];let moves:Int;let hints:Int;let elapsed:Double;let finished:Bool;let start:String?;let finish:String?}
+protocol ProgressStore:AnyObject {func load(level:Int)->ProgressRecord?;func save(_ record:ProgressRecord,level:Int);var inProgressLevels:Set<Int> {get}}
+/// Keeps an in-memory summary for the home grid; per-level records stay in UserDefaults.
+final class UserDefaultsProgressStore:ProgressStore {
+ private let defaults:UserDefaults;private let levelIds:[Int];private(set) var inProgressLevels:Set<Int>=[]
+ init(defaults:UserDefaults = .standard,levels:[Int]){self.defaults=defaults;levelIds=levels;inProgressLevels=Set(levels.filter{id in decode(id).map{!$0.finished && !$0.placed.isEmpty} ?? false})}
+ private func decode(_ level:Int)->ProgressRecord? {defaults.data(forKey:"level-\(level)").flatMap{try?JSONDecoder().decode(ProgressRecord.self,from:$0)}}
+ func load(level:Int)->ProgressRecord? {decode(level)}
+ func save(_ record:ProgressRecord,level:Int){
+  if let d=try?JSONEncoder().encode(record){defaults.set(d,forKey:"level-\(level)")}
+  if !record.finished && !record.placed.isEmpty{inProgressLevels.insert(level)}else{inProgressLevels.remove(level)}
+ }
 }
