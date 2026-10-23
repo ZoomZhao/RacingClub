@@ -50,7 +50,13 @@ class RunAnimationTest {
             assertTrue("A real horse rail crossing must animate its corresponding goal: $observed",pulsed)
             var frozen=0L;var scoreCount=0;var moves=0
             scenario.onActivity{assertTrue(s.running);frozen=s.elapsed;scoreCount=s.repository.list(3).size;moves=s.moves}
-            val skip=device.findObject(By.desc("跳过动画"));assertNotNull("Skip is available during the run",skip);skip.click()
+            // Read a fresh native node while animated semantics are changing each frame.
+            // UiAutomator's cached selector can otherwise briefly miss a visible button.
+            var skip=find("跳过动画");val skipDeadline=SystemClock.uptimeMillis()+1500
+            while(skip==null&&SystemClock.uptimeMillis()<skipDeadline){SystemClock.sleep(25);skip=find("跳过动画")}
+            assertNotNull("Skip is available during the run",skip)
+            val hit=android.graphics.Rect().also{skip!!.getBoundsInScreen(it)}
+            device.click(hit.centerX(),hit.centerY())
             val settled=SystemClock.uptimeMillis()+2000
             while(SystemClock.uptimeMillis()<settled&&!device.hasObject(By.text("漂亮，顺利通关！"))){if(android.os.Build.VERSION.SDK_INT>=33)ins.uiAutomation.clearCache();SystemClock.sleep(50)}
             scenario.onActivity{assertEquals("win",s.screen);assertFalse(s.running);assertEquals(frozen,s.elapsed);assertEquals(scoreCount,s.repository.list(3).size);assertEquals(moves,s.moves)}

@@ -74,7 +74,7 @@ private fun DrawScope.plaque(top:Float=0f,active:Color?=null) {
     BoxWithConstraints(modifier.height(height).clip(RoundedCornerShape(9.dp)).clickable(role=Role.Button){s.start(l)}.semantics{contentDescription="进入挑战 ${l.number}";stateDescription=if(done)"已完成"else if(inProgress)"进行中"else"未开始"}) {
         val compact=maxWidth<100.dp||fontScale>1.15f
         Canvas(Modifier.matchParentSize()) {
-            val p=1.dp.toPx();plaque()
+            val p=1.dp.toPx();plaque(active=if(done)Green else null)
             // Small brass pins make the cream face read as a stable name plaque.
             for(x in listOf(5*p,size.width-5*p))for(y in listOf(5*p,size.height-7*p)){
                 drawCircle(Color(0xff95612c),1.65f*p,Offset(x,y));drawCircle(Color(0xfff9d68a),.85f*p,Offset(x-.2f*p,y-.3f*p))
@@ -82,12 +82,15 @@ private fun DrawScope.plaque(top:Float=0f,active:Color?=null) {
         }
         Column(Modifier.fillMaxSize().padding(horizontal=9.dp,vertical=7.dp),verticalArrangement=Arrangement.SpaceBetween){
             Row(Modifier.fillMaxWidth().weight(1f),verticalAlignment=Alignment.CenterVertically){
-                Text(l.number,fontSize=(26/fontScale.coerceAtMost(1.2f)).sp,lineHeight=29.sp,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,color=Green,maxLines=1)
+                Text(l.number,fontSize=(26/fontScale.coerceAtMost(1.2f)).sp,lineHeight=29.sp,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,color=if(done)Color(0xfffff6df)else Green,maxLines=1)
                 Spacer(Modifier.weight(1f))
-                Icon(if(done)Icons.Default.CheckCircle else if(inProgress)Icons.Default.Schedule else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.size(12.dp),tint=if(done)Green else if(inProgress)Color(0xffad6a1e)else Brown)
+                Icon(if(done)Icons.Default.CheckCircle else if(inProgress)Icons.Default.Schedule else Icons.AutoMirrored.Filled.ArrowForward,null,Modifier.size(if(done)19.dp else 12.dp),tint=if(done)Color(0xffffd783)else if(inProgress)Color(0xffad6a1e)else Brown)
             }
             val details=if(best!=null)"%02d:%02d.%02d".format(best.millis/60000,best.millis/1000%60,best.millis%1000/10)else if(compact)"${l.requiredPieces.size}块 ·${l.sequence.size}跨"else"${l.requiredPieces.size} 块 · ${l.sequence.size} 跨"
-            Text(if(compact)details else "${d.label} · $details",fontSize=8.sp,lineHeight=11.sp,color=Brown,maxLines=1,overflow=TextOverflow.Ellipsis)
+            if(done)Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(4.dp)){
+                Text("已完成",fontSize=8.sp,lineHeight=11.sp,fontWeight=FontWeight.Bold,color=Color(0xffffe0a0),maxLines=1)
+                Text(if(best!=null)details else "",fontSize=8.sp,lineHeight=11.sp,color=Color(0xfff8efdb),maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f),textAlign=androidx.compose.ui.text.style.TextAlign.End)
+            }else Text(if(compact)details else "${d.label} · $details",fontSize=8.sp,lineHeight=11.sp,color=Brown,maxLines=1,overflow=TextOverflow.Ellipsis)
         }
     }
 }

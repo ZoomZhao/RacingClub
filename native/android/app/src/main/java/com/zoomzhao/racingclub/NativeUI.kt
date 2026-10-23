@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
@@ -59,13 +60,17 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 }
 @Composable private fun NumberBadge(id:Int,s:GameState,diameter:Dp=25.dp,active:Boolean=false,description:String?=null,passed:Boolean=false,pulse:Float=0f) {
     val shape=RoundedCornerShape(50)
-    Box(Modifier.size(diameter).graphicsLayer{scaleX=1f+pulse*.14f;scaleY=1f+pulse*.14f}.drawBehind{if(pulse>.001f)drawCircle(Color(0xffefbc54).copy(alpha=.45f*pulse),size.minDimension/2+3.dp.toPx())}.background(Color(numberFace(id)),shape).border(if(active||passed)2.dp else 1.dp,if(passed)Color(0xffd9a442)else if(active)Green else Color(0xfff9e8c8),shape).then(if(description!=null)Modifier.semantics{contentDescription=description;stateDescription=if(passed)"已跨越${if(pulse>.01f)"，完成动效中"else""}"else"等待跨越"}else Modifier),contentAlignment=Alignment.Center) {
+    Box(Modifier.size(diameter).zIndex(if(active||pulse>.001f)2f else 0f).graphicsLayer{scaleX=1f+pulse*.14f;scaleY=1f+pulse*.14f}.drawBehind{
+        val radius=size.minDimension/2
+        if(pulse>.001f)drawCircle(Color(0xffefbc54).copy(alpha=.45f*pulse),radius+3.dp.toPx())
+        // All progress decoration stays outside the number face; the digit is drawn last.
+        if(active||passed)drawCircle(if(passed)Color(0xffd9a442)else Green,radius+1.dp.toPx(),style=Stroke(2.dp.toPx()))
+    }.background(Color(numberFace(id)),shape).border(1.dp,Color(0xfff9e8c8),shape).then(if(description!=null)Modifier.semantics{contentDescription=description;stateDescription=if(passed)"已跨越${if(pulse>.01f)"，完成动效中"else""}"else"等待跨越"}else Modifier),contentAlignment=Alignment.Center) {
         Text("$id",color=Color(numberInk(id)),fontSize=(diameter.value*.57f/LocalDensity.current.fontScale.coerceAtLeast(1f)).sp,fontWeight=FontWeight.Bold,maxLines=1)
-        if(passed)Icon(Icons.Default.Check,null,Modifier.size(9.dp).align(Alignment.BottomEnd).background(Green,shape).padding(1.dp),tint=Color.White)
     }
 }
 @Composable internal fun CourseSequence(s:GameState,l:Level,modifier:Modifier=Modifier,crossed:Int=0,pulse:Float=0f) {
-    BoxWithConstraints(modifier.background(Paper.copy(alpha=.96f),RoundedCornerShape(10.dp)).border(1.dp,Color(0xffe8d4b8),RoundedCornerShape(10.dp)).padding(horizontal=9.dp,vertical=5.dp).semantics{contentDescription="障碍顺序";stateDescription="${s.startGate.ifEmpty{"?"}} → ${l.sequence.joinToString(" → ")} → ${s.finishGate.ifEmpty{"?"}}"}) {
+    BoxWithConstraints(modifier.background(Paper.copy(alpha=.96f),RoundedCornerShape(10.dp)).border(1.dp,Color(0xffe8d4b8),RoundedCornerShape(10.dp)).padding(horizontal=9.dp,vertical=8.dp).semantics{contentDescription="障碍顺序";stateDescription="${s.startGate.ifEmpty{"?"}} → ${l.sequence.joinToString(" → ")} → ${s.finishGate.ifEmpty{"?"}}"}) {
         val rows=courseRows(l.sequence.size+2,maxWidth.value,1f)
         val diameter=min(24f,(maxWidth.value-8f-(rows.maxOf{it.size}-1)*8f)/rows.maxOf{it.size}).dp
         val rowWidth=(diameter.value*rows.maxOf{it.size}+8f*(rows.maxOf{it.size}-1)).dp
@@ -224,7 +229,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                                 detectDragGestures(onDragStart={at->val p=s.placed.firstOrNull{it.id==id}?:Placement(id,0,0,if(s.selected==id)s.rotation else 0);drag.begin(s,p,origin+at)},onDrag={change,delta->change.consume();drag.pointer+=delta},onDragEnd={drag.finish(s)},onDragCancel={drag.cancel()})
                             }.clickable(enabled=!s.running){s.select(id)}.semantics{contentDescription="拼板 $id";selected=active;stateDescription="${if(active)"已选中"else"未选中"}，${if(s.placed.any{it.id==id})"已放置"else"待放置"}，${(if(active)s.rotation else s.placed.firstOrNull{it.id==id}?.r?:0)*90}度${if(covered)"，下层被遮挡，点按置顶"else""}"}.padding(3.dp),contentAlignment=Alignment.Center) {
                                 Canvas(Modifier.fillMaxSize().padding(top=12.dp,bottom=if(placed!=null)17.dp else 2.dp)){
-                                    val r=if(active)s.rotation else placed?.r?:0;val(w,h)=s.rules.dimensions(r);val u=min(size.width/w,size.height/h)
+                                    val r=1;val(w,h)=s.rules.dimensions(r);val u=min(size.width/w,size.height/h)
                                     paintTile(s.rules,Placement(id,0,0,r),u,Offset((size.width-w*u)/2,(size.height-h*u)/2),materials,selected=active)
                                 }
                                 Box(Modifier.align(Alignment.TopStart)){NumberBadge(id,s,18.dp)}

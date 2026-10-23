@@ -109,12 +109,12 @@ struct ClubView:View {
      let done=game.solved(level.id),ongoing=game.inProgress(level.id),best=game.repository.list(level:level.id).first
      Button{game.start(level)}label:{VStack(alignment:.leading,spacing:3){
       HStack(spacing:3){
-       Text(level.number).font(.system(size:25,weight:.bold,design:.serif)).foregroundStyle(forest)
+       Text(level.number).font(.system(size:25,weight:.bold,design:.serif)).foregroundStyle(done ? ink("#fff6df"):forest)
        Spacer()
-       Image(systemName:done ? "checkmark.circle.fill":ongoing ? "clock":"chevron.right").font(.system(size:11,weight:.bold)).foregroundStyle(done ? forest:ongoing ? ink("#ad6a1e"):saddle)
+       Image(systemName:done ? "checkmark.circle.fill":ongoing ? "clock":"chevron.right").font(.system(size:done ? 19:11,weight:.bold)).foregroundStyle(done ? ink("#ffd783"):ongoing ? ink("#ad6a1e"):saddle)
       }
-      Text(best.map{"\(d.label) · \(timeString(Double($0.millis)/1000))"} ?? "\(d.label) · \(level.requiredPieces.count) 块 · \(level.sequence.count) 跨").font(.system(size:8)).foregroundStyle(saddle).lineLimit(1)
-     }.padding(.horizontal,9).padding(.vertical,7).frame(maxWidth:.infinity,minHeight:max(57,(layout.size.height-114)/4)).background{HomePlaqueBackground()}}.buttonStyle(HomePlaquePress()).accessibilityLabel("进入挑战 \(level.number)").accessibilityValue(done ? "已完成":ongoing ? "进行中":"未开始")
+      if done{HStack(spacing:4){Text("已完成").font(.system(size:8,weight:.bold)).foregroundStyle(ink("#ffe0a0"));Spacer(minLength:0);if let best{Text(timeString(Double(best.millis)/1000)).font(.system(size:8)).foregroundStyle(ink("#f8efdb")).lineLimit(1)}}}else{Text("\(d.label) · \(level.requiredPieces.count) 块 · \(level.sequence.count) 跨").font(.system(size:8)).foregroundStyle(saddle).lineLimit(1)}
+     }.padding(.horizontal,9).padding(.vertical,7).frame(maxWidth:.infinity,minHeight:max(57,(layout.size.height-114)/4)).background{HomePlaqueBackground(active:done ? forest:nil)}}.buttonStyle(HomePlaquePress()).accessibilityLabel("进入挑战 \(level.number)").accessibilityValue(done ? "已完成":ongoing ? "进行中":"未开始")
     }}}
    }.foregroundStyle(forest).frame(maxWidth:.infinity)
   }}
@@ -223,7 +223,7 @@ private struct HomePlaqueBackground:View {
  }}
 }
 private func drawTile(_ c:inout GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ origin:CGPoint){let(w,h)=data.dimensions(p.r);let top=CGPoint(x:origin.x+CGFloat(p.x)*u,y:origin.y+CGFloat(p.y)*u);c.fill(Path(roundedRect:CGRect(x:top.x,y:top.y,width:CGFloat(w)*u,height:CGFloat(h)*u),cornerRadius:7),with:.color(ink("#d7b68a")));let piece=data.pieces.first{$0.id==p.id}!;for road in piece.paths {var path=Path();for(i,pt)in road.samples.enumerated(){let q=data.rotate(pt,p.r);let point=CGPoint(x:top.x+q[0]*u,y:top.y+q[1]*u);if i==0{path.move(to:point)}else{path.addLine(to:point)}};c.stroke(path,with:.color(ink("#fff2d6")),lineWidth:u*0.36)};let g=piece.gate;let q=data.rotate([g[0]/100,g[1]/100],p.r);let a=(g[2]+Double(p.r*90)) * .pi/180;let center=CGPoint(x:top.x+q[0]*u,y:top.y+q[1]*u);let dx = -sin(a)*u*0.23,dy=cos(a)*u*0.23;var gate=Path();gate.move(to:CGPoint(x:center.x-dx,y:center.y-dy));gate.addLine(to:CGPoint(x:center.x+dx,y:center.y+dy));c.stroke(gate,with:.color(ink(piece.color)),lineWidth:u*0.09)}
-struct TilePreview:View {@ObservedObject var game:Game;let id:Int;var body:some View{Canvas{context,size in var c=context;let r=game.selected==id ? game.rotation:game.placed.first{$0.id==id}?.r ?? 0;let(w,h)=game.data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(&c,game.data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2))}}}
+struct TilePreview:View {@ObservedObject var game:Game;let id:Int;var body:some View{Canvas{context,size in var c=context;let r=1;let(w,h)=game.data.dimensions(r);let u=min(size.width/CGFloat(w),size.height/CGFloat(h));drawTile(&c,game.data,Placement(id:id,x:0,y:0,r:r),u,CGPoint(x:(size.width-CGFloat(w)*u)/2,y:(size.height-CGFloat(h)*u)/2))}}}
 private struct NativeCourseSequence:View {
  @ObservedObject var game:Game
  let level:Level
@@ -234,7 +234,7 @@ private struct NativeCourseSequence:View {
    goalRows(level.sequence.count>8 ? 3:2)
    goalRows(4)
    goalRows(5)
-  }.frame(maxWidth:.infinity).padding(.vertical,5).padding(.horizontal,9).background(paper.opacity(0.96),in:RoundedRectangle(cornerRadius:10)).overlay{RoundedRectangle(cornerRadius:10).stroke(ink("#e8d4b8"),lineWidth:1)}.accessibilityElement(children:.contain).accessibilityLabel("障碍顺序")
+  }.frame(maxWidth:.infinity).padding(.vertical,8).padding(.horizontal,9).background(paper.opacity(0.96),in:RoundedRectangle(cornerRadius:10)).overlay{RoundedRectangle(cornerRadius:10).stroke(ink("#e8d4b8"),lineWidth:1)}.accessibilityElement(children:.contain).accessibilityLabel("障碍顺序")
  }
  private func rows(_ count:Int)->[[Int]] {
   let n=level.sequence.count+2,r=min(count,n)
@@ -265,7 +265,7 @@ private struct NativeCourseSequence:View {
    }else{
     let id=level.sequence[index-1],feedback=game.data.crossingFeedback(game.route,game.progress)
     let passed=game.running && index<=feedback.crossed,pulse=game.running && index==feedback.crossed ? feedback.pulse:0
-    Text("\(id)").font(.system(size:diameter*0.57,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:diameter,height:diameter).background(numberFill(id),in:Circle()).overlay{Circle().stroke(passed ? ink("#d9a442"):ink("#f9e8c8"),lineWidth:passed ? 2:1)}.overlay(alignment:.bottomTrailing){if passed{Image(systemName:"checkmark").font(.system(size:6,weight:.bold)).foregroundStyle(.white).frame(width:9,height:9).background(forest,in:Circle())}}.scaleEffect(1+pulse*0.14).shadow(color:ink("#efbc54").opacity(pulse*0.7),radius:5).accessibilityLabel("目标 \(index)：\(id)号").accessibilityValue(passed ? "已跨越":"等待跨越")
+    Text("\(id)").font(.system(size:diameter*0.57,weight:.bold)).foregroundStyle(numberInk(id)).frame(width:diameter,height:diameter).background(numberFill(id),in:Circle()).overlay{Circle().stroke(ink("#f9e8c8"),lineWidth:1)}.background{if passed || game.running && index==feedback.crossed+1{Circle().stroke(passed ? ink("#d9a442"):forest,lineWidth:2).padding(-1)}}.zIndex(game.running && (index==feedback.crossed || index==feedback.crossed+1) ? 2:0).scaleEffect(1+pulse*0.14).shadow(color:ink("#efbc54").opacity(pulse*0.7),radius:5).accessibilityLabel("目标 \(index)：\(id)号").accessibilityValue(passed ? "已跨越":"等待跨越")
    }
   }
  }

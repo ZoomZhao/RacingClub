@@ -138,3 +138,5 @@ ImageGen 已生成设计图、hero 与透明棋子。最新 UI 按用户后续�
 - Debug与release签名不同，首次切换无法覆盖旧Debug；卸载会清本机进度。未触碰已安装的用户手机/原debug模拟器。后续release可用同一固定签名升级。
 
 2026-10-23：原生 0.1.2（Android versionCode 3）。棋盘内允许临时重叠，数组底到顶顺序渲染/命中，点右侧编号置顶；可见上层显示“叠 N”，右侧浅绿/绿色已放置和琥珀被遮挡状态，长期保留必要叠放反馈。双向旋转按实际方向更新，靠边最少向内移，选中拼板置顶且数量不减；十块堆叠124组合法位置/方向回归通过。重叠未消除不触发通关；Hint仍会清除挡住目标解答的拼板。托盘按题目首次出现去重排序。成功动画支持右下跳过；按真实跨障时点（含反向/重复编号）600ms金色光晕/14%缩放/小勾，跳过不改时间步数不重复记分。Kotlin15单元用例、Android13界面/集成用例、Swift80关和逐次跨障检查通过，iOS arm64编译通过；签名Release独立模拟器覆盖升级及外部UI通过。证据 docs/validation/native-stacking-validation.json、android-release-012*.json；截图 design/gameplay-redesign/*-v3.png。固定发布签名沿用原身份，勿删除本机.signing。后续以当前Git状态与CI构建为准。
+
+2026-10-23：0.1.3 / Android versionCode 4 界面优化。已完成关卡整牌深绿、米白编号、金色大勾和明确已完成文字；右侧缩略图固定竖向，首现排序和棋盘真实朝向/操作逻辑保持；任务编号取消内部勾选遮挡，完成外环/光晕移到数字牌外，活动编号提高绘制层级并加垂直留白。同步 SwiftUI 原生页面并编译 arm64 通过。15单测、10界面回归用例通过（跳过用例读取原生新节点后复测）；独立签名Release覆盖升级、旋转堆叠自动通关跳过结算通过。截图 design/list-redesign/android-completed*-v2.png 与 design/gameplay-redesign/android-portrait-rack-v4.png。证据 docs/validation/native-visual-013.json、android-release-013*.json。
