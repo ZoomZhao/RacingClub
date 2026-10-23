@@ -23,3 +23,6 @@ native/**/*-log.txt
 *.keystore
 *.p12
 *.mobileprovision
+
+# Persistent release identity and local credentials (back up separately).
+native/android/.signing/

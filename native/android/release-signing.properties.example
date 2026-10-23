@@ -1,0 +1,6 @@
+# Copy to .signing/release.properties and use your fixed release identity.
+# Paths are relative to native/android; never commit the real credentials.
+storeFile=.signing/racingclub-release.p12
+storePassword=REPLACE_WITH_YOUR_STORE_PASSWORD
+keyAlias=racingclub
+keyPassword=REPLACE_WITH_YOUR_KEY_PASSWORD

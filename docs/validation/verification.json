@@ -84,7 +84,20 @@
     "runtime_pieces": 10,
     "rules_schema": 2,
     "level_report": "docs/validation/catalog-rules-report.json",
-    "ui_revision": "selected-left-board-piece-rotation-and-removal"
+    "ui_revision": "selected-left-board-piece-rotation-and-removal",
+    "release": {
+      "version_name": "0.1.1",
+      "version_code": 2,
+      "debuggable": false,
+      "r8": true,
+      "resource_shrinking": true,
+      "fixed_signing_certificate_sha256": "14eb1cc0846e2d92977dd80a1b92226fdab4a9f49faba9bf8f29c3513169cfb2",
+      "local_unit_tests": 11,
+      "local_external_ui_passed": true,
+      "report": "docs/validation/android-release.json",
+      "workflow": ".github/workflows/android-apk.yml",
+      "artifact": "RacingClub-Android-release-<commit SHA>"
+    }
   },
   "ios": {
     "native_platform": "IOS",

@@ -35,15 +35,15 @@
 ## Android
 
 - 工程：`native/android/`，可直接用 Android Studio 打开。
-- 安装包：`output/RacingClub-Android-debug.apk`，调试签名，Android 8.0 / API 26 起。
+- Release 安装包：`output/RacingClub-Android-release.apk`，固定发布签名，0.1.1（versionCode 2），Android 8.0 / API 26 起；关闭 debuggable，启用 R8 与资源压缩。
 - 本次使用 JDK 21、Gradle 8.14.3、SDK 36 构建；依赖和 Wrapper 版本已固定。
 
 ```sh
 cd native/android
-./gradlew :app:assembleDebug :app:testDebugUnitTest
+./gradlew :app:assembleRelease :app:testReleaseUnitTest
 ```
 
-需配置本机 `JAVA_HOME` 与 Android SDK。生成的 APK 位于 `app/build/outputs/apk/debug/app-debug.apk`。已在独立的 `RacingClub_API35` 模拟器（Android 15 / API 35，arm64，1920 × 1080 横屏）验证 80 关的原生规则、真实端口与动画端点。原有选中旋转、撤销、越界保留原位、03/04 自动跑动流程通过；新增 80 关导航、两排九块托盘、完整折行目标、65+ 字母入口的起终点选择与恢复、80 关完整自动跑动和每关成绩保留检查。当前 8 项 Android 集成/界面检查与 9 项 Kotlin 单元测试全部通过，包含全 80 关目标完整可见、六个入口坐标不偏移，以及 620dp/1.35 倍字号检查。设备范围仍为该模拟器，尚未进行实体手机适配。
+需配置本机 `JAVA_HOME` 与 Android SDK。Release 构建需要下文签名配置，APK 位于 `app/build/outputs/apk/release/app-release.apk`。开发调试仍可使用 `:app:assembleDebug`。已在独立的 `RacingClub_API35` 模拟器（Android 15 / API 35，arm64，1920 × 1080 横屏）验证 80 关的原生规则、真实端口与动画端点。原有选中旋转、撤销、越界保留原位、03/04 自动跑动流程通过；新增 80 关导航、两排九块托盘、完整折行目标、65+ 字母入口的起终点选择与恢复、80 关完整自动跑动和每关成绩保留检查。当前 10 项 Android 集成/界面检查与 11 项 Kotlin 单元测试全部通过，包含全 80 关目标完整可见、六个入口坐标不偏移，以及 620dp/1.35 倍字号检查。设备范围仍为该模拟器，尚未进行实体手机适配。
 
 本机专用 AVD 已设为硬件图形模式；启动命令为 `~/Library/Android/sdk/emulator/emulator -avd RacingClub_API35 -gpu host -feature -Vulkan -no-snapshot`。默认软件图形模式在此机明显变慢，应使用本次验证的 host GPU 配置。
 
@@ -51,13 +51,19 @@ cd native/android
 
 ### GitHub Actions 自动打包
 
-工作流见 [`.github/workflows/android-apk.yml`](.github/workflows/android-apk.yml)。将此配置提交并推送到 GitHub 后，每次推送任意分支或标签都会自动运行 Kotlin 单元测试并生成 Debug APK；仅在本地执行 `git commit` 不会触发。同一分支或标签有新推送时，会取消尚未完成的旧构建。
+工作流见 [`.github/workflows/android-apk.yml`](.github/workflows/android-apk.yml)。推送分支或标签后，CI 执行 `testReleaseUnitTest` 与 `assembleRelease`，生成固定签名的 **Release APK**。仅本地 commit 不触发；同一分支/标签的新推送会取消旧构建，也支持手动 Run workflow。
 
-CI 使用 Ubuntu 24.04、JDK 21、Android SDK 36 和仓库中的 Gradle Wrapper，并缓存 Gradle 依赖。测试失败时构建会失败，生成的测试报告仍会上传，方便排查。
+CI 使用 Ubuntu 24.04、JDK 21、SDK 36。构建后检查 APK 签名证书与仓库中的公开证书一致、不可调试、包名正确且关卡数据与 shared 完全一致；缺少签名时构建失败，不回退到 debug 或未签名包。
 
-下载方式：打开仓库的 [Actions → Android APK](https://github.com/ZoomZhao/RacingClub/actions/workflows/android-apk.yml)，选择成功的运行，在 **Artifacts** 中下载 `RacingClub-Android-debug-<提交 SHA>`，解压后安装 `app-debug.apk`。APK 和测试报告保留 14 天。配置进入默认分支后，也可以点击 **Run workflow** 手动选择分支打包。
+下载：[Actions → Android APK](https://github.com/ZoomZhao/RacingClub/actions/workflows/android-apk.yml)，选择成功运行，在 Artifacts 下载 `RacingClub-Android-release-<提交 SHA>`，解压得到 `app-release.apk`。APK、Release 测试报告、签名验证摘要和 R8 mapping 保留 14 天。私有仓库需要登录后访问。
 
-产物为使用自动生成的调试密钥签名的测试包，无需配置 Secrets。不同运行生成的签名可能不同；若覆盖安装提示签名不一致，需要先卸载旧版（会清除本机进度）。正式发布包需另行配置固定的发布签名。
+### 固定 Release 签名
+
+本机签名文件在 `native/android/.signing/`，整个目录已排除出 Git。请单独妥善备份其中的 `racingclub-release.p12` 和 `release.properties`，后续升级使用同一身份。新环境可参考 [`release-signing.properties.example`](native/android/release-signing.properties.example) 配置；路径相对于 `native/android`。
+
+GitHub Secrets 已配置：`ANDROID_RELEASE_KEYSTORE_BASE64`、`ANDROID_RELEASE_STORE_PASSWORD`、`ANDROID_RELEASE_KEY_ALIAS`、`ANDROID_RELEASE_KEY_PASSWORD`。CI 仅在临时目录恢复密钥，构建后删除临时文件。仓库仅保存不含私钥的 [`release-signing-certificate.pem`](native/android/release-signing-certificate.pem)，用于校验证书指纹。
+
+本地验证：`python3 tools/verify-release-apk.py output/RacingClub-Android-release.apk`（需配置 JDK 与 Android SDK）。如已安装旧的 Debug 包，由于签名身份不同，首次切换 Release 无法直接覆盖；卸载旧包会清除该设备的本机进度。后续 Release 使用固定身份，可正常覆盖升级。
 
 ## iOS
 

@@ -154,3 +154,13 @@ Android 原生视觉还原与模拟器验收（2026-10-23）：
 - 当前截图使用design/gameplay-redesign/*-v2.png。ImageGen初版原图与完整提示词保留为历史风格来源，当前布局以v2实装为准。
 
 最终验证：10项Android设备检查、11项Kotlin单元测试通过；SwiftUI原生arm64编译通过，iOS仍未设备运行验收。当前APK已更新，v2原生截图已归档，验证记录见docs/validation/。
+
+
+2026-10-23 签名 Release 构建与 CI：
+- 用户要求非debug版本，Android改为0.1.1/versionCode2，release关闭debuggable，启用R8和资源压缩；本地产物output/RacingClub-Android-release.apk约19.3MB。
+- 项目此前没有release签名。已生成固定RSA3072/PKCS12身份，私钥与凭据仅放native/android/.signing/（700目录/600文件，已忽略）；须单独备份该目录。仅公开证书release-signing-certificate.pem入库。
+- 已配置四个GitHub Secrets（ANDROID_RELEASE_KEYSTORE_BASE64/STORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD）。Actions切换testReleaseUnitTest+assembleRelease，缺签名直接失败。签名文件只在runner临时目录恢复，最后清除；上传release APK、测试报告、验证摘要与R8 mapping。
+- tools/verify-release-apk.py校验固定证书、不可调试、包名和80关数据一致，并可输出SHA256摘要；已验证会拒绝旧debug APK。
+- 11项release单元测试与R8/lintVital构建通过。独立RacingClub_Release_API35模拟器安装原始签名release包，使用tools/verify-release-ui.py外部ADB/UIAutomator验证启动、棋盘选中、双向旋转、移回隐藏操作、03自动通关及练习榜。两帧马儿东向/北向移动且计时冻结00:13.52已目视检查。
+- 旧debug instrumentation依赖未混淆Kotlin类，无法直接用于压缩release；采用外部UI工具，未为测试向release增加keep规则或debug能力。日志与公开摘要归档docs/validation/android-release*，截图位于output/release/ui/。
+- Debug与release签名不同，首次切换无法覆盖旧Debug；卸载会清本机进度。未触碰已安装的用户手机/原debug模拟器。后续release可用同一固定签名升级。

@@ -1,12 +1,52 @@
+import java.util.Properties
+
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.plugin.compose") }
+
+// Local credentials stay outside Git; CI injects the same identity from Secrets.
+val releaseProperties = Properties().apply {
+    rootProject.file(".signing/release.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
+}
+fun releaseCredential(environment: String, property: String): String? =
+    providers.environmentVariable(environment).orNull?.takeIf { it.isNotBlank() }
+        ?: releaseProperties.getProperty(property)?.takeIf { it.isNotBlank() }
+val releaseStoreFile = releaseCredential("ANDROID_RELEASE_STORE_FILE", "storeFile")?.let { rootProject.file(it) }
+val releaseStorePassword = releaseCredential("ANDROID_RELEASE_STORE_PASSWORD", "storePassword")
+val releaseKeyAlias = releaseCredential("ANDROID_RELEASE_KEY_ALIAS", "keyAlias")
+val releaseKeyPassword = releaseCredential("ANDROID_RELEASE_KEY_PASSWORD", "keyPassword")
+val releaseSigningReady = releaseStoreFile?.isFile == true &&
+    listOf(releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.zoomzhao.racingclub"
     compileSdk = 36
-    defaultConfig { applicationId = "com.zoomzhao.racingclub"; minSdk = 26; targetSdk = 36; versionCode = 1; versionName = "0.1.0"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    defaultConfig { applicationId = "com.zoomzhao.racingclub"; minSdk = 26; targetSdk = 36; versionCode = 2; versionName = "0.1.1"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    signingConfigs {
+        if (releaseSigningReady) create("release") {
+            storeFile = releaseStoreFile
+            storePassword = releaseStorePassword
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (releaseSigningReady) signingConfig = signingConfigs.getByName("release")
+        }
+    }
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
 }
+// An unsigned or debug-signed fallback must never be presented as an installable release.
+val verifyReleaseSigning by tasks.registering {
+    doLast { check(releaseSigningReady) { "Release signing is missing. Configure .signing/release.properties or ANDROID_RELEASE_* environment variables." } }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach { dependsOn(verifyReleaseSigning) }
+
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2025.09.01"))
     implementation("androidx.activity:activity-compose:1.11.0")
