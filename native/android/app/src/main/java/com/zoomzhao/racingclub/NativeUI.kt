@@ -198,7 +198,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 @Composable private fun Workbench(s:GameState,progress:Float,tick:Long,drag:BoardDrag,modifier:Modifier) {
     val materials=boardMaterials()
     BoxWithConstraints(modifier.padding(vertical=2.dp)) {
-    val toolSlot=min(44f,maxWidth.value/4).dp
+    val toolSlot=min(44f,maxWidth.value/3).dp
     Column(Modifier.fillMaxSize()) {
         GameHeader(s,tick)
         val cursor=(progress*s.activeRoute.size).coerceAtMost((s.activeRoute.size-.0001f).coerceAtLeast(0f));val step=s.activeRoute.getOrNull(cursor.toInt())
@@ -210,12 +210,10 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
             EndpointLabel(true,s.finishGate,if(s.level.solveEndpoints&&!s.running)({s.showDialog("finish")})else null)
         }
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            val trayWidth=maxWidth
             val rows=s.level.requiredPieces.chunked(5)
-            val cardHeight=min(106f,(maxHeight.value-58f-6f*(rows.size-1))/rows.size).coerceAtLeast(26f).dp
-            val activeRow=rows.indexOfFirst{s.selected in it}
+            val cardHeight=min(106f,(maxHeight.value-6f*(rows.size-1))/rows.size).coerceAtLeast(26f).dp
             Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                rows.forEachIndexed { rowIndex,row ->
+                rows.forEach { row ->
                     Row(horizontalArrangement=Arrangement.spacedBy(5.dp)) {
                         row.forEach { id ->
                             val active=s.selected==id
@@ -233,13 +231,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                         }
                         if(rows.size>1)repeat(5-row.size){Spacer(Modifier.weight(1f))}
                     }
-                    if(rowIndex==activeRow){
-                        val columns=if(rows.size>1)5 else row.size;val cardWidth=(trayWidth.value-5f*(columns-1))/columns
-                        val center=row.indexOf(s.selected)*(cardWidth+5f)+cardWidth/2
-                        RotationPopover(s,trayWidth,center,!s.running&&drag.piece==null)
-                    }
                 }
-                if(activeRow<0)Spacer(Modifier.height(52.dp))
             }
         }
         val problem=if(drag.piece!=null)drag.problem(s)else s.message
@@ -249,7 +241,6 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
         }
         HorizontalDivider(color=Color(0xffead7ba))
         Row(Modifier.height(48.dp).fillMaxWidth().semantics{contentDescription="棋盘操作"},verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
-            Action(Icons.Default.Unarchive,"移回",s.selected!=null&&!s.running,toolSlot){s.remove()}
             Action(Icons.Default.Undo,"撤销",!s.running,toolSlot){s.undo()}
             Action(Icons.Default.Lightbulb,"提示",!s.running,toolSlot){s.hint()}
             Action(Icons.Default.Refresh,"重置",!s.running,toolSlot){s.reset()}
@@ -295,7 +286,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     val letter=s.dialog.substringAfter(":")
                     Text("将 $letter 设为起点或终点；两端可以使用同一入口。",fontSize=12.sp,color=Brown)
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){Button(onClick={s.chooseEndpoint(letter,false)}){Text("设为起点")};OutlinedButton(onClick={s.chooseEndpoint(letter,true)}){Text("设为终点")}}
-                }else Text("看右上方障碍顺序。点右侧编号选择拼板，再点棋盘左上格放置。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。点已有拼板后，右侧卡片下的按钮可双向旋转 90°。重叠时落点标红，松手后保留原位。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。右上方目标按箭头折行，始终完整展示。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
+                }else Text("看右上方障碍顺序。点右侧编号选择拼板，再点棋盘左上格放置。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。点棋盘上的拼板后，附近的按钮可双向旋转 90°，或移回拼板区。重叠时落点标红，松手后保留原位。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。右上方目标按箭头折行，始终完整展示。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
             }
         }},confirmButton={TextButton(onClick={s.closeDialog()}) {Text("知道了")}})
 }
@@ -344,6 +335,9 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     Box(Modifier.offset((unit*(center.x-.35f)).dp,(unit*(center.y-.35f)).dp).size((unit*.70f).dp).then(if(s.level.solveEndpoints&&!s.running)Modifier.clickable{s.showDialog("gate:$name")}else Modifier).semantics{
                         contentDescription="入口 $name";stateDescription=listOfNotNull(if(name==s.startGate)"起点"else null,if(name==s.finishGate)"终点"else null).joinToString("、").ifEmpty{"未指定"}
                     })
+                }
+                s.placed.firstOrNull{it.id==s.selected}?.takeIf{!s.running&&drag.piece==null}?.let{p->
+                    BoardPieceActions(s,p,unit)
                 }
             }
             }

@@ -43,3 +43,17 @@ internal fun placementProblem(rules:Rules,p:Placement,all:List<Placement>):Strin
     val ids=all.filter{o->val(ow,oh)=rules.dimensions(o.r);o.id!=p.id&&p.x<o.x+ow&&o.x<p.x+w&&p.y<o.y+oh&&o.y<p.y+h}.map{it.id}.sorted()
     return if(ids.isEmpty())"" else "与 ${ids.joinToString("、")} 号拼板重叠"
 }
+
+internal data class PieceActionAnchor(val left:Float,val top:Float,val tipX:Float,val below:Boolean)
+/** A local three-button bar never covers its selected tile at supported board sizes. */
+internal fun pieceActionAnchor(p:Placement,unit:Float):PieceActionAnchor {
+    val(w,h)=if(p.r%2==0)2 to 1 else 1 to 2
+    val width=140f;val height=52f;val margin=4f;val gap=8f
+    val center=(p.x+.35f+w/2f)*unit
+    val sideMargin=.35f*unit+margin
+    val left=(center-width/2).coerceIn(sideMargin,(5.35f*unit-width-margin).coerceAtLeast(sideMargin))
+    val above=(p.y+.35f)*unit-gap-height
+    val below=above<margin
+    val top=(if(below)(p.y+.35f+h)*unit+gap else above).coerceIn(margin,(4.7f*unit-height-margin).coerceAtLeast(margin))
+    return PieceActionAnchor(left,top,(center-left).coerceIn(10f,width-10f),below)
+}

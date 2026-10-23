@@ -2,7 +2,7 @@
   "date": "2026-10-23",
   "android": {
     "build": "assembleDebug passed",
-    "unit_tests": 10,
+    "unit_tests": 11,
     "failures": 0,
     "device_validation": true,
     "validation_date": "2026-10-23",
@@ -18,19 +18,19 @@
     "native_ui_tests": {
       "tests": 10,
       "failures": 0,
-      "runtime_seconds": 133.672,
+      "runtime_seconds": 135.335,
       "framework": "Android UI Automator and continuous native MotionEvent input, API35, real wall-clock animation",
       "checks": [
-        "board uses available landscape height; full goal sequence is on upper right and never scrolls",
-        "open right region without enclosing background; no all-ten inventory entry",
-        "ImageGen ceramic and bronze controls, four bottom actions, rotation follows selected tray card",
-        "counterclockwise and clockwise rotation, invalid rotation retention and undo; automatic wins and directional horse animation for03/04/80",
-        "live drag from tray and board; green valid and red conflict previews; overlapping piece numbers shown",
-        "preview stays uncommitted until release; rejected/cancelled drops preserve position and move count",
-        "successful drag undoes in one step; grabbed offset and pre-rotated unplaced orientation preserved",
-        "second row drag and contextual controls stay reachable; ten-tile presentation capacity fixture",
-        "all 80 actual rules replay; five exact difficulty ranges; progress and per-level leaderboards persist",
-        "all 80 complete goal lists including repeated numbers; 620dp/1.35 font; original A–F coordinates stable"
+        "board uses available landscape height; every goal is visible at upper right without scrolling",
+        "open right region and sorted required tray; no all-ten inventory entry",
+        "ImageGen-style controls: both rotations and removal follow selected placed tile on LEFT board; right bottom has undo, hint and reset only",
+        "contextual controls prefer above and switch below at top edge; remain on board, avoid selected piece and entry centers",
+        "rotation changes model and control anchor; selecting unplaced tile hides contextual controls; removing hides them; undo restores tile and its controls",
+        "counterclockwise and clockwise rotation, invalid rotation retention and undo; automatic wins with directional horse movement for03/04/80",
+        "continuous native drag from tray and board; live green/red preview and numbered conflict feedback; preview uncommitted until release",
+        "rejected and cancelled drags preserve position and move count; successful drags undo in one step; rotated tile orientation survives relocation",
+        "second-row drag and ten-tile UI capacity fixture; no game-data changes",
+        "all 80 rules and native goals; five exact difficulty ranges, progress and per-level scores;620dp/1.35 font and stable A–F positions"
       ],
       "reports": [
         "docs/validation/android-flows.log",
@@ -41,19 +41,19 @@
         "docs/validation/drag-report.json",
         "docs/validation/goals-visibility-report.json"
       ],
-      "final_followup": "After the full ten-test suite, rebuilt and reran both drag tests to cover retaining an unplaced tile rotation at drag start."
+      "final_followup": "All eight existing device checks passed, then both drag/control tests reran successfully after updating the test helper to refresh API35 accessibility cache on control removal."
     },
-    "visual_review": "Native play, long 18-obstacle instruction, second tray row, ten-tile fixture and overlapping drag preview inspected against ImageGen reference; no large right panel; controls beside selected tray card, bottom four actions; small cream endpoint/difficulty chips retain contrast.",
+    "visual_review": "Inspected selected piece at center and both board edges, long 18-obstacle task and second tray row: all three piece operations are on left board near selected tile; no rotations/removal in right region; no large enclosing panel.",
     "runtime_crashes": 0,
     "directional_animation_samples": [
       {
         "name": "challenge-3-animation",
         "value": {
-          "timer": "00:07.25",
+          "timer": "00:07.30",
           "horseBounds": [
-            "190 762 305 892",
-            "335 762 472 892",
-            "374 598 511 728"
+            "190 762 314 892",
+            "347 760 484 890",
+            "373 584 510 714"
           ],
           "headings": [
             "朝向东，跑动中",
@@ -65,11 +65,11 @@
       {
         "name": "challenge-4-animation",
         "value": {
-          "timer": "00:01.12",
+          "timer": "00:01.20",
           "horseBounds": [
             "971 383 1108 513",
             "923 513 1060 643",
-            "800 583 937 713"
+            "796 580 933 710"
           ],
           "headings": [
             "朝向西，跑动中",
@@ -84,13 +84,13 @@
     "runtime_pieces": 10,
     "rules_schema": 2,
     "level_report": "docs/validation/catalog-rules-report.json",
-    "ui_revision": "open-game-sidebar-imagegen-controls-contextual-tray-rotation-and-native-drag"
+    "ui_revision": "selected-left-board-piece-rotation-and-removal"
   },
   "ios": {
     "native_platform": "IOS",
     "architecture": "arm64",
     "minimum_os": "17.0",
-    "compile_and_link": "passed: native open sidebar, ImageGen-style controls, contextual tray rotation, native drag and conflict feedback; no iOS device or simulator runtime validation",
+    "compile_and_link": "passed: native rotation and removal controls follow selected placed tile on left board; right sidebar has no rotation/removal controls; no iOS runtime validation",
     "signed": false,
     "device_validation": false,
     "runtime_levels": 80,
@@ -110,13 +110,13 @@
   "artifacts": [
     {
       "path": "output/RacingClub-Android-debug.apk",
-      "bytes": 44884290,
-      "sha256": "ade2d6649a15151a905c38c3b5dfd75115ab0465377502247dfe7dc5f4ef5120"
+      "bytes": 44884933,
+      "sha256": "b78fb51ec1f29e8f006931df86a28bc73c206da58cd95f35004f47c6f05c1aed"
     },
     {
       "path": "native/ios/build/unsigned/RacingClub.app/RacingClub",
-      "bytes": 2068152,
-      "sha256": "e629cc301d911379d080b6bd566795a51baf003739c7e732e0ccdf9832109942"
+      "bytes": 2070472,
+      "sha256": "385a01f0fd6f9ec10b8c8a77af92a6cbdd7cfd7172c08bc82f46a9d3944b0a91"
     },
     {
       "path": "design/gameplay-redesign/imagegen-reference-v1.png",
@@ -124,34 +124,39 @@
       "sha256": "c3baef628ea694dec947004e642ea88a0c0547a1039c4c1355d609b52c295ae1"
     },
     {
-      "path": "design/gameplay-redesign/android-play.png",
-      "bytes": 2021677,
-      "sha256": "870cedb61e91020d41d60bc7af28bc853eba2d8fc91d5f97da16796dc6c60194"
+      "path": "design/gameplay-redesign/android-play-v2.png",
+      "bytes": 2020464,
+      "sha256": "82565eaa1bed91e8101a40ebd2dbd3b942aedd1811d323df314abea2e72ccde1"
     },
     {
-      "path": "design/gameplay-redesign/android-drag-preview.png",
-      "bytes": 2087769,
-      "sha256": "865bab8df22aa38d77899157f8375a7527faf8f817d2967753344742e85f20c6"
+      "path": "design/gameplay-redesign/android-drag-preview-v2.png",
+      "bytes": 2103366,
+      "sha256": "47277c7fe99c25e2ab65e05b7cc34afd5fa7c51833a21d0d0775ed454972d372"
     },
     {
-      "path": "design/gameplay-redesign/android-drag-conflict.png",
-      "bytes": 2095613,
-      "sha256": "77fdf50b12c66fd9ac66e75b95601e3ebefd2606ada150794d9d92ce0105ad9e"
+      "path": "design/gameplay-redesign/android-drag-conflict-v2.png",
+      "bytes": 2111523,
+      "sha256": "688174370cbf18ba8483612f9ef6bed78bccf09498a4cf7c4644233a7f96059b"
     },
     {
-      "path": "design/gameplay-redesign/android-long-goals.png",
-      "bytes": 2132198,
-      "sha256": "dfb45ed6f9c4698b4e7f320f1238dbb349fe419cae72265786b43a59825e0468"
+      "path": "design/gameplay-redesign/android-long-goals-v2.png",
+      "bytes": 2117329,
+      "sha256": "ea327476bd2f5fce4fbb59e8e03cccdbc0e467a5e3bfbb3df5f70978467f9468"
     },
     {
-      "path": "design/gameplay-redesign/android-ten-tile-capacity.png",
-      "bytes": 2123130,
-      "sha256": "bd7f100c200eb40484552b8eadc39a0cb68cb7e1fdfa21ee2d7c81253c450e65"
+      "path": "design/gameplay-redesign/android-ten-tile-capacity-v2.png",
+      "bytes": 2067927,
+      "sha256": "79e26ce8f8d61a983161b7d56fb0035a7bdf4ee0a01e62f015a01cf2920c1336"
     },
     {
-      "path": "output/game-drag/validation/challenge-80.mp4",
-      "bytes": 14970590,
-      "sha256": "8c4af2b2e5f54a0fa11aebd80f2243647ccea0cc7de56269e5aec6ff339767c0"
+      "path": "design/gameplay-redesign/android-actions-bottom-edge-v2.png",
+      "bytes": 2057188,
+      "sha256": "0f38aba252844ca86e1b8fd14f57ef73a4edaf8bfbf89086b3d104e2da2644a0"
+    },
+    {
+      "path": "output/board-actions/validation/challenge-80.mp4",
+      "bytes": 14771500,
+      "sha256": "10c3d4c2c39731ece983f5bf95243317749c23d773ddfe79141bb593a865a9bc"
     }
   ],
   "last_four_hints": "Computed offline from verified topology and instructions; independent reference replay passed. No solution photos claimed; original referenceLayout remains null.",
@@ -241,12 +246,13 @@
     "reference": "design/gameplay-redesign/imagegen-reference-v1.png",
     "prompt": "design/gameplay-redesign/imagegen-prompt-v1.json",
     "native_screenshots": [
-      "design/gameplay-redesign/android-play.png",
-      "design/gameplay-redesign/android-drag-preview.png",
-      "design/gameplay-redesign/android-drag-conflict.png",
-      "design/gameplay-redesign/android-long-goals.png",
-      "design/gameplay-redesign/android-ten-tile-capacity.png"
+      "design/gameplay-redesign/android-play-v2.png",
+      "design/gameplay-redesign/android-drag-preview-v2.png",
+      "design/gameplay-redesign/android-drag-conflict-v2.png",
+      "design/gameplay-redesign/android-long-goals-v2.png",
+      "design/gameplay-redesign/android-ten-tile-capacity-v2.png",
+      "design/gameplay-redesign/android-actions-bottom-edge-v2.png"
     ],
-    "controls": "Native Canvas/SwiftUI reconstruction, no enclosing right card, no inventory, paired contextual rotations beside selected tray card; four bottom action buttons"
+    "controls": "Ceramic/bronze style retained from built-in ImageGen; user correction moves both rotations plus removal to selected LEFT board tile. Right bottom has three actions, tray has no action popovers."
   }
 }

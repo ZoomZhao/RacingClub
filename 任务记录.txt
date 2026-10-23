@@ -144,3 +144,13 @@ Android 原生视觉还原与模拟器验收（2026-10-23）：
 - Android模拟器10项设备检查与10项Kotlin测试通过；先全套10项，最后补充“未放置先旋转再拖入”用例并复跑2项拖拽。包含80关规则、80关完整任务、620dp/1.35字号、第二排操作、10块容量、双向旋转、03/04/80自动通关和马儿跑动。iOS原生arm64重新编译通过，尚无iOS设备/模拟器运行验收。
 - APK：output/RacingClub-Android-debug.apk。实际截图design/gameplay-redesign/android-{play,drag-preview,drag-conflict,long-goals,ten-tile-capacity}.png。日志/摘要归档docs/validation/；工具tools/verify-android-emulator.sh现运行5个设备测试类，共10项。
 - 本轮工作期间另一任务独立提交7f4f6b9 GitHub Actions APK构建流程；保留该提交及README内容，不重复修改CI。
+
+
+2026-10-23 用户纠正按钮关联位置：
+- 上一版将旋转关联右侧托盘卡片，理解有误。当前以最新明确要求为准：左转、右转和移回均关联左侧棋盘上选中的已放置拼板，组成附近的原生操作组；不在右侧卡片旁显示。
+- 保留已完成的ImageGen奶油色/铜边按钮样式。操作组优先放在拼板上方，顶边不足时换到下方；横向限制在棋盘内部，避开字母入口中心，不遮住选中拼板。拖动、跑动和选择未放置拼板时隐藏。
+- 右下只留撤销、提示和重置，移除托盘旋转占位后，两排拼板预览获得更多高度。Android与SwiftUI同步。
+- 新增遍历四方向、各合法位置与52–100dp棋格大小的几何检查；设备流程验证棋盘内三个操作、顶/底边、旋转跟随、移回隐藏与撤销恢复。原生Android的44dp按钮系统扩展到48dp触控边界，测试按真实触控中心与棋盘界限检查，避免把正常的触控扩展误判成位置错误。
+- 当前截图使用design/gameplay-redesign/*-v2.png。ImageGen初版原图与完整提示词保留为历史风格来源，当前布局以v2实装为准。
+
+最终验证：10项Android设备检查、11项Kotlin单元测试通过；SwiftUI原生arm64编译通过，iOS仍未设备运行验收。当前APK已更新，v2原生截图已归档，验证记录见docs/validation/。

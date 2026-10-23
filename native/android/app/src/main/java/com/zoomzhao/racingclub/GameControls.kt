@@ -2,6 +2,9 @@ package com.zoomzhao.racingclub
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
@@ -25,31 +28,33 @@ internal fun Modifier.gameControlFace(pressed:Boolean=false)=drawBehind {
     drawRoundRect(Color.White.copy(alpha=.85f),face.topLeft+Offset(inset,inset),Size(face.width-2*inset,face.height-2*inset),CornerRadius(r-2*inset),style=Stroke(.6.dp.toPx()))
 }
 
-@Composable internal fun RotationPopover(s:GameState,width:Dp,center:Float,visible:Boolean) {
-    val popWidth=104f;val left=(center-popWidth/2).coerceIn(0f,(width.value-popWidth).coerceAtLeast(0f))
-    Box(Modifier.fillMaxWidth().height(52.dp)) {
-        if(visible)Box(Modifier.offset(left.dp,0.dp).width(popWidth.dp).height(52.dp)) {
-            Canvas(Modifier.fillMaxSize()){
-                val tip=(center-left).coerceIn(10f,popWidth-10).dp.toPx();val y=6.dp.toPx()
-                val path=Path().apply{moveTo(tip-6.dp.toPx(),y);lineTo(tip,0f);lineTo(tip+6.dp.toPx(),y);close()}
-                drawPath(path,Color(0xfffff7e5));drawLine(Color(0xffbd8d56),Offset(tip-6.dp.toPx(),y),Offset(tip,0f),1.dp.toPx());drawLine(Color(0xffbd8d56),Offset(tip,0f),Offset(tip+6.dp.toPx(),y),1.dp.toPx())
-            }
-            Row(Modifier.padding(top=6.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp)) {
-                for(turn in listOf(-1,1)){
-                    val interaction=remember{MutableInteractionSource()};val pressed by interaction.collectIsPressedAsState()
-                    Box(Modifier.weight(1f).height(44.dp).gameControlFace(pressed).clip(RoundedCornerShape(7.dp)).clickable(enabled=!s.running,interactionSource=interaction,indication=null,role=Role.Button){s.rotate(turn)}.semantics{contentDescription=if(turn<0)"逆时针旋转90度"else"顺时针旋转90度"},contentAlignment=Alignment.Center){
-                        Canvas(Modifier.size(29.dp,34.dp)){
-                            // Matching hand-drawn quarter-turn glyphs, with compact 90° notation.
-                            val u=size.width/29f;val c=Offset(size.width/2,11*u);val radius=8*u
-                            val angle=if(turn>0)-130f else -50f;val sweep=if(turn>0)280f else -280f
-                            drawArc(Green,angle,sweep,false,c-Offset(radius,radius),Size(radius*2,radius*2),style=Stroke(2.2f*u,cap=StrokeCap.Round))
-                            val end=(angle+sweep)*PI.toFloat()/180;val p=c+Offset(cos(end)*radius,sin(end)*radius);val tangent=Offset(-sin(end)*turn,cos(end)*turn)
-                            val arrow=Path().apply{moveTo(p.x+tangent.x*3*u,p.y+tangent.y*3*u);lineTo(p.x-tangent.x*3*u-cos(end)*3*u,p.y-tangent.y*3*u-sin(end)*3*u);lineTo(p.x-tangent.x*3*u+cos(end)*3*u,p.y-tangent.y*3*u+sin(end)*3*u);close()};drawPath(arrow,Green)
-                            drawContext.canvas.nativeCanvas.drawText("90°",size.width/2,31*u,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=0xff254c3b.toInt();textSize=10.5f*u;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
-                        }
-                    }
+@Composable internal fun BoardPieceActions(s:GameState,piece:Placement,unit:Float) {
+    val anchor=pieceActionAnchor(piece,unit)
+    Box(Modifier.offset(anchor.left.dp,anchor.top.dp).size(140.dp,52.dp).semantics{contentDescription="拼板操作";stateDescription="${piece.id}号"}) {
+        Canvas(Modifier.fillMaxSize()){
+            val tip=anchor.tipX.dp.toPx();val edge=if(anchor.below)8.dp.toPx()else 44.dp.toPx();val peak=if(anchor.below)0f else 52.dp.toPx()
+            val path=Path().apply{moveTo(tip-6.dp.toPx(),edge);lineTo(tip,peak);lineTo(tip+6.dp.toPx(),edge);close()}
+            drawPath(path,Color(0xfffff7e5));drawLine(Color(0xffbd8d56),Offset(tip-6.dp.toPx(),edge),Offset(tip,peak),1.dp.toPx());drawLine(Color(0xffbd8d56),Offset(tip,peak),Offset(tip+6.dp.toPx(),edge),1.dp.toPx())
+        }
+        Row(Modifier.padding(top=if(anchor.below)8.dp else 0.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+            for(action in listOf(-1,1,0)){
+                val interaction=remember{MutableInteractionSource()};val pressed by interaction.collectIsPressedAsState()
+                Box(Modifier.size(44.dp).gameControlFace(pressed).clip(RoundedCornerShape(7.dp)).clickable(enabled=!s.running,interactionSource=interaction,indication=null,role=Role.Button){if(action==0)s.remove()else s.rotate(action)}.semantics{contentDescription=when(action){-1->"逆时针旋转90度";1->"顺时针旋转90度";else->"移回"}},contentAlignment=Alignment.Center){
+                    if(action==0)Icon(Icons.Default.Unarchive,null,Modifier.size(24.dp),tint=Green)
+                    else QuarterTurnGlyph(action)
                 }
             }
         }
+    }
+}
+
+@Composable private fun QuarterTurnGlyph(turn:Int) {
+    Canvas(Modifier.size(29.dp,34.dp)){
+        val u=size.width/29f;val c=Offset(size.width/2,11*u);val radius=8*u
+        val angle=if(turn>0)-130f else -50f;val sweep=if(turn>0)280f else -280f
+        drawArc(Green,angle,sweep,false,c-Offset(radius,radius),Size(radius*2,radius*2),style=Stroke(2.2f*u,cap=StrokeCap.Round))
+        val end=(angle+sweep)*PI.toFloat()/180;val p=c+Offset(cos(end)*radius,sin(end)*radius);val tangent=Offset(-sin(end)*turn,cos(end)*turn)
+        val arrow=Path().apply{moveTo(p.x+tangent.x*3*u,p.y+tangent.y*3*u);lineTo(p.x-tangent.x*3*u-cos(end)*3*u,p.y-tangent.y*3*u-sin(end)*3*u);lineTo(p.x-tangent.x*3*u+cos(end)*3*u,p.y-tangent.y*3*u+sin(end)*3*u);close()};drawPath(arrow,Green)
+        drawContext.canvas.nativeCanvas.drawText("90°",size.width/2,31*u,android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=0xff254c3b.toInt();textSize=10.5f*u;textAlign=android.graphics.Paint.Align.CENTER;isFakeBoldText=true})
     }
 }

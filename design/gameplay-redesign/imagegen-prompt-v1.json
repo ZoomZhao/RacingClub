@@ -9,5 +9,5 @@
   ],
   "output": "design/gameplay-redesign/imagegen-reference-v1.png",
   "original": "/Users/zoomzhao/.codex/generated_images/01a16406-5896-7e33-abd9-2912a947312c/exec-7cb3c901-b7aa-425a-bc54-5f1d4cb49a15.png",
-  "implementation": "Native controls recreate the generated ceramic/bronze face and paired rotation popover; no screenshot used as an application UI."
+  "implementation": "Native Canvas/SwiftUI reconstruction of the generated ceramic/bronze controls. The user corrected placement: both rotation buttons and removal follow the selected tile on the LEFT board; the reference right-side placement is historical. Current placement is recorded in android-play-v2.png."
 }

@@ -91,13 +91,13 @@ class EmulatorFlowTest {
         find(By.desc("棋盘"))
         assertTrue("Native activity must be landscape",device.displayWidth>device.displayHeight)
     }
-    @Test fun landscapeLayoutAndInventory() {
+    @Test fun landscapeLayoutAndRequiredTray() {
         ActivityScenario.launch(MainActivity::class.java).use {
             text("马术训练场");capture("01-native-home")
             start03()
             val b=find(By.desc("棋盘")).visibleBounds
             assertTrue("Board must fit screen",b.left>=0&&b.top>=0&&b.right<=device.displayWidth&&b.bottom<=device.displayHeight)
-            val labels=listOf("移回","撤销","提示","重置")
+            val labels=listOf("撤销","提示","重置")
             val bounds=labels.map {find(By.desc(it)).visibleBounds}
             bounds.forEach {r->assertTrue("Tool must be to right of board: $r vs $b",r.centerX()>b.right);assertTrue(r.width()>0&&r.right<=device.displayWidth)}
             assertTrue("All tools must share a row",bounds.maxOf{it.centerY()}-bounds.minOf{it.centerY()}<8)
@@ -105,6 +105,7 @@ class EmulatorFlowTest {
             assertTrue("Goals belong at upper right",goals.left>b.right&&goals.bottom<bounds.first().top)
             assertTrue("Operations belong at bottom",bounds.first().bottom>device.displayHeight*0.85)
             assertTrue("Board uses full height",b.height()>device.displayHeight*0.8)
+            assertFalse("No piece actions before placement",device.hasObject(By.desc("移回")))
             assertFalse("No inventory entry",device.hasObject(By.desc("全部 10 块")))
             val rack=listOf(1,5,6).map{find(By.desc("拼板 $it")).visibleBounds.centerX()}
             assertEquals("Tray must be sorted by number",rack.sorted(),rack)
@@ -125,8 +126,15 @@ class EmulatorFlowTest {
             expectBoard("1号，第2行第2列，90度")
             val board=find(By.desc("棋盘")).visibleBounds
             val left=find(By.desc("逆时针旋转90度")).visibleBounds;val right=find(By.desc("顺时针旋转90度")).visibleBounds
-            val card=find(By.desc("拼板 1")).visibleBounds
-            assertTrue("Rotation follows selected tray card",left.left>board.right&&left.top>=card.bottom&&left.top-card.bottom<60)
+            val actions=find(By.desc("拼板操作")).visibleBounds
+            assertTrue("Piece actions must be on left board",board.contains(actions))
+            val u=board.width()/5.7f
+            val piece=Rect((board.left+1.35f*u).toInt(),(board.top+1.35f*u).toInt(),(board.left+2.35f*u).toInt(),(board.top+3.35f*u).toInt())
+            assertFalse("Controls must not cover selected tile",Rect.intersects(actions,piece))
+            assertTrue("Controls stay beside selected tile",kotlin.math.abs(actions.bottom-piece.top)<80||kotlin.math.abs(actions.top-piece.bottom)<80)
+            val removal=find(By.desc("移回")).visibleBounds
+            assertTrue("Removal follows same board action group: $actions, $removal",actions.contains(removal.centerX(),removal.centerY()))
+            assertTrue(board.contains(removal))
             for(r in listOf(left,right)){assertTrue("Comfortable rotation target",r.width()>=110&&r.height()>=110);assertTrue(r.right<=device.displayWidth)}
             capture("04-native-selected-90")
 
