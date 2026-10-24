@@ -95,7 +95,7 @@ func drawBoard(_ c:GraphicsContext,_ size:CGSize,_ data:GameData,placed:[Placeme
   var avoid=data.coveredBy(p,placed).map{o in let(w,h)=data.dimensions(o.r);return CGRect(x:o.x-p.x,y:o.y-p.y,width:w,height:h)}
   if !data.beneath(p,placed).isEmpty,let q=data.stackMarker(p,placed){avoid.append(CGRect(x:q[0]-Double(p.x)-0.80,y:q[1]-Double(p.y)-0.16,width:0.80,height:0.31))}
   if selected==p.id && actionsVisible{
-   let a=nativeActionAnchor(p,u,placed,actionCount)
+   let a=nativeActionAnchor(p,u,placed,count:actionCount)
    if a.inside{avoid.append(CGRect(x:a.left/u-Double(p.x)-0.35,y:a.top/u-Double(p.y)-0.35,width:a.width/u,height:a.height/u))}
   }
   drawTile(c,data,p,u,origin,tex,selected:selected==p.id,number:true,numberAvoid:avoid)
