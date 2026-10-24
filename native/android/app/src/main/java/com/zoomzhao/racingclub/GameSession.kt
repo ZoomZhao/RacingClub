@@ -9,8 +9,8 @@ data class UiSnapshot(val screen:String,val level:Int,val selected:Int?,val dial
 
 /** One play session. Storage and the monotonic clock are injected, so the whole
  * state machine runs in JVM tests; no Context or system clock is touched here. */
-class GameState(val rules:Rules,val repository:LeaderboardRepository,private val progress:ProgressStore,private val nowMillis:()->Long) {
- var level by mutableStateOf(rules.levels.first());var screen by mutableStateOf("home");var placed by mutableStateOf(listOf<Placement>());var selected by mutableStateOf<Int?>(null);var rotation by mutableIntStateOf(0);var moves by mutableIntStateOf(0);var hints by mutableIntStateOf(0);var message by mutableStateOf("");var running by mutableStateOf(false);var dialog by mutableStateOf("");var elapsed by mutableLongStateOf(0);private var started:Long?=null;private val history=mutableListOf<Snapshot>();var activeRoute:List<RouteStep> = emptyList();var chosenStart by mutableStateOf("");var chosenFinish by mutableStateOf("");var selectedDifficultyId by mutableStateOf(rules.difficulties.firstOrNull()?.id.orEmpty());var progressVersion by mutableIntStateOf(0)
+class GameState(val rules:Rules,val repository:LeaderboardRepository,private val progress:ProgressStore,initialTurnMode:TurnMode=TurnMode.BOTH,private val persistTurnMode:(TurnMode)->Unit={},private val nowMillis:()->Long) {
+ var level by mutableStateOf(rules.levels.first());var screen by mutableStateOf("home");var placed by mutableStateOf(listOf<Placement>());var selected by mutableStateOf<Int?>(null);var rotation by mutableIntStateOf(0);var moves by mutableIntStateOf(0);var hints by mutableIntStateOf(0);var message by mutableStateOf("");var running by mutableStateOf(false);var dialog by mutableStateOf("");var elapsed by mutableLongStateOf(0);private var started:Long?=null;private val history=mutableListOf<Snapshot>();var activeRoute:List<RouteStep> = emptyList();var chosenStart by mutableStateOf("");var chosenFinish by mutableStateOf("");var selectedDifficultyId by mutableStateOf(rules.difficulties.firstOrNull()?.id.orEmpty());var progressVersion by mutableIntStateOf(0);var turnMode by mutableStateOf(initialTurnMode);private set
  /** Route animation position; kept here so a recreated UI continues the same run. */
  var runProgress by mutableFloatStateOf(0f)
  /** False from ON_PAUSE to ON_RESUME: the clock stops and no run or score may begin. */
@@ -69,6 +69,14 @@ class GameState(val rules:Rules,val repository:LeaderboardRepository,private val
  fun remove(){removePiece(selected?:return)}
  fun undo(){if(running||history.isEmpty())return;val s=history.removeAt(history.lastIndex);placed=s.pieces;moves=s.moves;hints=maxOf(hints,s.hints);chosenStart=s.start;chosenFinish=s.finish;rotation=placed.firstOrNull{it.id==selected}?.r?:0;message="";save()}
  fun reset(){if(running)return;remember();placed=emptyList();chosenStart="";chosenFinish="";rotation=0;moves++;message="";save()}
+  /** Which rotation buttons the board shows. Persisted so it survives leaving the level. */
+  fun chooseTurnMode(mode:TurnMode){if(turnMode==mode)return;turnMode=mode;persistTurnMode(mode)}
+  /** Clears every level's saved layout and completion. The current board is emptied too; scores stay. */
+  fun clearAllProgress(){
+   if(running)return
+   progress.clearAll();progressVersion++
+   if(screen!="home"){history.clear();placed=emptyList();chosenStart="";chosenFinish="";selected=level.requiredPieces.firstOrNull();rotation=0;moves=0;hints=0;elapsed=0;started=null;message="";save();resume()}
+  }
  fun hint(){if(running)return;val p=level.solution.firstOrNull{it !in placed};if(p==null){if(level.solveEndpoints&&(chosenStart!=level.solutionStart||chosenFinish!=level.solutionFinish)){remember();chosenStart=level.solutionStart;chosenFinish=level.solutionFinish;moves++;hints++;message="";save()};return};remember();placed=placed.filter{it.id!=p.id&&!rules.overlaps(p,it)}+p;selected=p.id;rotation=p.r;moves++;hints++;message="";save()}
  fun chooseEndpoint(letter:String,finish:Boolean=dialog=="finish"){if(running||!level.solveEndpoints||letter !in rules.gates)return;remember();if(finish)chosenFinish=letter else chosenStart=letter;moves++;message="";closeDialog();save()}
  fun trace():List<RouteStep>? {if(level.solveEndpoints&&(startGate.isEmpty()||finishGate.isEmpty()))return null;return rules.trace(level,placed,startGate,finishGate)}
@@ -98,7 +106,7 @@ class GameState(val rules:Rules,val repository:LeaderboardRepository,private val
    ui.screen=="game"->{
     start(l);selectedDifficultyId=rules.difficulties.firstOrNull{it.id==ui.difficulty}?.id?:selectedDifficultyId
     selected=ui.selected?.takeIf{it in l.requiredPieces};rotation=placed.firstOrNull{it.id==selected}?.r?:0
-    if(ui.dialog in listOf("rank","help","start","finish")||(ui.dialog.startsWith("gate:")&&ui.dialog.substringAfter(":") in rules.gates))showDialog(ui.dialog)
+    if(ui.dialog in listOf("rank","help","settings","confirm-clear","start","finish")||(ui.dialog.startsWith("gate:")&&ui.dialog.substringAfter(":") in rules.gates))showDialog(ui.dialog)
    }
    else->{level=l;screen="home"}
   }

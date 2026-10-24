@@ -21,6 +21,7 @@ internal class MemoryProgress:ProgressStore {
     override fun save(level:Int,progress:SavedProgress){levels[level]=progress}
     override fun completed(level:Int)=level in done
     override fun markCompleted(level:Int){done+=level}
+    override fun clearAll(){levels.clear();done.clear()}
 }
 internal class MemoryLeaderboard:LeaderboardRepository {
     val scores=mutableListOf<Score>()

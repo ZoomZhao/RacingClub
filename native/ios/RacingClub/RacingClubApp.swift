@@ -55,7 +55,7 @@ struct ClubView:View {
    VStack(spacing:5){
     if game.screen=="home"{home}else if game.screen=="win"{header;win}else{
      HStack(spacing:10){
-      NativeBoard(game:game,drag:drag).frame(width:min((geo.size.height-16)*6.3/5.3,max(geo.size.width-274,(geo.size.width-24)*0.54)),height:geo.size.height-16)
+      NativeBoard(game:game,drag:drag).frame(width:min((geo.size.height-16)*6.3/5.3,max(geo.size.width-(min(geo.size.width,geo.size.height)>=600 ? 360:274),(geo.size.width-24)*(min(geo.size.width,geo.size.height)>=600 ? 0.62:0.54))),height:geo.size.height-16)
       workbench.frame(maxWidth:.infinity,maxHeight:.infinity)
      }
     }
@@ -71,7 +71,7 @@ struct ClubView:View {
    .onChange(of:game.screen){_,_ in drag.reset(game)}
    .onChange(of:phase){_,p in if p != .active{drag.reset(game)}}
  }
- private var header:some View {HStack(spacing:12){tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.headline);difficultyBadge(game.data.difficulties.first{$0.id==game.level.difficultyId}!);Spacer();Text(timeString(game.elapsed)).font(.system(size:13,design:.monospaced));tool("trophy","本关排行榜"){game.show("rank")};tool("questionmark.circle","玩法"){game.show("help")}}.foregroundStyle(forest).frame(height:38)}
+ private var header:some View {HStack(spacing:12){tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.headline);difficultyBadge(game.data.difficulties.first{$0.id==game.level.difficultyId}!);Spacer();Text(timeString(game.elapsed)).font(.system(size:13,design:.monospaced));tool("trophy","本关排行榜"){game.show("rank")};tool("gearshape","设置"){game.show("settings")};tool("questionmark.circle","玩法"){game.show("help")}}.foregroundStyle(forest).frame(height:38)}
  private func difficultyBadge(_ d:Difficulty)->some View {Text(d.label).font(.system(size:11,weight:.bold)).foregroundStyle(labelInk(d,on:[Design.paper])).padding(.horizontal,8).padding(.vertical,4).background(paper.opacity(0.96),in:Capsule()).overlay{Capsule().stroke(ink("#d5b486"),lineWidth:0.6)}.accessibilityLabel("难度：\(d.label) \(d.originalLabel)")}
  private var home:some View {
   let d=game.data.difficulties.first{$0.id==game.selectedDifficultyId}!
@@ -88,7 +88,7 @@ struct ClubView:View {
    }.frame(maxWidth:.infinity,maxHeight:.infinity).clipped().clipShape(RoundedRectangle(cornerRadius:16))
    }.frame(width:layout.size.width*0.27)
    VStack(spacing:10){
-    HStack{Text("马术训练场").font(.title2.bold());Spacer();Text("\(d.originalLabel) · \(levels.filter{game.solved($0.id)}.count) / \(levels.count) 已完成").font(.system(size:11,weight:.bold)).foregroundStyle(labelInk(d,on:[Design.paper]))}.frame(height:30)
+    HStack(spacing:6){Text("马术训练场").font(.title2.bold());Spacer(minLength:0);Text("\(d.originalLabel) · \(levels.filter{game.solved($0.id)}.count) / \(levels.count) 已完成").font(.system(size:11,weight:.bold)).foregroundStyle(labelInk(d,on:[Design.paper])).lineLimit(1);tool("gearshape","设置"){game.show("settings")}}.frame(height:30)
     HStack(spacing:5){ForEach(Array(game.data.difficulties.enumerated()),id:\.element.id){index,item in
      let active=game.selectedDifficultyId==item.id
      Button{game.selectedDifficultyId=item.id}label:{ZStack(alignment:.bottom){
@@ -116,7 +116,7 @@ struct ClubView:View {
  private var workbench:some View {
   VStack(spacing:4){
    HStack(spacing:5){tool("chevron.left","返回"){game.home()};Text("挑战 \(game.level.number)").font(.system(size:16,weight:.bold)).lineLimit(1);Spacer(minLength:0);difficultyBadge(game.data.difficulties.first{$0.id==game.level.difficultyId}!)}.frame(height:28)
-   HStack(spacing:4){Image(systemName:"timer");ClockText(game:game);Spacer(minLength:0);tool("trophy","本关排行榜"){game.show("rank")};tool("questionmark.circle","玩法"){game.show("help")}}.font(.system(size:12)).frame(height:26)
+   HStack(spacing:4){Image(systemName:"timer");ClockText(game:game);Spacer(minLength:0);tool("trophy","本关排行榜"){game.show("rank")};tool("gearshape","设置"){game.show("settings")};tool("questionmark.circle","玩法"){game.show("help")}}.font(.system(size:12)).frame(height:26)
    NativeCourseSequence(game:game,level:game.level)
    HStack{
     Button{if game.level.solveEndpoints{game.show("start")}}label:{Label("起点 \(game.startGate.isEmpty ? "?":game.startGate)",systemImage:"arrow.right")}.disabled(!game.level.solveEndpoints || game.running)
@@ -137,7 +137,7 @@ struct ClubView:View {
   }.foregroundStyle(forest).padding(.vertical,2)
  }
  private var win:some View {HStack(spacing:25){ArtImage(name:ArtLibrary.arena).frame(maxWidth:.infinity,maxHeight:.infinity).clipped().clipShape(RoundedRectangle(cornerRadius:18)).accessibilityHidden(true);VStack(spacing:14){Text("漂亮，顺利通关！").font(.title.bold());Text(timeString(game.elapsed)).font(.system(size:32,design:.serif));Text("\(game.moves) 步 · \(game.hints==0 ? "独立完成":"使用提示")").font(.system(size:13));Button(game.level.id<game.data.levels.last!.id ? "挑战下一关":"返回训练场"){if let next=game.data.levels.first(where:{$0.id>game.level.id}){game.start(next)}else{game.home()}}.buttonStyle(.borderedProminent).tint(forest);Button("查看本关排行榜"){game.show("rank")}}.frame(maxWidth:.infinity).foregroundStyle(forest)}}
- private var dialog:some View {NavigationStack{ScrollView{VStack(alignment:.leading,spacing:16){if game.dialog=="rank"{Text("挑战 \(game.level.number) · 本机排行榜").font(.title2.bold());let records=game.repository.list(level:game.level.id);if records.isEmpty{Text("还没有成绩，完成一次训练就会记录。")};ForEach(Array(records.enumerated()),id:\.element.id){i,r in HStack{Text("\(i+1)");Text(millisString(r.millis)).monospacedDigit();Spacer();Text("\(r.moves) 步");Text(r.hints==0 ? "独立完成":"使用提示").font(.caption)}};Text("记录保存在此设备；线上服务尚未接入。").font(.caption)}else if game.dialog=="start" || game.dialog=="finish"{Text(game.dialog=="start" ? "选择起点":"选择终点").font(.title2.bold());Text("按字母选择棋盘边界，可与另一端相同。").font(.callout);HStack{ForEach(game.data.gates.keys.sorted(),id:\.self){letter in Button(letter){game.choose(letter)}.buttonStyle(.bordered)}}}else if game.dialog.hasPrefix("gate:"){let letter=String(game.dialog.dropFirst(5));Text("入口 \(letter)").font(.title2.bold());Text("设置起终点；两端可以使用同一入口。");HStack{Button("设为起点"){game.choose(letter,finish:false)}.buttonStyle(.borderedProminent);Button("设为终点"){game.choose(letter,finish:true)}.buttonStyle(.bordered)}}else{Text("一条路，刚刚好的顺序").font(.title2.bold());Text("看右上方障碍顺序。点右侧编号，再点棋盘空格放置。\n\n从右侧拖入棋盘，或拖动棋盘上的拼板。点棋盘上的拼板后，附近按钮可双向旋转或移回拼板区；再点一次该拼板，或点空格、木框，即可取消选中。棋盘内允许临时叠放，琥珀标记提示下层拼板。点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n正确后自动停止计时，马儿沿路跑到终点。岔路须平顺转弯，无障碍支路不计跨障。同一障碍可多次跨越。第65关起，点入口字母设置起终点；两端可相同。绿色箭头指向起点，棋格标记代表终点。右上顺序按箭头折行，全部直接展示。")}}.padding(25)}.foregroundStyle(forest).background(paper).toolbar{ToolbarItem(placement:.confirmationAction){Button("完成"){game.close()}}}}}
+ private var dialog:some View {NavigationStack{ScrollView{VStack(alignment:.leading,spacing:16){if game.dialog=="rank"{Text("挑战 \(game.level.number) · 本机排行榜").font(.title2.bold());let records=game.repository.list(level:game.level.id);if records.isEmpty{Text("还没有成绩，完成一次训练就会记录。")};ForEach(Array(records.enumerated()),id:\.element.id){i,r in HStack{Text("\(i+1)");Text(millisString(r.millis)).monospacedDigit();Spacer();Text("\(r.moves) 步");Text(r.hints==0 ? "独立完成":"使用提示").font(.caption)}};Text("记录保存在此设备；线上服务尚未接入。").font(.caption)}else if game.dialog=="start" || game.dialog=="finish"{Text(game.dialog=="start" ? "选择起点":"选择终点").font(.title2.bold());Text("按字母选择棋盘边界，可与另一端相同。").font(.callout);HStack{ForEach(game.data.gates.keys.sorted(),id:\.self){letter in Button(letter){game.choose(letter)}.buttonStyle(.bordered)}}}else if game.dialog.hasPrefix("gate:"){let letter=String(game.dialog.dropFirst(5));Text("入口 \(letter)").font(.title2.bold());Text("设置起终点；两端可以使用同一入口。");HStack{Button("设为起点"){game.choose(letter,finish:false)}.buttonStyle(.borderedProminent);Button("设为终点"){game.choose(letter,finish:true)}.buttonStyle(.bordered)}}else if game.dialog=="settings"{Text("设置").font(.title2.bold());Text("旋转按钮").font(.headline);Text("只影响棋盘上选中拼板旁边显示哪些按钮。").font(.callout);HStack{ForEach([TurnMode.both,.cw,.ccw],id:\.self){mode in Button(mode==.both ? "双向":mode==.cw ? "仅顺时针":"仅逆时针"){game.setTurnMode(mode)}.buttonStyle(.bordered).tint(game.turnMode==mode ? forest:saddle)}};Divider();Text("进度").font(.headline);Button("清除所有进度"){game.show("confirm-clear")}.buttonStyle(.bordered).tint(ink("#a9442b"))}else if game.dialog=="confirm-clear"{Text("清除所有进度？").font(.title2.bold());Text("会清除全部分关进度、未完成的摆放和完成标记。本机最佳成绩会保留。此操作不能撤销。");HStack{Button("取消"){game.show("settings")}.buttonStyle(.bordered);Button("清除"){game.clearAllProgress();game.close()}.buttonStyle(.borderedProminent).tint(ink("#a9442b"))}}else{Text("一条路，刚刚好的顺序").font(.title2.bold());Text("看右上方障碍顺序。点右侧编号，再点棋盘空格放置。\n\n从右侧拖入棋盘，或拖动棋盘上的拼板。点棋盘上的拼板后，附近按钮可双向旋转或移回拼板区；再点一次该拼板，或点空格、木框，即可取消选中。棋盘内允许临时叠放，琥珀标记提示下层拼板。点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n正确后自动停止计时，马儿沿路跑到终点。岔路须平顺转弯，无障碍支路不计跨障。同一障碍可多次跨越。第65关起，点入口字母设置起终点；两端可相同。绿色箭头指向起点，棋格标记代表终点。右上顺序按箭头折行，全部直接展示。")}}.padding(25)}.foregroundStyle(forest).background(paper).toolbar{ToolbarItem(placement:.confirmationAction){Button("完成"){game.close()}}}}}
  private func tool(_ icon:String,_ label:String,_ action:@escaping()->Void)->some View {Button(action:action){Image(systemName:icon).font(.system(size:19)).foregroundStyle(label=="提示" ? ink("#9b641b"):forest).frame(width:34,height:34)}.buttonStyle(GameControlStyle()).accessibilityLabel(label)}
 }
 /// Only this text refreshes while the clock runs; the rest of the page is state driven.
@@ -163,23 +163,25 @@ struct NativeActionAnchor {
  var width:CGFloat=140;var height:CGFloat=52;var button:CGFloat=44;var vertical=false;var inside=false
 }
 /// Prefer free space beside the tile; a crowded board keeps controls on their owner, never on a neighbor.
-func nativeActionAnchor(_ p:Placement,_ u:CGFloat,_ all:[Placement])->NativeActionAnchor {
+func nativeActionAnchor(_ p:Placement,_ u:CGFloat,_ all:[Placement],count:Int=3)->NativeActionAnchor {
+ let n=min(3,max(1,count))
  let w=p.r%2==0 ? 2:1,h=p.r%2==0 ? 1:2
+ let width=n==3 ? 140:CGFloat(44*n+4*(n-1))
  let tile=CGRect(x:(CGFloat(p.x)+0.35)*u,y:(CGFloat(p.y)+0.35)*u,width:CGFloat(w)*u,height:CGFloat(h)*u)
- let low=0.35*u+4,high=max(low,5.35*u-144)
- let xs=[tile.midX-70,tile.minX,tile.maxX-140].map{min(high,max(low,$0))}
+ let low=0.35*u+4,high=max(low,5.35*u-width-4)
+ let xs=[tile.midX-width/2,tile.minX,tile.maxX-width].map{min(high,max(low,$0))}
  for(top,below)in [(tile.minY-60,false),(tile.maxY+8,true)]{for left in xs{
-  let box=CGRect(x:left,y:top,width:140,height:52)
+  let box=CGRect(x:left,y:top,width:width,height:52)
   if top<4 || box.maxY>4.7*u-4 || box.intersects(tile){continue}
   let blocked=all.contains{o in
    if o.id==p.id{return false};let ow=o.r%2==0 ? 2:1,oh=o.r%2==0 ? 1:2
    return box.insetBy(dx:-2,dy:-2).intersects(CGRect(x:(CGFloat(o.x)+0.35)*u,y:(CGFloat(o.y)+0.35)*u,width:CGFloat(ow)*u,height:CGFloat(oh)*u))
   }
-  if !blocked{return NativeActionAnchor(left:left,top:top,tip:min(130,max(10,tile.midX-left)),below:below)}
+  if !blocked{return NativeActionAnchor(left:left,top:top,tip:min(width-10,max(10,tile.midX-left)),below:below,width:width)}
  }}
- let button=max(24,min(44,(2*u-8)/3,0.64*u-5)),vertical=h>w
- let width=vertical ? button:button*3+8,height=vertical ? button*3+8:button
- return NativeActionAnchor(left:vertical ? tile.maxX-3-button:tile.midX-width/2,top:vertical ? tile.midY-height/2:tile.maxY-3-button,tip:0,below:false,width:width,height:height,button:button,vertical:vertical,inside:true)
+ let span=CGFloat(4*(n-1)),button=max(24,min(44,(2*u-8-span)/CGFloat(n),0.64*u-5)),vertical=h>w
+ let barWidth=vertical ? button:button*CGFloat(n)+span,barHeight=vertical ? button*CGFloat(n)+span:button
+ return NativeActionAnchor(left:vertical ? tile.maxX-3-button:tile.midX-barWidth/2,top:vertical ? tile.midY-barHeight/2:tile.maxY-3-button,tip:0,below:false,width:barWidth,height:barHeight,button:button,vertical:vertical,inside:true)
 }
 private struct NativeBoardPieceActions:View {
  @GestureState private var touching=false
@@ -189,13 +191,14 @@ private struct NativeBoardPieceActions:View {
  let piece:Placement
  let unit:CGFloat
  var body:some View {
-  let a=nativeActionAnchor(piece,unit,game.placed),edge:CGFloat=a.below ? 8:44,peak:CGFloat=a.below ? 0:52
+  let actions=game.turnMode.actions
+  let a=nativeActionAnchor(piece,unit,game.placed,actions.count),edge:CGFloat=a.below ? 8:44,peak:CGFloat=a.below ? 0:52
   return ZStack(alignment:.topLeading){
    if !a.inside{Path{p in p.move(to:CGPoint(x:a.tip-6,y:edge));p.addLine(to:CGPoint(x:a.tip,y:peak));p.addLine(to:CGPoint(x:a.tip+6,y:edge))}.stroke(ink("#bd8d56"),lineWidth:1)}
-   Group{if a.vertical{VStack(spacing:4){buttons(a.button)}}else{HStack(spacing:4){buttons(a.button)}}}.offset(y:a.below ? 8:0)
+   Group{if a.vertical{VStack(spacing:4){buttons(a.button,actions)}}else{HStack(spacing:4){buttons(a.button,actions)}}}.offset(y:a.below ? 8:0)
   }.frame(width:a.width,height:a.height,alignment:.topLeading).accessibilityElement(children:.contain).accessibilityLabel("拼板操作").accessibilityValue("\(piece.id)号").offset(x:a.left,y:a.top).opacity(drag.piece==nil ? 1:0).onChange(of:touching){_,active in if !active{drag.release(token,game)}}
  }
- private func buttons(_ size:CGFloat)->some View {ForEach([-1,1,0],id:\.self){action in
+ private func buttons(_ size:CGFloat,_ actions:[Int])->some View {ForEach(actions,id:\.self){action in
   Button{guard drag.owner==nil else{return};if action==0{game.remove()}else{game.rotate(action)}}label:{
    Group{if action==0{Image(systemName:"square.and.arrow.up").font(.system(size:23,weight:.semibold))}else{VStack(spacing:0){Image(systemName:action<0 ? "arrow.counterclockwise":"arrow.clockwise").font(.system(size:19,weight:.semibold));Text("90°").font(.system(size:10,weight:.bold))}}}.foregroundStyle(forest).frame(width:size,height:size)
   }.buttonStyle(GameControlStyle()).accessibilityLabel(action==0 ? "移回":action<0 ? "逆时针旋转90度":"顺时针旋转90度").highPriorityGesture(DragGesture(minimumDistance:12,coordinateSpace:.named("game")).updating($touching){_,state,_ in state=true}.onChanged{value in
@@ -332,9 +335,9 @@ private struct NativeCourseSequence:View {
 
 /// Static board picture; equality skips redraws while a finger moves a drag preview.
 private struct BoardSurface:View,Equatable {
- let data:GameData;let placed:[Placement];let selected:Int?;let start:String;let finish:String;let actionsVisible:Bool
- static func ==(a:BoardSurface,b:BoardSurface)->Bool {a.placed==b.placed && a.selected==b.selected && a.start==b.start && a.finish==b.finish && a.actionsVisible==b.actionsVisible}
- var body:some View {Canvas{c,size in drawBoard(c,size,data,placed:placed,selected:selected,start:start,finish:finish,actionsVisible:actionsVisible)}}
+ let data:GameData;let placed:[Placement];let selected:Int?;let start:String;let finish:String;let actionsVisible:Bool;let actionCount:Int
+ static func ==(a:BoardSurface,b:BoardSurface)->Bool {a.placed==b.placed && a.selected==b.selected && a.start==b.start && a.finish==b.finish && a.actionsVisible==b.actionsVisible && a.actionCount==b.actionCount}
+ var body:some View {Canvas{c,size in drawBoard(c,size,data,placed:placed,selected:selected,start:start,finish:finish,actionsVisible:actionsVisible,actionCount:actionCount)}}
 }
 private struct DragPreviewLayer:View {
  @ObservedObject var game:Game;@ObservedObject var drag:NativeDrag;let u:CGFloat
@@ -380,7 +383,7 @@ struct NativeBoard:View {
    VStack(spacing:0){
     ZStack{
      ZStack(alignment:.topLeading){
-      BoardSurface(data:game.data,placed:game.placed,selected:game.selected,start:game.startGate,finish:game.finishGate,actionsVisible:!game.running).equatable()
+      BoardSurface(data:game.data,placed:game.placed,selected:game.selected,start:game.startGate,finish:game.finishGate,actionsVisible:!game.running,actionCount:game.turnMode.actions.count).equatable()
        .contentShape(Rectangle()).gesture(boardGesture(u))
        .accessibilityElement(children:.contain).accessibilityLabel("棋盘").accessibilityChildren{pieceElements(u,w,h)}
       DragPreviewLayer(game:game,drag:drag,u:u)
@@ -447,8 +450,8 @@ struct NativeBoard:View {
   return Color.clear.frame(width:frame.width,height:frame.height).offset(x:frame.minX,y:frame.minY)
    .accessibilityLabel("棋盘拼板 \(p.id) 号").accessibilityValue(value).accessibilityAddTraits(traits)
    .accessibilityAction{if active{game.deselect()}else{game.select(p.id)}}
-   .accessibilityAction(named:"顺时针旋转90度"){game.select(p.id);game.rotate(1)}
-   .accessibilityAction(named:"逆时针旋转90度"){game.select(p.id);game.rotate(-1)}
+   .accessibilityAction(named:"顺时针旋转90度"){guard game.turnMode != .ccw else{return};game.select(p.id);game.rotate(1)}
+   .accessibilityAction(named:"逆时针旋转90度"){guard game.turnMode != .cw else{return};game.select(p.id);game.rotate(-1)}
    .accessibilityAction(named:"移回拼板区"){game.select(p.id);game.remove()}
  }
 }

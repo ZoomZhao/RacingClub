@@ -82,11 +82,15 @@ internal fun GameState.rackPiece(id:Int)=placed.firstOrNull{it.id==id}?:Placemen
 /** Letter hit boxes match the entry labels; board units include the .35 frame. */
 internal fun onEntryLetter(rules:Rules,x:Float,y:Float)=rules.gates.values.any{val c=entryCenter(it);abs(x-c.x)<=.35f&&abs(y-c.y)<=.35f}
 
-internal data class PieceActionAnchor(val left:Float,val top:Float,val tipX:Float,val below:Boolean,val width:Float=140f,val height:Float=52f,val button:Float=44f,val vertical:Boolean=false,val inside:Boolean=false)
+internal fun turnActions(mode:TurnMode)=when(mode){TurnMode.CLOCKWISE->listOf(1,0);TurnMode.COUNTERCLOCKWISE->listOf(-1,0);TurnMode.BOTH->listOf(-1,1,0)}
+
+internal data class PieceActionAnchor(val left:Float,val top:Float,val tipX:Float,val below:Boolean,val width:Float=140f,val height:Float=52f,val button:Float=44f,val vertical:Boolean=false,val inside:Boolean=false,val count:Int=3)
 /** Prefer a free space beside the tile; a crowded board keeps controls on its owner. */
-internal fun pieceActionAnchor(p:Placement,unit:Float,all:List<Placement> = emptyList()):PieceActionAnchor {
+internal fun pieceActionAnchor(p:Placement,unit:Float,all:List<Placement> = emptyList(),count:Int=3):PieceActionAnchor {
     val(w,h)=if(p.r%2==0)2 to 1 else 1 to 2
-    val width=140f;val height=52f;val margin=4f;val gap=8f
+    val n=count.coerceIn(1,3)
+    val width=if(n==3)140f else 44f*n+4f*(n-1)
+    val height=52f;val margin=4f;val gap=8f
     val center=(p.x+.35f+w/2f)*unit
     val sideMargin=.35f*unit+margin
     val rightLimit=(5.35f*unit-width-margin).coerceAtLeast(sideMargin)
@@ -98,13 +102,14 @@ internal fun pieceActionAnchor(p:Placement,unit:Float,all:List<Placement> = empt
         if(top<margin||box.bottom>4.7f*unit-margin||box.overlaps(tile))continue
         val blocks=all.any{o->if(o.id==p.id)false else{val(ow,oh)=if(o.r%2==0)2 to 1 else 1 to 2
             box.inflate(2f).overlaps(Rect((o.x+.35f)*unit,(o.y+.35f)*unit,(o.x+.35f+ow)*unit,(o.y+.35f+oh)*unit))}}
-        if(!blocks)return PieceActionAnchor(left,top,(center-left).coerceIn(10f,width-10f),below)
+        if(!blocks)return PieceActionAnchor(left,top,(center-left).coerceIn(10f,width-10f),below,width,height,44f,false,false,n)
     }
     // Leave the owner's number visible. Foundation retains the 48dp touch targets.
-    val button=minOf(44f,(2*unit-8f)/3,.64f*unit-5f).coerceAtLeast(24f)
-    val vertical=h>w;val barWidth=if(vertical)button else button*3+8
-    val barHeight=if(vertical)button*3+8 else button
+    val span=4f*(n-1)
+    val button=minOf(44f,(2*unit-8f-span)/n,.64f*unit-5f).coerceAtLeast(24f)
+    val vertical=h>w;val barWidth=if(vertical)button else button*n+span
+    val barHeight=if(vertical)button*n+span else button
     val left=if(vertical)tile.right-3-button else tile.center.x-barWidth/2
     val top=if(vertical)tile.center.y-barHeight/2 else tile.bottom-3-button
-    return PieceActionAnchor(left,top,0f,false,barWidth,barHeight,button,vertical,true)
+    return PieceActionAnchor(left,top,0f,false,barWidth,barHeight,button,vertical,true,n)
 }

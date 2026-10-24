@@ -22,6 +22,7 @@ final class MemoryStore:ProgressStore {
  var inProgressLevels:Set<Int> {Set(records.filter{!$0.value.finished && !$0.value.placed.isEmpty}.keys)}
  func load(level:Int)->ProgressRecord? {records[level]}
  func save(_ record:ProgressRecord,level:Int){records[level]=record}
+ func clearAll(){records.removeAll()}
 }
 final class MemoryLeaderboard:LeaderboardRepository {
  var scores:[Score]=[]
@@ -129,6 +130,18 @@ func check(_ ok:Bool,_ message:@autoclosure ()->String,line:Int=#line){if !ok{Fi
    g.hint();check(g.placed.count==1 && g.hints==1 && g.moves==1,"piece hint")
    g.undo();check(g.placed.isEmpty && g.hints==1 && g.moves==0,"undo keeps hint marker")
   }
+  // Four quarter-turns about the center return home; clearing progress is not one undo.
+  do{
+   let h=Harness(data),g=h.game;h.start(3)
+   g.select(1);g.place(1,1);let home=g.placed.last!
+   for _ in 0..<4{g.rotate(1)};check(g.placed.last!==home,"four clockwise turns return")
+   for _ in 0..<4{g.rotate(-1)};check(g.placed.last!==home,"four counterclockwise turns return")
+   g.setTurnMode(.cw);check(g.turnMode.actions==[1,0],"clockwise only")
+   g.setTurnMode(.ccw);check(g.turnMode.actions==[-1,0],"counterclockwise only")
+   g.hint();h.store.records[4]=ProgressRecord(placed:[Placement(id:1,x:0,y:0,r:0)],moves:1,hints:0,elapsed:1,finished:false,start:nil,finish:nil)
+   g.clearAllProgress();check(g.placed.isEmpty && g.moves==0 && !g.inProgress(3) && !g.inProgress(4),"progress cleared")
+   g.undo();check(g.placed.isEmpty,"clear is not one undo step")
+  }
   // Orientation: rack pieces enter at 0°, placed pieces keep their own rotation; drop ignores selection.
   do{
    let h=Harness(data),g=h.game;h.start(3)
@@ -149,7 +162,7 @@ func check(_ ok:Bool,_ message:@autoclosure ()->String,line:Int=#line){if !ok{Fi
    check(g.placed==[Placement(id:1,x:4,y:1,r:1)] && g.moves==1 && g.message.isEmpty,"right-column tap auto-turns as one move")
    g.undo();check(g.placed.isEmpty && g.moves==0,"auto-turn and placement undo together")
    g.select(1);g.place(4,3)
-   check(g.placed==[Placement(id:1,x:4,y:2,r:1)] && g.moves==1,"bottom-right tap turns and nudges upward")
+   check(g.placed==[Placement(id:1,x:4,y:1,r:1)] && g.moves==1,"bottom-right tap turns and nudges upward")
    for r in 0...3{for x in 0...4{for y in 0...3{
     let p=Placement(id:7,x:x,y:y,r:r),first=data.initialPlacement(p)
     check(data.fits(first) && first.r==(data.fits(p) ? r:(r+1)%4),"first-tap fit across board")

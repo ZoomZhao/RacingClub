@@ -144,7 +144,7 @@ internal fun DrawScope.paintBoard(s:GameState,m:BoardMaterials) {
         s.rules.coveredBy(p,s.placed).forEach{o->val(w,h)=s.rules.dimensions(o.r);avoid+=Rect((o.x-p.x).toFloat(),(o.y-p.y).toFloat(),(o.x-p.x+w).toFloat(),(o.y-p.y+h).toFloat())}
         if(s.rules.beneath(p,s.placed).isNotEmpty())s.rules.stackMarker(p,s.placed)?.let{q->avoid+=Rect(q.x-p.x-.80f,q.y-p.y-.16f,q.x-p.x,q.y-p.y+.15f)}
         if(s.selected==p.id&&!s.running) {
-            val a=pieceActionAnchor(p,u/density,s.placed)
+            val a=pieceActionAnchor(p,u/density,s.placed,turnActions(s.turnMode).size)
             if(a.inside)avoid+=Rect(a.left/(u/density)-p.x-.35f,a.top/(u/density)-p.y-.35f,(a.left+a.width)/(u/density)-p.x-.35f,(a.top+a.height)/(u/density)-p.y-.35f)
         }
         paintTile(s.rules,p,u,origin,m,s.selected==p.id,true,avoid)

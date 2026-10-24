@@ -152,10 +152,10 @@ class EmulatorFlowTest {
 
             tap("拼板 5");cell(0,3);expectBoard("5号，第4行第1列，0度")
             // This tile is already selected; its compact controls can occupy its face.
-            tap("顺时针旋转90度");expectBoard("5号，第3行第1列，90度")
-            tap("逆时针旋转90度");expectBoard("5号，第3行第1列，0度");capture("06-native-edge-rotation")
+            tap("顺时针旋转90度");expectBoard("5号，第2行第1列，90度")
+            tap("逆时针旋转90度");expectBoard("5号，第2行第1列，0度");capture("06-native-edge-rotation")
             // An empty cell only dismisses a placed tile; it never relocates it.
-            cell(3,3);expectGone("拼板操作");expectBoard("5号，第3行第1列，0度")
+            cell(3,3);expectGone("拼板操作");expectBoard("5号，第2行第1列，0度")
             cell(0,2);tap("移回");assertFalse(boardState().contains("5号"))
             tap("拼板 5");cell(0,3);tap("拼板 6")
             capture("07-native-ready")

@@ -34,7 +34,8 @@ internal fun Modifier.gameControlFace(pressed:Boolean=false)=drawBehind {
 }
 
 @Composable internal fun BoardPieceActions(s:GameState,piece:Placement,unit:Float,drag:BoardDrag) {
-    val anchor=pieceActionAnchor(piece,unit,s.placed)
+    val actions=turnActions(s.turnMode)
+    val anchor=pieceActionAnchor(piece,unit,s.placed,actions.size)
     val config=LocalViewConfiguration.current
     val density=androidx.compose.ui.platform.LocalDensity.current.density
     val controlsConfig=remember(config,density){object:androidx.compose.ui.platform.ViewConfiguration by config{override val touchSlop=max(config.touchSlop,12*density)}}
@@ -45,7 +46,7 @@ internal fun Modifier.gameControlFace(pressed:Boolean=false)=drawBehind {
             drawPath(path,Color(0xfffff7e5));drawLine(Color(0xffbd8d56),Offset(tip-6.dp.toPx(),edge),Offset(tip,peak),1.dp.toPx());drawLine(Color(0xffbd8d56),Offset(tip,peak),Offset(tip+6.dp.toPx(),edge),1.dp.toPx())
         }
         @Composable fun buttons(){
-            for(action in listOf(-1,1,0)){
+            for(action in actions){
                 val interaction=remember{MutableInteractionSource()};val pressed by interaction.collectIsPressedAsState()
                 var origin by remember{mutableStateOf(Offset.Zero)}
                 Box(Modifier.size(anchor.button.dp).onGloballyPositioned{origin=it.positionInRoot()}.gameControlFace(pressed).clip(RoundedCornerShape(7.dp)).pointerInput(piece,s.running){

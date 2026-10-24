@@ -31,9 +31,18 @@ import Foundation
   precondition(data.hit(stack,0,0)==top && data.stackMarker(bottom,stack)==nil)
   precondition(data.coveredBy(bottom,stack)==[top] && data.beneath(top,stack)==[bottom])
   for r in 0..<4{let(w,h)=data.dimensions(r);for x in 0...5-w{for y in 0...4-h{for turn in [-1,1]{
-   let p=data.turnedInside(Placement(id:1,x:x,y:y,r:r),turn),(nw,nh)=data.dimensions(p.r)
-   precondition(data.fits(p) && p.r==(r+turn+4)%4 && p.x==min(x,5-nw) && p.y==min(y,4-nh))
+   let placed=data.turnedInside(Placement(id:1,x:x,y:y,r:r),turn),(nw,nh)=data.dimensions(placed.r)
+   precondition((0...5-nw).contains(placed.x) && (0...4-nh).contains(placed.y) && placed.r==(r+turn+4)%4,"turn stays on the board")
+   // Only the bottom row and the right column have no corner that stays on the board,
+   // so those turns are nudged inward and cannot be reversed. Everywhere else the
+   // opposite turn returns to the same cell.
+   let nudged=(r%2==0 && y==4-h) || (r%2==1 && x==5-w)
+   if !nudged{precondition(data.turnedInside(placed,-turn)==Placement(id:1,x:x,y:y,r:r),"opposite turn restores")}
   }}}}
+  for x in 0...2{for y in 0...1{for dir in [-1,1]{
+   var p=Placement(id:1,x:x,y:y,r:0);for _ in 0..<4{p=data.turnedInside(p,dir)}
+   precondition(p==Placement(id:1,x:x,y:y,r:0),"four turns return home")
+  }}}
   precondition(data.inventory.count==10 && data.pieces.count==10 && data.levels.count==80)
   print("Swift native core: 80 levels, repeated jumps, branches, unknown endpoints, invalid layouts and animation endpoints passed.")
  }

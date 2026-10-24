@@ -27,7 +27,38 @@ struct GameData:Decodable {
  func fits(_ p:Placement)->Bool {guard pieces.contains(where:{$0.id==p.id}),(0...3).contains(p.r)else{return false};let(w,h)=dimensions(p.r);return p.x>=0 && p.y>=0 && p.x+w<=5 && p.y+h<=4}
  func overlaps(_ p:Placement,_ o:Placement)->Bool {let(w,h)=dimensions(p.r),(ow,oh)=dimensions(o.r);return p.id != o.id && p.x<o.x+ow && o.x<p.x+w && p.y<o.y+oh && o.y<p.y+h}
  func hasOverlap(_ all:[Placement])->Bool {all.enumerated().contains{i,p in all.dropFirst(i+1).contains{overlaps(p,$0)}}}
- func turnedInside(_ p:Placement,_ turns:Int)->Placement {let r=((p.r+turns)%4+4)%4,(w,h)=dimensions(r);return Placement(id:p.id,x:min(max(0,p.x),5-w),y:min(max(0,p.y),4-h),r:r)}
+ /// Quarter-turn about a corner of the tile's own cells, not a point in its
+ /// artwork. The top-left corner is kept whenever that stays on the board, so an
+ /// interior tile does not move and four turns bring it home. The other corners are
+ /// tried in order, and the result is pulled one cell inward only when every corner
+ /// would leave the 5×4 board. A negative count is that many counterclockwise steps:
+ /// Swift's remainder keeps the sign, so folding it into 0..<4 would turn -1 into 3.
+ func turnedInside(_ p:Placement,_ turns:Int)->Placement {
+  let sign=turns>=0 ? 1:-1
+  let steps=abs(turns)%4
+  var cur=p
+  if steps>0{for _ in 0..<steps{cur=quarterAboutCorner(cur,sign)}}
+  return cur
+ }
+ private func quarterAboutCorner(_ p:Placement,_ sign:Int)->Placement {
+  let(w,h)=dimensions(p.r)
+  let corners=[(0,0),(w,0),(0,h),(w,h)]
+  for corner in corners{
+   let next=originForCorner(p,sign,corner)
+   let(nw,nh)=dimensions(next.r)
+   if (0...5-nw).contains(next.x) && (0...4-nh).contains(next.y){return next}
+  }
+  let next=originForCorner(p,sign,corners[0])
+  let(nw,nh)=dimensions(next.r)
+  return Placement(id:p.id,x:min(max(0,next.x),5-nw),y:min(max(0,next.y),4-nh),r:next.r)
+ }
+ private func originForCorner(_ p:Placement,_ sign:Int,_ corner:(Int,Int))->Placement {
+  let nr=(p.r+sign+4)%4,ox=corner.0,oy=corner.1
+  // Rotate the top-left around this corner: CW (a,b)->(b,-a), CCW (a,b)->(-b,a).
+  let x=sign>=0 ? p.x+oy:p.x-oy
+  let y=sign>=0 ? p.y-ox:p.y+ox
+  return Placement(id:p.id,x:x,y:y,r:nr)
+ }
  /// A first board tap from the tray turns once when needed, then hugs the nearest edge.
  func initialPlacement(_ p:Placement)->Placement {fits(p) || !pieces.contains(where:{$0.id==p.id}) || !(0...3).contains(p.r) || !(0...4).contains(p.x) || !(0...3).contains(p.y) ? p:turnedInside(p,1)}
  func hit(_ all:[Placement],_ x:Int,_ y:Int)->Placement? {all.last{p in let(w,h)=dimensions(p.r);return(p.x..<p.x+w).contains(x) && (p.y..<p.y+h).contains(y)}}
@@ -79,7 +110,10 @@ final class LocalLeaderboard:LeaderboardRepository {
  func save(_ score:Score) {scores.append(score);scores=scores.filter{$0.level != score.level}+list(level:score.level);if let d=try?JSONEncoder().encode(scores){defaults.set(d,forKey:key)}}
 }
 struct ProgressRecord:Codable,Equatable {let placed:[Placement];let moves:Int;let hints:Int;let elapsed:Double;let finished:Bool;let start:String?;let finish:String?}
-protocol ProgressStore:AnyObject {func load(level:Int)->ProgressRecord?;func save(_ record:ProgressRecord,level:Int);var inProgressLevels:Set<Int> {get}}
+enum TurnMode:String {case both,cw,ccw
+ var actions:[Int] {switch self {case .cw:return [1,0];case .ccw:return [-1,0];case .both:return [-1,1,0]}}
+}
+protocol ProgressStore:AnyObject {func load(level:Int)->ProgressRecord?;func save(_ record:ProgressRecord,level:Int);var inProgressLevels:Set<Int> {get};func clearAll()}
 /// Keeps an in-memory summary for the home grid; per-level records stay in UserDefaults.
 final class UserDefaultsProgressStore:ProgressStore {
  private let defaults:UserDefaults;private let levelIds:[Int];private(set) var inProgressLevels:Set<Int>=[]
@@ -90,4 +124,5 @@ final class UserDefaultsProgressStore:ProgressStore {
   if let d=try?JSONEncoder().encode(record){defaults.set(d,forKey:"level-\(level)")}
   if !record.finished && !record.placed.isEmpty{inProgressLevels.insert(level)}else{inProgressLevels.remove(level)}
  }
+ func clearAll(){for id in levelIds{defaults.removeObject(forKey:"level-\(id)")};inProgressLevels=[]}
 }

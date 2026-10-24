@@ -1,1 +1,0 @@
-{"passed":true,"input":"native continuous MotionEvent","checks":["tray to board","board relocation","live uncommitted preview","numbered overlap feedback","invalid drops preserve position and move count","undo one successful drag","out of bounds","gesture cancellation","rotation and removal follow selected board piece; top and bottom edges; removal hides actions; undo restores"]}

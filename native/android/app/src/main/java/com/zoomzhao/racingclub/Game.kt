@@ -28,10 +28,38 @@ class Rules(val pieces:Map<Int,Piece>,val gates:Map<String,Point>,val levels:Lis
         return p.id!=o.id&&p.x<o.x+ow&&o.x<p.x+w&&p.y<o.y+oh&&o.y<p.y+h
     }
     fun hasOverlap(all:List<Placement>)=all.indices.any{i->all.drop(i+1).any{overlaps(all[i],it)}}
-    /** Rotate about the current anchor, shifting only as far as the edge requires. */
+    /** Quarter-turn about a corner of the tile's own cells, not a point in its
+     *  artwork. The top-left corner is kept whenever that stays on the board, so an
+     *  interior tile does not move and four turns bring it home. The other corners are
+     *  tried in order, and the result is pulled one cell inward only when every corner
+     *  would leave the 5×4 board. A negative count is that many counterclockwise steps:
+     *  Kotlin's remainder keeps the sign, so folding it into 0..3 would turn -1 into 3. */
     fun turnedInside(p:Placement,quarterTurns:Int):Placement {
-        val r=((p.r+quarterTurns)%4+4)%4;val(w,h)=dimensions(r)
-        return p.copy(x=p.x.coerceIn(0,5-w),y=p.y.coerceIn(0,4-h),r=r)
+        val sign=if(quarterTurns>=0)1 else -1
+        val turns=kotlin.math.abs(quarterTurns)%4
+        var cur=p
+        repeat(turns){cur=quarterAboutCorner(cur,sign)}
+        return cur
+    }
+    private fun quarterAboutCorner(p:Placement,sign:Int):Placement {
+        val(w,h)=dimensions(p.r)
+        val corners=listOf(Point(0f,0f),Point(w.toFloat(),0f),Point(0f,h.toFloat()),Point(w.toFloat(),h.toFloat()))
+        for(corner in corners){
+            val next=originForCorner(p,sign,corner)
+            val(nw,nh)=dimensions(next.r)
+            if(next.x in 0..5-nw && next.y in 0..4-nh)return next
+        }
+        val next=originForCorner(p,sign,corners.first())
+        val(nw,nh)=dimensions(next.r)
+        return next.copy(x=next.x.coerceIn(0,5-nw),y=next.y.coerceIn(0,4-nh))
+    }
+    private fun originForCorner(p:Placement,sign:Int,corner:Point):Placement {
+        val nr=(p.r+sign+4)%4
+        val ox=corner.x.toInt();val oy=corner.y.toInt()
+        // Rotate the top-left around this corner: CW (a,b)->(b,-a), CCW (a,b)->(-b,a).
+        val x=if(sign>=0)p.x+oy else p.x-oy
+        val y=if(sign>=0)p.y-ox else p.y+ox
+        return Placement(p.id,x,y,nr)
     }
     /** First tap from the tray: turn once if needed, then hug the nearest board edge. */
     fun initialPlacement(p:Placement):Placement =
@@ -103,10 +131,15 @@ interface LeaderboardRepository {fun list(level:Int):List<Score>;fun save(score:
 
 /** Raw saved progress. The session validates pieces and gates before using it. */
 data class SavedProgress(val placed:List<Placement>,val moves:Int,val hints:Int,val elapsed:Long,val start:String,val finish:String,val finished:Boolean)
+/** Which quarter-turn buttons appear beside a selected tile. */
+enum class TurnMode { BOTH, CLOCKWISE, COUNTERCLOCKWISE }
+
 /** Per-level progress boundary, so sessions can run against memory in JVM tests. */
 interface ProgressStore {
     fun load(level:Int):SavedProgress?
     fun save(level:Int,progress:SavedProgress)
     fun completed(level:Int):Boolean
     fun markCompleted(level:Int)
+    /** Drop every unfinished layout and completion mark. Best scores stay. */
+    fun clearAll() {}
 }

@@ -77,6 +77,21 @@ class GameSessionTest {
         val home=h.reopen().s;home.restore(UiSnapshot("home",80,null,"","pundit",false,0,0,0))
         assertEquals("home",home.screen);assertEquals("pundit",home.selectedDifficultyId)
     }
+    @Test fun fourTurnsAboutTheCenterReturnToTheSameCellAndClearNeedsNoUndo() {
+        val h=Harness();val s=h.s
+        s.start(h.level(3));s.select(1);s.place(1,1)
+        val home=s.placed.single()
+        repeat(4){s.rotate(1)}
+        assertEquals(home,s.placed.single())
+        repeat(4){s.rotate(-1)}
+        assertEquals(home,s.placed.single())
+        s.chooseTurnMode(TurnMode.CLOCKWISE);assertEquals(listOf(1,0),turnActions(s.turnMode))
+        s.chooseTurnMode(TurnMode.COUNTERCLOCKWISE);assertEquals(listOf(-1,0),turnActions(s.turnMode))
+        s.hint();h.progress.save(4,SavedProgress(listOf(Placement(1,0,0,0)),1,0,10,"","",false));h.progress.markCompleted(5)
+        s.clearAllProgress()
+        assertTrue(s.placed.isEmpty());assertEquals(0,s.moves);assertFalse(s.solved(3));assertFalse(s.inProgress(4));assertFalse(h.progress.completed(5))
+        s.undo();assertTrue("Clear is not one undo step",s.placed.isEmpty())
+    }
     @Test fun endpointHintIsUndoableAndCountsOnce() {
         val h=Harness();val s=h.s;val l=h.level(65)
         s.start(l);s.placed=l.solution

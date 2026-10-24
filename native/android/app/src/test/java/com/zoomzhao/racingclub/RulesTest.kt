@@ -23,9 +23,15 @@ class RulesTest {
   for(r in 0..3){val(w,h)=rules.dimensions(r)
    for(x in 0..5-w)for(y in 0..4-h)for(turn in listOf(-1,1)){
     val p=Placement(1,x,y,r);val next=rules.turnedInside(p,turn);val(nw,nh)=rules.dimensions(next.r)
-    assertTrue(rules.fits(next));assertEquals((r+turn+4)%4,next.r)
-    assertEquals(x.coerceAtMost(5-nw),next.x);assertEquals(y.coerceAtMost(4-nh),next.y)
+    assertTrue("${next} left the board",next.x in 0..5-nw && next.y in 0..4-nh)
+    assertEquals((r+turn+4)%4,next.r)
+    // Only the bottom row and the right column have no corner that stays on the board.
+    val nudged=(r%2==0 && y==4-h) || (r%2==1 && x==5-w)
+    if(!nudged)assertEquals(rules.turnedInside(next,-turn),p)
    }
+  }
+  for(x in 0..2)for(y in 0..1)for(dir in listOf(-1,1)){
+   var p=Placement(1,x,y,0);repeat(4){p=rules.turnedInside(p,dir)};assertEquals(Placement(1,x,y,0),p)
   }
  }
  @Test fun rackFollowsFirstAppearanceAndDeduplicatesRepeatedObstacles(){assertEquals(listOf(5,1,6),l3.copy(sequence=listOf(5,1,5,6,1)).requiredPieces)}

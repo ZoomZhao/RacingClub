@@ -23,6 +23,7 @@ typealias SessionScheduler = (_ seconds:Double,_ action:@escaping @MainActor ()-
  @Published private(set) var dialog=""
  @Published private(set) var elapsed=0.0
  @Published var selectedDifficultyId="starter"
+ @Published private(set) var turnMode=TurnMode.both
  @Published private(set) var chosenStart=""
  @Published private(set) var chosenFinish=""
  @Published private(set) var route:[RouteStep]=[]
@@ -49,6 +50,7 @@ typealias SessionScheduler = (_ seconds:Double,_ action:@escaping @MainActor ()-
   let url=Bundle.main.url(forResource:"game-data",withExtension:"json")!
   let data=try!JSONDecoder().decode(GameData.self,from:Data(contentsOf:url))
   self.init(data:data,repository:LocalLeaderboard(),store:UserDefaultsProgressStore(levels:data.levels.map(\.id)),now:{ProcessInfo.processInfo.systemUptime},schedule:Game.taskScheduler)
+  if let saved=UserDefaults.standard.string(forKey:"turn-mode"),let mode=TurnMode(rawValue:saved){turnMode=mode}
  }
  static let taskScheduler:SessionScheduler={seconds,action in
   let task=Task{@MainActor in try? await Task.sleep(for:.milliseconds(Int(seconds*1000)));if !Task.isCancelled{action()}}
@@ -124,6 +126,16 @@ typealias SessionScheduler = (_ seconds:Double,_ action:@escaping @MainActor ()-
  func remove(){guard canEdit,let id=selected,placed.contains(where:{$0.id==id}) else{return};remember();placed.removeAll{$0.id==id};moves+=1;changed()}
  func undo(){guard canEdit,let last=history.popLast() else{return};placed=last.placed;moves=last.moves;hints=max(hints,last.hints);chosenStart=last.start;chosenFinish=last.finish;changed()}
  func reset(){guard canEdit else{return};remember();placed=[];chosenStart="";chosenFinish="";moves+=1;changed()}
+ func setTurnMode(_ mode:TurnMode){guard turnMode != mode else{return};turnMode=mode;UserDefaults.standard.set(mode.rawValue,forKey:"turn-mode")}
+ /// Clears every level's layout and completion. Best scores stay. The open board starts over.
+ func clearAllProgress(){
+  guard canEdit || screen=="home" else{return}
+  store.clearAll();inProgressLevels=[]
+  solvedLevels=Set(data.levels.compactMap{repository.list(level:$0.id).isEmpty ? nil:$0.id})
+  guard screen != "home" else{return}
+  history=[];placed=[];chosenStart="";chosenFinish="";selected=level.requiredPieces.first;moves=0;hints=0;elapsed=0;started=nil;message=""
+  save();resumeClock()
+ }
  func hint(){
   guard canEdit else{return}
   if let p=level.solution.first(where:{!placed.contains($0)}){

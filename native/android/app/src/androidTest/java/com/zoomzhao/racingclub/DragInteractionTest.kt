@@ -55,7 +55,7 @@ class DragInteractionTest {
             node("撤销").click();SystemClock.sleep(120);node("撤销").click();SystemClock.sleep(120)
             scenario.onActivity{assertTrue(s.placed.isEmpty());assertEquals(0,s.moves)}
             val corner=anchor(4.5f,3.5f);device.click(corner.x.toInt(),corner.y.toInt());expectActions()
-            scenario.onActivity{assertEquals(listOf(Placement(1,4,2,1)),s.placed);assertEquals(1,s.moves);assertTrue(s.message.isEmpty())}
+            scenario.onActivity{assertEquals(listOf(Placement(1,4,1,1)),s.placed);assertEquals(1,s.moves);assertTrue(s.message.isEmpty())}
             assertFalse(device.hasObject(By.desc("马儿")))
             assertTrue(device.takeScreenshot(File(dir,"72-right-edge-first-placement.png")))
         }
@@ -220,11 +220,11 @@ class DragInteractionTest {
             assertPieceActions(Placement(10,3,2,1))
             assertTrue(device.takeScreenshot(File(dir,"64-ten-stack-bottom-rotation.png")))
             node("逆时针旋转90度").click();SystemClock.sleep(120)
-            scenario.onActivity{assertEquals(Placement(10,3,2,0),s.placed.last())}
+            scenario.onActivity{assertEquals(Placement(10,3,3,0),s.placed.last())}
             node("顺时针旋转90度").click();SystemClock.sleep(100)
             scenario.onActivity{s.place(4,2)}
             node("逆时针旋转90度").click();SystemClock.sleep(120)
-            scenario.onActivity{assertEquals(Placement(10,3,2,0),s.placed.last());assertTrue(s.placed.all{s.rules.fits(it)})}
+            scenario.onActivity{assertEquals(Placement(10,2,2,0),s.placed.last());assertTrue("Right-edge turn stays on the board",s.placed.all{s.rules.fits(it)})}
             node("撤销").click();SystemClock.sleep(120)
             scenario.onActivity{assertEquals(Placement(10,4,2,1),s.placed.last())}
             assertPieceActions(Placement(10,4,2,1))

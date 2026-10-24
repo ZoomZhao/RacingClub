@@ -128,8 +128,13 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 "home" -> TrainingHome(s)
                 "win" -> {GameHeader(s,tick);WinScreen(s)}
                 else -> BoxWithConstraints(Modifier.fillMaxSize()) {
-                    val boardWidth=min(maxHeight.value*6.3f/5.3f,(maxWidth.value-250f).coerceAtLeast(maxWidth.value*.54f)).dp
-                    Row(Modifier.fillMaxSize(),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+                    // Phones keep a compact tray. Tablets (shortest side ≥ 600dp) give the board
+                    // the full 5.3-cell height and a wider tray so ten tiles stay tappable.
+                    val tablet=min(maxWidth.value,maxHeight.value)>=600f
+                    val trayReserve=if(tablet)340f else 250f
+                    val boardShare=if(tablet).62f else .54f
+                    val boardWidth=min(maxHeight.value*6.3f/5.3f,(maxWidth.value-trayReserve).coerceAtLeast(maxWidth.value*boardShare)).dp
+                    Row(Modifier.fillMaxSize(),horizontalArrangement=Arrangement.spacedBy(if(tablet)16.dp else 10.dp),verticalAlignment=Alignment.CenterVertically) {
                         NativeBoard(s,progress,Modifier.width(boardWidth).fillMaxHeight(),drag)
                         Workbench(s,progress,tick,drag,Modifier.weight(1f).fillMaxHeight())
                     }
@@ -169,9 +174,10 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
             }
         }
         Column(Modifier.weight(.73f),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Row(Modifier.fillMaxWidth().height(22.dp),verticalAlignment=Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().height(30.dp),verticalAlignment=Alignment.CenterVertically) {
                 Text("马术训练场",fontSize=19.sp,color=Green,fontWeight=FontWeight.Bold)
-                Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=readable(difficulty.color,PaperFace))
+                Spacer(Modifier.weight(1f));Text("${difficulty.originalLabel} · ${levels.count{s.solved(it.id)}} / ${levels.size} 已完成",fontSize=10.sp,color=readable(difficulty.color,PaperFace),maxLines=1)
+                Spacer(Modifier.width(6.dp));Action(Icons.Default.Settings,"设置",slot=28.dp){s.showDialog("settings")}
             }
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
                 s.rules.difficulties.forEachIndexed{index,d->
@@ -202,6 +208,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
             Spacer(Modifier.width(4.dp));Text(clock(if(s.running||s.screen=="win")s.elapsed else s.time()+tick*0),fontSize=11.sp,color=Brown,maxLines=1)
             Spacer(Modifier.weight(1f))
             Action(Icons.Default.EmojiEvents,"本关排行榜",slot=26.dp){s.showDialog("rank")}
+            Action(Icons.Default.Settings,"设置",slot=26.dp){s.showDialog("settings")}
             Action(Icons.Default.HelpOutline,"玩法",slot=26.dp){s.showDialog("help")}
         }
     }
@@ -323,7 +330,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 
 @Composable private fun ClubDialog(s:GameState) {
     AlertDialog(onDismissRequest={s.closeDialog()},containerColor=Paper,
-        title={Text(when(s.dialog){"rank"->"挑战 ${s.level.number} · 本机排行榜";"start"->"选择起点";"finish"->"选择终点";else->if(s.dialog.startsWith("gate:"))"入口 ${s.dialog.substringAfter(":")}"else"一条路，刚刚好的顺序"},fontSize=20.sp,lineHeight=27.sp,color=Green,fontWeight=FontWeight.Bold)},
+        title={Text(when(s.dialog){"rank"->"挑战 ${s.level.number} · 本机排行榜";"start"->"选择起点";"finish"->"选择终点";"settings"->"设置";"confirm-clear"->"清除所有进度？";else->if(s.dialog.startsWith("gate:"))"入口 ${s.dialog.substringAfter(":")}"else"一条路，刚刚好的顺序"},fontSize=20.sp,lineHeight=27.sp,color=Green,fontWeight=FontWeight.Bold)},
         text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             when(s.dialog) {
                 "rank" -> {
@@ -337,6 +344,8 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     } }
                     Text("成绩保存在本机；线上榜接口已预留。",fontSize=10.sp,lineHeight=15.sp,modifier=Modifier.padding(top=5.dp))
                 }
+                "settings" -> SettingsBody(s)
+                "confirm-clear" -> Text("会清除全部分关进度、未完成的摆放和完成标记。本机最佳成绩会保留。此操作不能撤销。",fontSize=13.sp,lineHeight=21.sp,color=Brown)
                 "start", "finish" -> {
                     Text("按字母选择棋盘边界，可与另一端相同。",fontSize=12.sp,color=Brown)
                     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){s.rules.gates.keys.forEach{letter->OutlinedButton(onClick={s.chooseEndpoint(letter)},modifier=Modifier.size(42.dp),contentPadding=PaddingValues(0.dp)){Text(letter)}}}
@@ -347,7 +356,30 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){Button(onClick={s.chooseEndpoint(letter,false)}){Text("设为起点")};OutlinedButton(onClick={s.chooseEndpoint(letter,true)}){Text("设为终点")}}
                 }else Text("看右上方障碍顺序。点右侧编号选择拼板，再点棋盘左上格放置。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。点棋盘上的拼板后，附近的按钮可双向旋转 90°，或移回拼板区；再点一次这块拼板、它的编号或木框即可收起按钮。棋盘内允许临时叠放，琥珀标记提示下层拼板。点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。右上方目标按箭头折行，始终完整展示。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
             }
-        }},confirmButton={TextButton(onClick={s.closeDialog()}) {Text("知道了")}})
+        }},confirmButton={
+            if(s.dialog=="confirm-clear") TextButton(onClick={s.clearAllProgress();s.closeDialog()}){Text("清除",color=Color(0xffa9442b))}
+            else TextButton(onClick={s.closeDialog()}) {Text(if(s.dialog=="settings")"完成" else "知道了")}
+        },dismissButton={
+            if(s.dialog=="confirm-clear") TextButton(onClick={s.showDialog("settings")}){Text("取消")}
+        })
+}
+
+@Composable private fun SettingsBody(s:GameState) {
+    Text("旋转按钮",fontSize=13.sp,fontWeight=FontWeight.Bold,color=Green)
+    Text("只影响棋盘上选中拼板旁边显示哪些按钮。",fontSize=12.sp,lineHeight=18.sp,color=Brown)
+    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+        listOf(TurnMode.BOTH to "双向",TurnMode.CLOCKWISE to "仅顺时针",TurnMode.COUNTERCLOCKWISE to "仅逆时针").forEach{(mode,label)->
+            val on=s.turnMode==mode
+            Box(Modifier.gameControlFace(on).clip(RoundedCornerShape(7.dp)).clickable(role=Role.Button){s.chooseTurnMode(mode)}.semantics{contentDescription=label;selected=on}.padding(horizontal=12.dp,vertical=8.dp)){
+                Text(label,fontSize=12.sp,fontWeight=FontWeight.Bold,color=if(on)Green else Brown,maxLines=1)
+            }
+        }
+    }
+    HorizontalDivider(color=Color(0xffead7ba))
+    Text("进度",fontSize=13.sp,fontWeight=FontWeight.Bold,color=Green)
+    Box(Modifier.fillMaxWidth().gameControlFace().clip(RoundedCornerShape(7.dp)).clickable(role=Role.Button){s.showDialog("confirm-clear")}.semantics{contentDescription="清除所有进度"}.padding(horizontal=12.dp,vertical=10.dp)){
+        Text("清除所有进度",fontSize=13.sp,fontWeight=FontWeight.Bold,color=Color(0xffa9442b))
+    }
 }
 
 @Composable internal fun NativeBoard(s:GameState,progress:Float,modifier:Modifier,drag:BoardDrag=remember{BoardDrag()}) {
@@ -406,10 +438,13 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                         contentDescription="棋盘上 ${p.id}号拼板";selected=chosen
                         stateDescription="${if(chosen)"已选中" else "未选中"}，第${p.y+1}行第${p.x+1}列，${p.r*90}度${if(s.rules.coveredBy(p,s.placed).isNotEmpty())"，部分被遮挡" else ""}"
                         onClick(if(chosen)"收起拼板操作" else "选中"){s.tapTile(p.id);true}
-                        customActions=listOf(
-                            CustomAccessibilityAction("逆时针旋转90度"){s.rotatePiece(p.id,-1);true},
-                            CustomAccessibilityAction("顺时针旋转90度"){s.rotatePiece(p.id,1);true},
-                            CustomAccessibilityAction("移回"){s.removePiece(p.id);true})
+                        customActions=turnActions(s.turnMode).map{action->
+                            when(action){
+                                -1->CustomAccessibilityAction("逆时针旋转90度"){s.rotatePiece(p.id,-1);true}
+                                1->CustomAccessibilityAction("顺时针旋转90度"){s.rotatePiece(p.id,1);true}
+                                else->CustomAccessibilityAction("移回"){s.removePiece(p.id);true}
+                            }
+                        }
                     })
                 }
                 val route=s.activeRoute;val cursor=if(route.isEmpty())0f else(progress*route.size).coerceAtMost(route.size-.0001f);val step=route.getOrNull(cursor.toInt())

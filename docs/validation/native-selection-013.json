@@ -1,1 +1,0 @@
-{"passed":true,"checks":["fully occupied board","all ten pieces selectable on press","board and rack tolerate 10dp jitter without moving or rotating","toolbar avoids neighboring pieces","horizontal and vertical fallback preserve number","drag through action face moves without rotating","undo restores layout"]}

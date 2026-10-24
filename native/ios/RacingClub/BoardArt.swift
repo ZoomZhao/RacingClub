@@ -71,7 +71,7 @@ func drawTile(_ c:GraphicsContext,_ data:GameData,_ p:Placement,_ u:CGFloat,_ or
 
 /// Static board layer; the drag preview and horse are separate layers so moving a finger
 /// does not redraw textures.
-func drawBoard(_ c:GraphicsContext,_ size:CGSize,_ data:GameData,placed:[Placement],selected:Int?,start:String,finish:String,actionsVisible:Bool=true){
+func drawBoard(_ c:GraphicsContext,_ size:CGSize,_ data:GameData,placed:[Placement],selected:Int?,start:String,finish:String,actionsVisible:Bool=true,actionCount:Int=3){
  let u=size.width/5.7,origin=CGPoint(x:u*0.35,y:u*0.35),tex=BoardTextures(c)
  let outer=CGRect(x:u*0.025,y:u*0.025,width:size.width-u*0.05,height:size.height-u*0.065),rad=u*0.28
  c.fill(rounded(outer.offsetBy(dx:0,dy:u*0.055),rad),with:.color(ink("#76512e").opacity(0.17)))
@@ -95,7 +95,7 @@ func drawBoard(_ c:GraphicsContext,_ size:CGSize,_ data:GameData,placed:[Placeme
   var avoid=data.coveredBy(p,placed).map{o in let(w,h)=data.dimensions(o.r);return CGRect(x:o.x-p.x,y:o.y-p.y,width:w,height:h)}
   if !data.beneath(p,placed).isEmpty,let q=data.stackMarker(p,placed){avoid.append(CGRect(x:q[0]-Double(p.x)-0.80,y:q[1]-Double(p.y)-0.16,width:0.80,height:0.31))}
   if selected==p.id && actionsVisible{
-   let a=nativeActionAnchor(p,u,placed)
+   let a=nativeActionAnchor(p,u,placed,actionCount)
    if a.inside{avoid.append(CGRect(x:a.left/u-Double(p.x)-0.35,y:a.top/u-Double(p.y)-0.35,width:a.width/u,height:a.height/u))}
   }
   drawTile(c,data,p,u,origin,tex,selected:selected==p.id,number:true,numberAvoid:avoid)

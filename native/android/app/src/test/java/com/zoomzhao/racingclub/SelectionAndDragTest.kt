@@ -23,7 +23,7 @@ class SelectionAndDragTest {
         assertEquals(listOf(Placement(1,4,1,1)),s.placed);assertEquals(1,s.rotation);assertEquals(1,s.moves);assertEquals("",s.message)
         s.undo();assertTrue(s.placed.isEmpty());assertEquals(0,s.moves)
         s.select(1);tapCell(4,3)
-        assertEquals(listOf(Placement(1,4,2,1)),s.placed);assertEquals(1,s.moves)
+        assertEquals(listOf(Placement(1,4,1,1)),s.placed);assertEquals(1,s.moves)
         s.undo();s.select(5);s.rotate(1);tapCell(3,3)
         assertEquals(listOf(Placement(5,3,3,2)),s.placed);assertEquals(1,s.moves)
         s.undo();s.select(6);tapCell(2,1)
