@@ -292,7 +292,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
         Row(Modifier.height(48.dp).fillMaxWidth().semantics{contentDescription="棋盘操作"},verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
             Action(Icons.Default.Undo,"撤销",!s.running,toolSlot){s.undo()}
             Action(Icons.Default.Lightbulb,"提示",!s.running,toolSlot){s.hint()}
-            Action(Icons.Default.Refresh,"重置",!s.running,toolSlot){s.reset()}
+            Action(Icons.Default.Refresh,"重置",!s.running,toolSlot){s.showDialog("confirm-reset")}
         }
     }
     }
@@ -330,7 +330,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 
 @Composable private fun ClubDialog(s:GameState) {
     AlertDialog(onDismissRequest={s.closeDialog()},containerColor=Paper,
-        title={Text(when(s.dialog){"rank"->"挑战 ${s.level.number} · 本机排行榜";"start"->"选择起点";"finish"->"选择终点";"settings"->"设置";"confirm-clear"->"清除所有进度？";else->if(s.dialog.startsWith("gate:"))"入口 ${s.dialog.substringAfter(":")}"else"一条路，刚刚好的顺序"},fontSize=20.sp,lineHeight=27.sp,color=Green,fontWeight=FontWeight.Bold)},
+        title={Text(when(s.dialog){"rank"->"挑战 ${s.level.number} · 本机排行榜";"start"->"选择起点";"finish"->"选择终点";"settings"->"设置";"confirm-clear"->"清除所有进度？";"confirm-reset"->"重置本关？";else->if(s.dialog.startsWith("gate:"))"入口 ${s.dialog.substringAfter(":")}"else"一条路，刚刚好的顺序"},fontSize=20.sp,lineHeight=27.sp,color=Green,fontWeight=FontWeight.Bold)},
         text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             when(s.dialog) {
                 "rank" -> {
@@ -346,6 +346,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
                 }
                 "settings" -> SettingsBody(s)
                 "confirm-clear" -> Text("会清除全部分关进度、未完成的摆放和完成标记。本机最佳成绩会保留。此操作不能撤销。",fontSize=13.sp,lineHeight=21.sp,color=Brown)
+                "confirm-reset" -> Text("清空本关已摆放的拼板和起终点，重新开始这一关。本机最佳成绩会保留，也可以用撤销恢复。",fontSize=13.sp,lineHeight=21.sp,color=Brown)
                 "start", "finish" -> {
                     Text("按字母选择棋盘边界，可与另一端相同。",fontSize=12.sp,color=Brown)
                     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){s.rules.gates.keys.forEach{letter->OutlinedButton(onClick={s.chooseEndpoint(letter)},modifier=Modifier.size(42.dp),contentPadding=PaddingValues(0.dp)){Text(letter)}}}
@@ -358,9 +359,11 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
             }
         }},confirmButton={
             if(s.dialog=="confirm-clear") TextButton(onClick={s.clearAllProgress();s.closeDialog()}){Text("清除",color=Color(0xffa9442b))}
+            else if(s.dialog=="confirm-reset") TextButton(onClick={s.reset();s.closeDialog()},Modifier.semantics{contentDescription="确认重置"}){Text("重置",color=Color(0xffa9442b))}
             else TextButton(onClick={s.closeDialog()}) {Text(if(s.dialog=="settings")"完成" else "知道了")}
         },dismissButton={
             if(s.dialog=="confirm-clear") TextButton(onClick={s.showDialog("settings")}){Text("取消")}
+            else if(s.dialog=="confirm-reset") TextButton(onClick={s.closeDialog()}){Text("取消")}
         })
 }
 

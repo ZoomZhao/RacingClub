@@ -103,7 +103,7 @@ class CatalogIntegrationTest {
    choose("选择起点","A")
    choose("选择终点","B");capture("24-level80-endpoints")
    tap("返回");tap("进入挑战 80");find(By.text("起点 A"));find(By.text("终点 B"))
-   tap("重置");find(By.text("起点 ?"));find(By.text("终点 ?"))
+   tap("重置");find(By.text("重置本关？"));tap("确认重置");find(By.text("起点 ?"));find(By.text("终点 ?"))
    repeat(9){tap("提示")}
    find(By.text("起点 ?"));capture("25-level80-placed")
    val movie=File(dir,"challenge-80.mp4")
