@@ -1,0 +1,26 @@
+package com.zoomzhao.racingclub
+
+import org.junit.Assert.*
+import org.junit.Test
+
+class Scene3DTest {
+    @Test fun tapsRayCastBackToTheBoardPointUnderThemAtAnyHeightAndSize() {
+        for((w,h) in listOf(900f to 700f,1400f to 760f,600f to 900f))for(y in listOf(0f,.16f,.5f)){
+            val camera=BoardCamera(w,h)
+            for(x in listOf(.35f,1.2f,2.85f,5.3f))for(z in listOf(.35f,2.3f,4.3f)){
+                val back=camera.toFrame(camera.project(V3(x,y,z)),y)
+                assertEquals(x,back.x,1e-3f);assertEquals(z,back.y,1e-3f)
+            }
+        }
+    }
+    @Test fun boardFitsTheViewAndNearCellsLookLarger() {
+        val camera=BoardCamera(1200f,800f);val b=camera.boardBounds()
+        assertTrue(b.left>=-.5f&&b.top>=-.5f&&b.right<=1200.5f&&b.bottom<=800.5f)
+        assertTrue(camera.pixelsPerUnit(V3(2.85f,0f,4.3f))>camera.pixelsPerUnit(V3(2.85f,0f,.35f)))
+    }
+    @Test fun stackLevelsCountOnlyOverlappingTilesBelow() {
+        val rules=RepoData.rules
+        val a=Placement(1,0,0,0);val b=Placement(5,1,0,0);val c=Placement(6,0,0,0);val d=Placement(7,3,3,0)
+        assertEquals(mapOf(1 to 0,5 to 1,6 to 2,7 to 0),stackLevels(rules,listOf(a,b,c,d)))
+    }
+}

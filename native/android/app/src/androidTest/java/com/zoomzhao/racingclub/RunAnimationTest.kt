@@ -21,6 +21,7 @@ class RunAnimationTest {
         val dir=File(ins.targetContext.getExternalFilesDir(null),"validation").apply{mkdirs()}
         ins.targetContext.getSharedPreferences("progress-v1",0).edit().clear().commit()
         ins.targetContext.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
+        useBoardView(ins.targetContext)
         fun find(label:String):AccessibilityNodeInfo? {
             fun walk(n:AccessibilityNodeInfo?):AccessibilityNodeInfo? {
                 if(n==null)return null

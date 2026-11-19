@@ -38,25 +38,29 @@ class SelectionAndDragTest {
         }
     }
 
-    @Test fun tappingTheSelectedTileOrFrameDismissesWithoutMoving() {
+    @Test fun tappingTheSelectedTileTurnsItAndEmptyCellOrFrameDismisses() {
         s.start(h.level(3));s.select(1);s.place(1,1);val moves=s.moves
-        tapCell(1,1);assertNull("Second tap dismisses",s.selected);assertEquals(moves,s.moves)
-        tapCell(2,1);assertEquals("Next press selects again",1,s.selected)
+        tapCell(1,1);assertEquals("Second tap turns",1,s.placed.single().r);assertEquals(1,s.selected);assertEquals(moves+1,s.moves)
+        s.undo();assertEquals(listOf(Placement(1,1,1,0)),s.placed)
+        s.chooseTurnMode(TurnMode.COUNTERCLOCKWISE);tapCell(1,1);assertEquals("Follows the turn setting",3,s.placed.single().r)
+        s.undo();s.chooseTurnMode(TurnMode.CLOCKWISE)
         tapCell(3,3);assertNull("Empty cell only dismisses a placed tile",s.selected)
+        tapCell(2,1);assertEquals("First press only selects",1,s.selected);assertEquals(0,s.placed.single().r)
         assertEquals(listOf(Placement(1,1,1,0)),s.placed);assertEquals(moves,s.moves)
         s.select(1);s.releaseBoardTap(null,false,-1,2,true);assertEquals("Entry letter keeps selection",1,s.selected)
         s.releaseBoardTap(null,false,-1,2,false);assertNull("Bare frame dismisses",s.selected)
         s.select(5);tapCell(3,3);assertEquals("Tray tile is still placed by tap",Placement(5,3,3,0),s.placed.last())
     }
-    @Test fun rackCardSecondTapDismissesOnlyPlacedTiles() {
+    @Test fun rackCardSecondTapTurnsPlacedAndWaitingTiles() {
         s.start(h.level(3));s.select(1);s.place(0,0)
-        s.releaseRackTap(1,s.pressTile(1));assertNull(s.selected)
-        s.releaseRackTap(1,s.pressTile(1));assertEquals(1,s.selected)
-        s.releaseRackTap(5,s.pressTile(5));s.releaseRackTap(5,s.pressTile(5));assertEquals("Unplaced tile stays ready",5,s.selected)
-        s.tapTile(1);assertEquals(1,s.selected);s.tapTile(1);assertNull(s.selected)
+        s.releaseRackTap(1,s.pressTile(1));assertEquals(1,s.selected);assertEquals(1,s.placed.single().r)
+        s.releaseRackTap(5,s.pressTile(5));assertEquals("First press selects at 0°",0,s.rotation)
+        s.releaseRackTap(5,s.pressTile(5));assertEquals("Waiting tile turns in the tray",5,s.selected);assertEquals(1,s.rotation)
+        s.tapTile(1);assertEquals(1,s.selected);val r=s.placed.single().r;s.tapTile(1);assertEquals((r+1)%4,s.placed.single().r)
+        s.undo();s.undo();assertEquals(listOf(Placement(1,0,0,0)),s.placed)
         s.select(5);s.place(0,0);assertTrue(s.rules.coveredBy(s.placed.first(),s.placed).isNotEmpty())
         s.selected=1 // e.g. after undo: a selected tile that is covered
-        s.releaseRackTap(1,s.pressTile(1));assertEquals("Raising a covered tile never dismisses",1,s.selected);assertEquals(1,s.placed.last().id)
+        s.releaseRackTap(1,s.pressTile(1));assertEquals("Raising a covered tile never turns it",1,s.selected);assertEquals(1,s.placed.last().id);assertEquals(0,s.placed.last().r)
     }
     @Test fun trayOrientationMatchesForTapDragAndAfterMovingBack() {
         s.start(h.level(3))

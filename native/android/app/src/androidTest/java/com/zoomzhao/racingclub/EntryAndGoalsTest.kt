@@ -104,7 +104,7 @@ class EntryAndGoalsTest {
         File(dir,"goals-visibility-report.json").writeText(JSONObject().put("passed",true).put("levels",rows).put("largeFontScale",1.35).put("narrowWidthDp",620).toString(2))
     }
     @Test fun startFinishAndSharedEntryKeepEveryOriginalLetterPosition() {
-        val rules=loadRules(instrumentation.targetContext);val level=rules.levels[64]
+        val rules=loadRules(instrumentation.targetContext);val level=rules.levels[64];useBoardView(instrumentation.targetContext)
         ActivityScenario.launch(MainActivity::class.java).use{scenario->
             lateinit var state:GameState
             scenario.onActivity{activity->state=GameState(activity,rules,LocalLeaderboard(activity));state.level=level;state.screen="game";activity.setContent{MaterialTheme(typography=ClubTypography){RacingApp(state)}}}

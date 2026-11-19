@@ -15,6 +15,10 @@ class GameState(val rules:Rules,val repository:LeaderboardRepository,private val
  var runProgress by mutableFloatStateOf(0f)
  /** False from ON_PAUSE to ON_RESUME: the clock stops and no run or score may begin. */
  var foreground by mutableStateOf(true);private set
+ /** Perspective 3D board, or the flat top-down board. Persisted by [onBoardViewChange]. */
+ var view3d by mutableStateOf(true)
+ var onBoardViewChange:(Boolean)->Unit={}
+ fun chooseBoardView(threeD:Boolean){if(view3d==threeD)return;view3d=threeD;onBoardViewChange(threeD)}
  fun difficulty(l:Level=level)=rules.difficulties.first{it.id==l.difficultyId}
  val startGate get()=level.start.ifEmpty{chosenStart}
  val finishGate get()=level.finish.ifEmpty{chosenFinish}

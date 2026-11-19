@@ -34,9 +34,11 @@ class AccessibilityBoardTest {
     private fun custom(n:AccessibilityNodeInfo,label:String)=n.actionList.single{it.label?.toString()==label}
     private fun tap(r:Rect){val d=SystemClock.uptimeMillis();for(a in listOf(MotionEvent.ACTION_DOWN,MotionEvent.ACTION_UP)){val e=MotionEvent.obtain(d,SystemClock.uptimeMillis(),a,r.exactCenterX(),r.exactCenterY(),0);ins.sendPointerSync(e);e.recycle();SystemClock.sleep(60)};SystemClock.sleep(200)}
 
+    /** Runs on the perspective board, so its projected semantics nodes are covered too. */
     @Test fun boardTilesExposeSelectionAndActionsWithoutBlockingTouch() {
         Configurator.getInstance().waitForIdleTimeout=100
         ins.targetContext.getSharedPreferences("progress-v1",0).edit().clear().commit()
+        useBoardView(ins.targetContext,threeD=true)
         val dir=File(ins.targetContext.getExternalFilesDir(null),"validation").apply{mkdirs()}
         ActivityScenario.launch(MainActivity::class.java).use{scenario->
             lateinit var s:GameState
@@ -51,9 +53,9 @@ class AccessibilityBoardTest {
             scenario.onActivity{assertEquals(1,s.selected);assertEquals("Selecting raises the tile",1,s.placed.last().id)}
             assertTrue(state(await("棋盘上 1号拼板")).contains("已选中"))
             assertTrue(await("棋盘上 1号拼板").performAction(AccessibilityNodeInfo.ACTION_CLICK));SystemClock.sleep(200)
-            scenario.onActivity{assertNull("Second activation dismisses",s.selected)}
+            scenario.onActivity{assertEquals("Second activation turns",s.rules.turnedInside(Placement(1,0,0,0),s.turnMode.tapTurn()),s.placed.last());assertEquals(1,s.selected)}
             val turn=await("棋盘上 1号拼板");assertTrue(turn.performAction(custom(turn,"顺时针旋转90度").id));SystemClock.sleep(200)
-            scenario.onActivity{assertEquals(Placement(1,0,0,1),s.placed.last());assertEquals(1,s.selected)}
+            scenario.onActivity{assertEquals(1,s.selected);assertEquals(1,s.placed.last().id);assertEquals((s.turnMode.tapTurn()+5)%4,s.placed.last().r)}
             assertTrue(device.takeScreenshot(File(dir,"71-accessibility-rotated.png")))
             val back=await("棋盘上 1号拼板");assertTrue(back.performAction(custom(back,"移回").id));SystemClock.sleep(200)
             scenario.onActivity{assertTrue(s.placed.none{it.id==1})}
@@ -61,13 +63,13 @@ class AccessibilityBoardTest {
             // Real touches land where the semantics node sits and reach the board Canvas.
             val five=Rect().also{await("棋盘上 5号拼板").getBoundsInScreen(it)}
             tap(five);scenario.onActivity{assertEquals("Touch through the semantics node selects",5,s.selected)}
-            tap(five);scenario.onActivity{assertNull("Second touch dismisses",s.selected)}
+            tap(five);scenario.onActivity{assertEquals("Second touch turns",s.rules.turnedInside(Placement(5,1,0,0),s.turnMode.tapTurn()),s.placed.last());assertEquals(5,s.selected)}
             // The tray card activates like a tap and raises the hidden tile.
             val rack=await("拼板 6")
             assertTrue("Tray owns click: ${rack.actionList.map{it.id to it.label}}",rack.performAction(AccessibilityNodeInfo.ACTION_CLICK));SystemClock.sleep(200)
             scenario.onActivity{assertEquals(6,s.selected);assertEquals(6,s.placed.last().id)}
             assertNotNull(await("棋盘上 6号拼板"))
-            File(dir,"accessibility-report.json").writeText("""{"passed":true,"checks":["visible board tiles expose nodes","fully covered tile only in tray","select and dismiss by accessibility click","rotate and move back custom actions","real touch passes through semantics nodes","tray click raises hidden tile"]}""")
+            File(dir,"accessibility-report.json").writeText("""{"passed":true,"checks":["3D board tiles expose nodes","fully covered tile only in tray","select and turn by accessibility click","rotate and move back custom actions","real touch passes through semantics nodes","tray click raises hidden tile"]}""")
         }
     }
 }

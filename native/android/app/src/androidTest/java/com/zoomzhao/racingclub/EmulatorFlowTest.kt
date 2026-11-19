@@ -33,6 +33,7 @@ class EmulatorFlowTest {
         dir.mkdirs()
         context.getSharedPreferences("progress-v1",0).edit().clear().commit()
         context.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
+        useBoardView(context)
     }
     private fun capture(name:String) {
         assertTrue("Screenshot $name",device.takeScreenshot(File(dir,"$name.png")))
@@ -103,16 +104,17 @@ class EmulatorFlowTest {
             assertTrue("Board must fit screen",b.left>=0&&b.top>=0&&b.right<=device.displayWidth&&b.bottom<=device.displayHeight)
             val labels=listOf("撤销","提示","重置")
             val bounds=labels.map {find(By.desc(it)).visibleBounds}
-            bounds.forEach {r->assertTrue("Tool must be to right of board: $r vs $b",r.centerX()>b.right);assertTrue(r.width()>0&&r.right<=device.displayWidth)}
+            bounds.forEach {r->assertTrue("Tool must sit in the dock under the board: $r vs $b",r.top>=b.bottom-2&&r.right<=b.right+b.width()/10);assertTrue(r.width()>0&&r.bottom<=device.displayHeight)}
             assertTrue("All tools must share a row",bounds.maxOf{it.centerY()}-bounds.minOf{it.centerY()}<8)
             val goals=find(By.desc("障碍顺序")).visibleBounds
-            assertTrue("Goals belong at upper right",goals.left>b.right&&goals.bottom<bounds.first().top)
+            assertTrue("Goals belong at upper right",goals.left>b.right&&goals.bottom<device.displayHeight/2)
             assertTrue("Operations belong at bottom",bounds.first().bottom>device.displayHeight*0.85)
-            assertTrue("Board uses full height",b.height()>device.displayHeight*0.8)
+            assertTrue("Board uses the height above the dock",b.height()>device.displayHeight*0.66)
             assertFalse("No piece actions before placement",device.hasObject(By.desc("移回")))
             assertFalse("No inventory entry",device.hasObject(By.desc("全部 10 块")))
-            val rack=listOf(5,1,6).map{find(By.desc("拼板 $it")).visibleBounds.centerX()}
-            assertEquals("Tray follows first appearance in the challenge",rack.sorted(),rack)
+            val rack=listOf(5,1,6).map{find(By.desc("拼板 $it")).visibleBounds}
+            val reading=compareBy<Rect>({it.top/40},{it.centerX()})
+            assertEquals("Tray reads in first-appearance order, row by row",rack.sortedWith(reading),rack)
             assertFalse("No trial-run button",device.hasObject(By.textContains("出发试跑")))
             capture("02-native-landscape")
             note("landscape",JSONObject().put("width",device.displayWidth).put("height",device.displayHeight).put("board",b.flattenToString()).put("toolbar",JSONArray(bounds.map{it.flattenToString()})))
@@ -131,33 +133,29 @@ class EmulatorFlowTest {
             val board=find(By.desc("棋盘")).visibleBounds
             val left=find(By.desc("逆时针旋转90度")).visibleBounds;val right=find(By.desc("顺时针旋转90度")).visibleBounds
             val actions=find(By.desc("拼板操作")).visibleBounds
-            assertTrue("Piece actions must be on left board",board.contains(actions))
-            val u=board.width()/5.7f
-            val piece=Rect((board.left+1.35f*u).toInt(),(board.top+1.35f*u).toInt(),(board.left+2.35f*u).toInt(),(board.top+3.35f*u).toInt())
-            assertFalse("Controls must not cover selected tile",Rect.intersects(actions,piece))
-            assertTrue("Controls stay beside selected tile",kotlin.math.abs(actions.bottom-piece.top)<80||kotlin.math.abs(actions.top-piece.bottom)<80)
+            assertFalse("Piece actions never cover the board",Rect.intersects(actions,board))
+            assertTrue("Piece actions sit in the dock under the board",actions.top>=board.bottom-2&&actions.left<board.centerX())
             val removal=find(By.desc("移回")).visibleBounds
             assertTrue("Removal follows same board action group: $actions, $removal",actions.contains(removal.centerX(),removal.centerY()))
-            assertTrue(board.contains(removal))
             for(r in listOf(left,right)){assertTrue("Comfortable rotation target",r.width()>=110&&r.height()>=110);assertTrue(r.right<=device.displayWidth)}
             capture("04-native-selected-90")
 
-            // Tapping the selected tile again dismisses its controls; the next tap brings them back.
-            cell(1,1);expectGone("拼板操作");expectBoard("1号，第2行第2列，90度")
-            cell(1,1);tap("逆时针旋转90度");expectBoard("1号，第2行第2列，0度")
-            tap("顺时针旋转90度");expectBoard("1号，第2行第2列，90度");tap("顺时针旋转90度")
-            expectBoard("1号，第2行第2列，180度")
+            // Tapping the selected tile again turns it a quarter, like the dock's clockwise button.
+            cell(1,1);expectBoard("1号，第2行第2列，180度")
+            tap("逆时针旋转90度");expectBoard("1号，第2行第2列，90度")
+            tap("顺时针旋转90度");expectBoard("1号，第2行第2列，180度")
             capture("05-native-rotated-placed")
             tap("撤销");expectBoard("1号，第2行第2列，90度")
 
             tap("拼板 5");cell(0,3);expectBoard("5号，第4行第1列，0度")
-            // This tile is already selected; its compact controls can occupy its face.
+            // The just-placed tile stays selected; the dock turns it without a second tap.
             tap("顺时针旋转90度");expectBoard("5号，第2行第1列，90度")
             tap("逆时针旋转90度");expectBoard("5号，第2行第1列，0度");capture("06-native-edge-rotation")
             // An empty cell only dismisses a placed tile; it never relocates it.
             cell(3,3);expectGone("拼板操作");expectBoard("5号，第2行第1列，0度")
-            cell(0,2);tap("移回");assertFalse(boardState().contains("5号"))
-            tap("拼板 5");cell(0,3);tap("拼板 6")
+            cell(0,1);tap("移回");assertFalse(boardState().contains("5号"))
+            // A moved-back tile stays selected at 0°, so the next board tap places it; tapping its card again would turn it.
+            cell(0,3);expectBoard("5号，第4行第1列，0度");tap("拼板 6")
             capture("07-native-ready")
             beginRecording("challenge-03")
             cell(0,0);observeRun("08-course03",3)
@@ -208,7 +206,7 @@ class EmulatorFlowTest {
         }
         var first=sample();val deadline=SystemClock.uptimeMillis()+2500
         while(!first.running&&SystemClock.uptimeMillis()<deadline){SystemClock.sleep(50);first=sample()}
-        assertTrue("Automatic route animation must start",first.running)
+        assertTrue("Automatic route animation must start: $first",first.running)
         val frozen=first.timer
         assertTrue("Timer must be visible",frozen.isNotEmpty())
         val positions=mutableListOf<Rect>()

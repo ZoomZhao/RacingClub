@@ -74,6 +74,7 @@ class CatalogIntegrationTest {
   Configurator.getInstance().waitForIdleTimeout=100
   context.getSharedPreferences("progress-v1",0).edit().clear().commit()
   context.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
+  useBoardView(context,threeD=true) // the full chapter flow runs on the default perspective board
   ActivityScenario.launch(MainActivity::class.java).use{scenario->
    find(By.text("马术训练场"));expectState("进入挑战 01","未开始");assertFalse("Home must not show help",device.hasObject(By.desc("玩法")));capture("20-catalog-home")
    val brand=find(By.text("♞ RacingClub")).visibleBounds
@@ -97,9 +98,11 @@ class CatalogIntegrationTest {
    capture("23-level80-complete-goals")
    val ids=level.requiredPieces;assertEquals(level.sequence.distinct(),ids);val bounds=ids.map{find(By.desc("拼板 $it")).visibleBounds}
    assertTrue("Second tray row must be reachable",bounds.last().bottom<device.displayHeight)
-   bounds.take(5).zipWithNext().forEach{(a,b)->assertTrue(a.centerX()<b.centerX())}
-   bounds.drop(5).zipWithNext().forEach{(a,b)->assertTrue(a.centerX()<b.centerX())}
-   assertTrue(bounds[5].centerY()>bounds[4].centerY());assertTrue("Uniform tray columns",bounds.maxOf{it.width()}-bounds.minOf{it.width()}<=3)
+   // Column count adapts to the space beside the board; cards still read row by row in challenge order.
+   val rows=bounds.groupBy{it.top/40}.toSortedMap().values.toList()
+   assertTrue("Tray wraps into rows",rows.size>=2)
+   rows.forEach{row->row.zipWithNext().forEach{(a,b)->assertTrue(a.centerX()<b.centerX())}}
+   assertEquals(bounds,rows.flatten());assertTrue("Uniform tray columns",bounds.maxOf{it.width()}-bounds.minOf{it.width()}<=3)
    choose("选择起点","A")
    choose("选择终点","B");capture("24-level80-endpoints")
    tap("返回");tap("进入挑战 80");find(By.text("起点 A"));find(By.text("终点 B"))

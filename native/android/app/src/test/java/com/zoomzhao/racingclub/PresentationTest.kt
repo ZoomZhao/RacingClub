@@ -26,20 +26,6 @@ class PresentationTest {
             }
         }
     }
-    @Test fun everyRoadNumberClearsItsControlsOnAFullyOccupiedBoard() {
-        val rules=RepoData.rules
-        for(unit in listOf(52f,56f,74f,100f))for(id in 1..10)for(r in 0..3){
-            val ids=listOf(id)+(1..10).filter{it!=id}
-            val slots=if(r%2==0)(0..3).flatMap{y->listOf(Placement(0,0,y,r),Placement(0,2,y,r))}+listOf(Placement(0,4,0,1),Placement(0,4,2,1))
-                else (0..1).flatMap{y->(0..4).map{x->Placement(0,x,y*2,r)}}
-            val all=slots.mapIndexed{i,p->p.copy(id=ids[i])};val p=all.first()
-            val a=pieceActionAnchor(p,unit,all)
-            assertTrue(a.inside)
-            val blocked=androidx.compose.ui.geometry.Rect(a.left/unit-p.x-.35f,a.top/unit-p.y-.35f,(a.left+a.width)/unit-p.x-.35f,(a.top+a.height)/unit-p.y-.35f)
-            val label=roadNumberLayout(rules,p,listOf(blocked))
-            assertFalse("$id/$r at $unit: controls cover the number",label.bounds.overlaps(blocked))
-        }
-    }
     @Test fun allGoalPositionsSurviveWrappingAtLandscapeWidthsAndLargerFonts() {
         for(count in 3..20)for(width in listOf(240f,360f,520f,620f,800f))for(scale in listOf(1f,1.3f,1.6f,2f)){
             val rows=courseRows(count,width,scale)

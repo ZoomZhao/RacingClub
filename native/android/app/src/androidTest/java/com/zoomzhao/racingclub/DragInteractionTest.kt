@@ -25,6 +25,7 @@ class DragInteractionTest {
     @Before fun cleanSession() {
         ins.targetContext.getSharedPreferences("progress-v1",0).edit().clear().commit()
         ins.targetContext.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
+        useBoardView(ins.targetContext)
     }
     private var down=0L
     private fun node(label:String):UiObject2 {
@@ -84,14 +85,14 @@ class DragInteractionTest {
     private fun expectActions() {node("拼板操作")}
     private fun center(label:String)=node(label).visibleBounds.let{PointF(it.exactCenterX(),it.exactCenterY())}
     private fun anchor(x:Float,y:Float)=node("棋盘").visibleBounds.let{val u=it.width()/5.7f;PointF(it.left+(x+.35f)*u,it.top+(y+.35f)*u)}
-    private fun assertPieceActions(p:Placement) {
-        val b=node("棋盘").visibleBounds;val u=b.width()/5.7f
-        val rect=Rect((b.left+(p.x+.35f)*u).toInt(),(b.top+(p.y+.35f)*u).toInt(),(b.left+(p.x+.35f+if(p.r%2==0)2 else 1)*u).toInt(),(b.top+(p.y+.35f+if(p.r%2==0)1 else 2)*u).toInt())
+    /** Tile actions live in the fixed dock under the board, never over a tile. */
+    private fun assertDockActions() {
+        val b=node("棋盘").visibleBounds
         val bar=node("拼板操作").visibleBounds
-        assertTrue("Actions stay on board",b.contains(bar))
-        if(Rect.intersects(rect,bar))assertTrue("Crowded actions stay within their owner",rect.contains(bar))
+        assertFalse("Dock never covers the board: $bar vs $b",Rect.intersects(b,bar))
+        assertTrue("Dock sits under the board",bar.top>=b.bottom-2)
         val controls=listOf("逆时针旋转90度","顺时针旋转90度","移回").map{node(it).visibleBounds}
-        for(r in controls){assertTrue("Contextual hit target stays on board: $bar, $r",b.contains(r));assertTrue(bar.contains(r.centerX(),r.centerY()));assertTrue(r.width()>=110&&r.height()>=110)}
+        for(r in controls){assertTrue(bar.contains(r.centerX(),r.centerY()));assertTrue(r.width()>=110&&r.height()>=110&&r.bottom<=device.displayHeight)}
         assertEquals(controls.map{it.centerX()}.sorted(),controls.map{it.centerX()})
     }
     @Test fun trayAndBoardDragPreviewStacksUndoAndCancel() {
@@ -109,7 +110,7 @@ class DragInteractionTest {
             assertTrue(device.takeScreenshot(File(dir,"55-drag-valid-preview.png")))
             event(MotionEvent.ACTION_UP,first);SystemClock.sleep(220)
             scenario.onActivity{assertEquals(listOf(Placement(1,1,1,0)),s.placed);assertEquals(1,s.moves)}
-            assertPieceActions(Placement(1,1,1,0))
+            assertDockActions()
             assertTrue(device.takeScreenshot(File(dir,"56-drag-placed-controls.png")))
 
             val moved=anchor(3f,2.5f)
@@ -139,17 +140,17 @@ class DragInteractionTest {
             // Top and bottom edge placements keep all contextual operations reachable.
             val topLeft=anchor(1f,.5f)
             dragTo(first,topLeft);event(MotionEvent.ACTION_UP,topLeft);SystemClock.sleep(180)
-            assertPieceActions(Placement(1,0,0,0))
+            assertDockActions()
             assertTrue(device.takeScreenshot(File(dir,"58-drag-edge-controls.png")))
             val bottomRight=anchor(4f,3.5f)
             dragTo(topLeft,bottomRight);event(MotionEvent.ACTION_UP,bottomRight);SystemClock.sleep(150)
-            assertPieceActions(Placement(1,3,3,0))
+            assertDockActions()
             node("移回").click();SystemClock.sleep(150)
             scenario.onActivity{assertTrue("Remove acts on selected board piece",s.placed.isEmpty())}
             expectNoActions()
             node("撤销").click();SystemClock.sleep(150)
             scenario.onActivity{assertEquals(listOf(Placement(1,3,3,0)),s.placed)}
-            assertPieceActions(Placement(1,3,3,0))
+            assertDockActions()
             assertTrue(device.takeScreenshot(File(dir,"61-board-actions-bottom-edge.png")))
             File(dir,"drag-report.json").writeText("""{"passed":true,"input":"native continuous MotionEvent","checks":["tray to board","board relocation","live uncommitted preview","amber stacking preview and committed overlap","invalid drops preserve position and move count","undo one successful drag","out of bounds","gesture cancellation","rotation and removal follow selected board piece; top and bottom edges; removal hides actions; undo restores"]}""")
         }
@@ -165,7 +166,7 @@ class DragInteractionTest {
             val target=anchor(1f,.5f)
             dragTo(center("拼板 10"),target);event(MotionEvent.ACTION_UP,target);SystemClock.sleep(200)
             scenario.onActivity{assertEquals(listOf(Placement(10,0,0,0)),s.placed)}
-            assertPieceActions(Placement(10,0,0,0))
+            assertDockActions()
             node("顺时针旋转90度").click();SystemClock.sleep(120)
             scenario.onActivity{assertEquals(Placement(10,0,0,1),s.placed.single())}
             assertTrue(device.takeScreenshot(File(dir,"59-long-goals-second-row.png")))
@@ -191,7 +192,7 @@ class DragInteractionTest {
         val dir=File(ins.targetContext.getExternalFilesDir(null),"validation").apply{mkdirs()}
         ActivityScenario.launch(MainActivity::class.java).use{scenario->
             lateinit var s:GameState
-            // Nothing selected, so the first board tap selects the top tile (a second tap would dismiss).
+            // Nothing selected, so the first board tap selects the top tile (a second tap would turn it).
             scenario.onActivity{a->s=GameState(a,loadRules(a),LocalLeaderboard(a));s.start(s.rules.levels[2]);s.select(1);s.place(0,0);s.select(5);s.place(0,0);s.clearSelection();a.setContent{MaterialTheme(typography=ClubTypography){RacingApp(s)}}}
             node("棋盘")
             assertTrue(device.hasObject(By.text("被遮挡")))
@@ -215,19 +216,24 @@ class DragInteractionTest {
                 for(id in 1..10){s.select(id);s.place(3,3)}
                 assertEquals(10,s.placed.size);assertNull("Overlaps never auto-complete",s.trace())
             }
-            node("顺时针旋转90度").click();SystemClock.sleep(160)
-            scenario.onActivity{assertEquals(Placement(10,3,2,1),s.placed.last());assertTrue(s.message.isEmpty())}
-            assertPieceActions(Placement(10,3,2,1))
+            fun turn(label:String,quarter:Int){
+                var before=Placement(0,0,0,0);scenario.onActivity{before=s.placed.last()}
+                node(label).click();SystemClock.sleep(150)
+                scenario.onActivity{assertEquals("$label from $before",s.rules.turnedInside(before,quarter),s.placed.last());assertTrue("Edge turns stay on the board",s.placed.all{s.rules.fits(it)});assertTrue(s.message.isEmpty())}
+            }
+            // The quarter turn pivots on a tile corner; at the bottom edge it uses the first corner that stays on the board.
+            turn("顺时针旋转90度",1)
+            scenario.onActivity{assertEquals(Placement(10,3,1,1),s.placed.last())}
+            assertDockActions()
             assertTrue(device.takeScreenshot(File(dir,"64-ten-stack-bottom-rotation.png")))
-            node("逆时针旋转90度").click();SystemClock.sleep(120)
-            scenario.onActivity{assertEquals(Placement(10,3,3,0),s.placed.last())}
-            node("顺时针旋转90度").click();SystemClock.sleep(100)
-            scenario.onActivity{s.place(4,2)}
-            node("逆时针旋转90度").click();SystemClock.sleep(120)
-            scenario.onActivity{assertEquals(Placement(10,2,2,0),s.placed.last());assertTrue("Right-edge turn stays on the board",s.placed.all{s.rules.fits(it)})}
+            turn("逆时针旋转90度",-1)
+            scenario.onActivity{assertTrue(s.placePiece(Placement(10,4,2,1)))}
+            turn("逆时针旋转90度",-1)
+            turn("顺时针旋转90度",1)
             node("撤销").click();SystemClock.sleep(120)
-            scenario.onActivity{assertEquals(Placement(10,4,2,1),s.placed.last())}
-            assertPieceActions(Placement(10,4,2,1))
+            node("撤销").click();SystemClock.sleep(120)
+            scenario.onActivity{assertEquals("Edge undo restores the exact anchor",Placement(10,4,2,1),s.placed.last())}
+            assertDockActions()
             assertTrue(device.takeScreenshot(File(dir,"65-ten-stack-right-rotation-undo.png")))
             File(dir,"stack-report.json").writeText("""{"passed":true,"checks":["topmost board hit","covered tile rack status","tap rack to raise hidden piece","stack save and restore","removing top reveals lower piece","undo restores stack order","ten overlapping tiles","bottom and right edge rotations in both directions","edge undo restores exact anchor","overlap blocks automatic completion"]}""")
         }
@@ -276,18 +282,18 @@ class DragInteractionTest {
                 val shifted=PointF(at.x+jitter,at.y);event(MotionEvent.ACTION_MOVE,shifted);event(MotionEvent.ACTION_UP,shifted);SystemClock.sleep(100)
                 scenario.onActivity{assertEquals(0,s.moves);assertTrue("Rack jitter is not an invalid drop",s.message.isEmpty());assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
             }
-            // Dragging across an action face remains a move, not an accidental rotation.
-            val from=center("顺时针旋转90度");val u=node("棋盘").visibleBounds.width()/5.7f
+            // Dragging the selected tile is a move, never the tap-again rotation.
+            val from=anchor(1f,2.5f);val u=node("棋盘").visibleBounds.width()/5.7f
             val to=PointF(from.x+u,from.y);dragTo(from,to);event(MotionEvent.ACTION_UP,to);SystemClock.sleep(180)
             scenario.onActivity{assertEquals(Placement(5,1,2,0),s.placed.last());assertEquals(1,s.moves)}
             node("撤销").click();SystemClock.sleep(120)
             scenario.onActivity{assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
-            File(dir,"selection-report.json").writeText("""{"passed":true,"checks":["fully occupied board","all ten pieces selectable on press","board and rack tolerate 10dp jitter without moving or rotating","toolbar avoids neighboring pieces","horizontal and vertical fallback preserve number","drag through action face moves without rotating","undo restores layout"]}""")
+            File(dir,"selection-report.json").writeText("""{"passed":true,"checks":["fully occupied board","all ten pieces selectable on press","board and rack tolerate 10dp jitter without moving or rotating","dragging the selected tile moves without rotating","undo restores layout"]}""")
         }
     }
 
 
-    @Test fun fullBoardSelectionDismissesByTappingTheTileItsNumberOrTheFrame() {
+    @Test fun fullBoardSecondTapTurnsAndFrameOrEmptyCellDismisses() {
         Configurator.getInstance().waitForIdleTimeout=100
         val fixture=(0..3).flatMap{y->listOf(Placement(y*2+1,0,y,0),Placement(y*2+2,2,y,0))}+listOf(Placement(9,4,0,1),Placement(10,4,2,1))
         val dir=File(ins.targetContext.getExternalFilesDir(null),"validation").apply{mkdirs()}
@@ -295,22 +301,18 @@ class DragInteractionTest {
             lateinit var s:GameState
             scenario.onActivity{a->s=GameState(a,loadRules(a),LocalLeaderboard(a));s.start(s.rules.levels[75]);s.level=s.level.copy(sequence=(1..10).toList());s.placed=fixture;s.moves=0;s.select(1);a.setContent{MaterialTheme(typography=ClubTypography){RacingApp(s)}}}
             node("棋盘");expectActions()
-            // Any point of tile 1 outside its own control bar reaches the board Canvas.
             val b=node("棋盘").visibleBounds;val u=b.width()/5.7f
-            val bar=node("拼板操作").visibleBounds
-            fun gap(p:PointF)=maxOf(bar.left-p.x,p.x-bar.right,bar.top-p.y,p.y-bar.bottom)
-            val free=(1..9).flatMap{i->(1..4).map{j->PointF(b.left+(.35f+i*.2f)*u,b.top+(.35f+j*.2f)*u)}}.maxBy{gap(it)}
-            assertTrue("Tile keeps an uncovered face",gap(free)>0)
-            tapAt(free);expectNoActions()
-            scenario.onActivity{assertNull("Second tap dismisses",s.selected);assertEquals(0,s.moves);assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
-            assertTrue(device.takeScreenshot(File(dir,"70-full-board-dismissed.png")))
-            tapAt(free);expectActions()
-            scenario.onActivity{assertEquals(1,s.selected)}
-            // The tray number toggles a placed tile the same way.
-            node("拼板 1").click();expectNoActions();scenario.onActivity{assertNull(s.selected)}
-            node("拼板 1").click();expectActions();scenario.onActivity{assertEquals(1,s.selected)}
-            node("顺时针旋转90度").click();SystemClock.sleep(150)
-            scenario.onActivity{assertEquals(Placement(1,0,0,1),s.placed.last());assertEquals(1,s.moves)}
+            var turned=Placement(1,0,0,1)
+            scenario.onActivity{turned=s.rules.turnedInside(fixture.first(),s.turnMode.tapTurn())}
+            // The whole tile face is a turn target: nothing on the board covers it.
+            tapAt(anchor(.5f,.5f));expectActions()
+            scenario.onActivity{assertEquals("Second tap turns",turned,s.placed.last());assertEquals(1,s.selected);assertEquals(1,s.moves)}
+            assertTrue(device.takeScreenshot(File(dir,"70-full-board-tap-turn.png")))
+            node("撤销").click();SystemClock.sleep(150)
+            scenario.onActivity{assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id});assertEquals(0,s.moves)}
+            // The tray card turns a selected placed tile the same way.
+            node("拼板 1").click();SystemClock.sleep(150)
+            scenario.onActivity{assertEquals(turned,s.placed.last());assertEquals(1,s.moves)}
             node("撤销").click();SystemClock.sleep(150)
             // The bare wooden frame between entries dismisses; nothing moves.
             tapAt(PointF(b.left+.15f*u,b.top+2.35f*u));expectNoActions()
@@ -320,7 +322,7 @@ class DragInteractionTest {
             expectActions()
             tapAt(anchor(4.5f,3.5f));expectNoActions()
             scenario.onActivity{assertNull(s.selected);assertEquals(Placement(1,0,0,0),s.placed.single{it.id==1});assertEquals("Undo restored the count and the tap added none",0,s.moves)}
-            File(dir,"selection-exit-report.json").writeText("""{"passed":true,"checks":["second tap on selected tile hides actions","tray number toggles placed tile","bare frame dismisses","empty cell dismisses without moving","no move counted"]}""")
+            File(dir,"selection-exit-report.json").writeText("""{"passed":true,"checks":["second tap on selected tile turns it","tray card turns placed tile","bare frame dismisses","empty cell dismisses without moving","undo restores the count"]}""")
         }
     }
 
