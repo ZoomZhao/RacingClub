@@ -322,13 +322,68 @@ internal fun ScenePainter.paintHorse3D(pose:HorsePose,sprites:GameSprites,drawSp
     val foot=V3(pose.at.x+.35f,ground,pose.at.y+.35f)
     val px=camera.pixelsPerUnit(foot)
     shadow(roundedOutline(foot.x-.26f,foot.z-.1f,foot.x+.26f,foot.z+.1f,.1f,3),ground,Offset(.03f,.04f),if(pose.jump>0f).14f else .28f,px*.06f)
-    val lifted=foot+V3(0f,pose.jump*.42f,0f)
+    // A gallop bobs the body a little; a jump lifts it clear of the rail.
+    val lifted=foot+V3(0f,pose.jump*.42f+(if(pose.jump>0f)0f else pose.gait*.045f),0f)
     val base=camera.project(lifted)
     val ahead=camera.project(lifted+V3(pose.direction.x,0f,pose.direction.y)*.2f)
     val heading=horseHeading(ahead.x-base.x,ahead.y-base.y)
     val sprite=sprites.horses.getValue(heading)
-    val height=px*.78f;val width=height*sprite.size.width/sprite.size.height.coerceAtLeast(1)
+    val height=px*.84f;val width=height*sprite.size.width/sprite.size.height.coerceAtLeast(1)
     drawSprite(sprite,Rect(base.x-width/2,base.y-height*.94f,base.x+width/2,base.y+height*.06f))
+}
+
+/** Run feedback under the horse: the travelled route glows gold, the road ahead is a dashed
+ * guide, hooves kick up dust, and every rail the horse clears bursts in its obstacle color. */
+internal fun ScenePainter.paintRunEffects(rules:Rules,route:List<RouteStep>,progress:Float) {
+    if(route.isEmpty())return
+    val end=route.size-.0001f
+    val cursor=(progress*route.size).coerceIn(0f,end)
+    val ground=TileThickness+.004f
+    fun world(t:Float):V3 {val c=t.coerceIn(0f,end);val p=rules.position(route[c.toInt()],c%1);return V3(p.x+.35f,ground,p.y+.35f)}
+    val px=camera.pixelsPerUnit(V3(2.85f,ground,2.35f))
+    val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.STROKE;strokeCap=Paint.Cap.ROUND;strokeJoin=Paint.Join.ROUND}
+    fun trace(from:Float,to:Float):Path {
+        val line=Path();var t=from;var first=true
+        while(true){val q=camera.project(world(t));if(first)line.moveTo(q.x,q.y)else line.lineTo(q.x,q.y);first=false;if(t>=to)break;t=min(to,t+.06f)}
+        return line
+    }
+    if(cursor<end){
+        paint.color=android.graphics.Color.argb(215,255,252,242);paint.strokeWidth=px*.035f
+        paint.pathEffect=android.graphics.DashPathEffect(floatArrayOf(px*.06f,px*.09f),0f)
+        canvas.drawPath(trace(cursor,end),paint);paint.pathEffect=null
+    }
+    if(cursor>.02f){
+        val done=trace(0f,cursor)
+        paint.color=android.graphics.Color.argb(105,239,188,84);paint.strokeWidth=px*.2f;canvas.drawPath(done,paint)
+        paint.color=android.graphics.Color.argb(240,226,164,52);paint.strokeWidth=px*.07f;canvas.drawPath(done,paint)
+        paint.color=android.graphics.Color.argb(220,255,246,216);paint.strokeWidth=px*.022f;canvas.drawPath(done,paint)
+    }
+    val dot=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.FILL}
+    // Dust: puffs left behind along the road, larger and fainter the older they are.
+    for(k in 1..6){
+        val back=cursor-k*.05f;if(back<=0f)break
+        val q=camera.project(world(back)+V3(0f,.03f+k*.012f,0f))
+        dot.color=android.graphics.Color.argb((92-k*13).coerceAtLeast(0),205,172,122)
+        canvas.drawCircle(q.x+sin(k*2.1f+cursor*9f)*px*.025f,q.y,px*(.028f+k*.013f),dot)
+    }
+    // Rail bursts: a ring and sparks in the obstacle's color, for half a road after the jump.
+    route.forEachIndexed{i,step->
+        if(step.jump==null)return@forEachIndexed
+        val road=rules.road(step);val at=road.jumpAt?:.5f
+        val crossing=i+if(step.from==road.from)at else 1-at
+        val t=(cursor-crossing)/.5f
+        if(t<0f||t>1f)return@forEachIndexed
+        val color=android.graphics.Color.parseColor(rules.pieces.getValue(step.p.id).color)
+        val center=camera.project(world(crossing)+V3(0f,.22f,0f))
+        val fade=((1f-t)*255).roundToInt().coerceIn(0,255)
+        paint.color=(color and 0xffffff) or (fade*3/4 shl 24);paint.strokeWidth=px*.035f*(1.2f-t)
+        canvas.drawCircle(center.x,center.y,px*(.12f+.42f*t),paint)
+        for(n in 0 until 8){
+            val angle=n*PI.toFloat()/4+i;val reach=px*(.16f+.5f*t)
+            dot.color=if(n%2==0)((color and 0xffffff) or (fade shl 24))else android.graphics.Color.argb(fade,255,226,140)
+            canvas.drawCircle(center.x+cos(angle)*reach,center.y+sin(angle)*reach*.7f-px*.12f*t,px*.035f*(1.1f-t),dot)
+        }
+    }
 }
 
 /** Bitmaps baked once from the same 2D art the top-down board paints. */

@@ -33,7 +33,6 @@ class EmulatorFlowTest {
         dir.mkdirs()
         context.getSharedPreferences("progress-v1",0).edit().clear().commit()
         context.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
-        useBoardView(context)
     }
     private fun capture(name:String) {
         assertTrue("Screenshot $name",device.takeScreenshot(File(dir,"$name.png")))
@@ -67,9 +66,9 @@ class EmulatorFlowTest {
     }
     private fun boardState()=nodeState("棋盘")
     private fun cell(x:Int,y:Int) {
-        val b=find(By.desc("棋盘")).visibleBounds
-        val unit=b.width()/5.7f
-        device.click((b.left+unit*(x+.85f)).toInt(),(b.top+unit*(y+.85f)).toInt())
+        find(By.desc("棋盘"))
+        val p=requireNotNull(BoardProbe.frameToRoot)(x+.85f,y+.85f)
+        device.click(p.x.toInt(),p.y.toInt())
         SystemClock.sleep(180)
     }
     private fun expectBoard(fragment:String) {

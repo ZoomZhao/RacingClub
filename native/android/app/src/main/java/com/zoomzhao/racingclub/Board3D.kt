@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.*
 
 /** Where the horse is on its route at [progress], or null when no run is playing. */
-internal data class HorsePose(val at:Point,val direction:Point,val jump:Float,val heading:HorseHeading)
+/** [gait] runs 0→1→0 once per stride, so the body can bob and kick up dust in rhythm. */
+internal data class HorsePose(val at:Point,val direction:Point,val jump:Float,val heading:HorseHeading,val gait:Float=0f)
 internal fun horsePose(s:GameState,progress:Float):HorsePose? {
     val route=s.activeRoute
     if(!s.running||route.isEmpty())return null
@@ -43,7 +44,7 @@ internal fun horsePose(s:GameState,progress:Float):HorsePose? {
     val direction=Point((after.x-before.x)/length,(after.y-before.y)/length)
     val road=s.rules.road(step);val along=if(step.from==road.from)cursor%1 else 1-cursor%1
     val jump=if(step.jump!=null)sin(PI.toFloat()*max(0f,1-abs(along-(road.jumpAt?:.5f))*8))else 0f
-    return HorsePose(raw,direction,jump,horseHeading(direction.x,direction.y))
+    return HorsePose(raw,direction,jump,horseHeading(direction.x,direction.y),abs(sin(cursor*PI.toFloat()*2.6f)))
 }
 
 private fun bake(width:Int,height:Int,block:DrawScope.()->Unit):Bitmap {
@@ -108,6 +109,10 @@ internal suspend fun PointerInputScope.boardGestures(s:GameState,drag:BoardDrag,
     }
 }
 
+/** Where a board-frame point (x, z on the tile surface) lands in root pixels on the current
+ * board. Instrumented tests use it to aim real touches at cells of the perspective board. */
+internal object BoardProbe {@Volatile var frameToRoot:((Float,Float)->Offset)?=null}
+
 /** Perspective board. Static scene and moving overlay are separate layers, so a finger
  * move redraws only the lifted tile and its landing preview. */
 @Composable internal fun NativeBoard3D(s:GameState,progress:Float,modifier:Modifier,drag:BoardDrag) {
@@ -124,6 +129,7 @@ internal suspend fun PointerInputScope.boardGestures(s:GameState,drag:BoardDrag,
             val origin=root
             drag.board=camera.boardBounds().translate(origin)
             drag.toFrame={p->camera.toFrame(p-origin,TileThickness)}
+            BoardProbe.frameToRoot={x,z->origin+camera.project(V3(x,TileThickness,z))}
         }.semantics {
             contentDescription="棋盘"
             stateDescription=s.placed.joinToString("；"){"${it.id}号，第${it.y+1}行第${it.x+1}列，${it.r*90}度"+if(s.rules.coveredBy(it,s.placed).isNotEmpty())"，下层被遮挡"else""}.ifEmpty{"空棋盘"}
@@ -142,7 +148,10 @@ internal suspend fun PointerInputScope.boardGestures(s:GameState,drag:BoardDrag,
                     painter.paintDragPreview(s,p,drag.frame(drag.pointer),drag.grabCells,textures,drag.problem(s).isNotEmpty())
                 }
             }
-            horsePose(s,progress)?.let{pose->painter.paintHorse3D(pose,sprites){sprite,box->paintSprite(sprite,box)}}
+            if(s.running){
+                painter.paintRunEffects(s.rules,s.activeRoute,progress)
+                horsePose(s,progress)?.let{pose->painter.paintHorse3D(pose,sprites){sprite,box->paintSprite(sprite,box)}}
+            }
         }
         horsePose(s,progress)?.let{pose->
             val foot=camera.project(V3(pose.at.x+.35f,TileThickness,pose.at.y+.35f))

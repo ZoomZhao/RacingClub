@@ -38,7 +38,6 @@ class AccessibilityBoardTest {
     @Test fun boardTilesExposeSelectionAndActionsWithoutBlockingTouch() {
         Configurator.getInstance().waitForIdleTimeout=100
         ins.targetContext.getSharedPreferences("progress-v1",0).edit().clear().commit()
-        useBoardView(ins.targetContext,threeD=true)
         val dir=File(ins.targetContext.getExternalFilesDir(null),"validation").apply{mkdirs()}
         ActivityScenario.launch(MainActivity::class.java).use{scenario->
             lateinit var s:GameState

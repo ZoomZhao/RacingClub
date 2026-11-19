@@ -20,7 +20,6 @@ class LifecycleRegressionTest {
         Configurator.getInstance().waitForIdleTimeout=100
         ins.targetContext.getSharedPreferences("progress-v1",0).edit().clear().commit()
         ins.targetContext.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
-        useBoardView(ins.targetContext)
     }
     private fun find(selector:BySelector,timeout:Long=7000):UiObject2 {
         val end=SystemClock.uptimeMillis()+timeout

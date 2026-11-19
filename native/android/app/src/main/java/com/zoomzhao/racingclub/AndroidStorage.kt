@@ -30,7 +30,6 @@ class SharedPreferencesProgressStore(context:Context):ProgressStore {
 }
 
 private const val TURN_MODE_KEY="turn-mode"
-private const val BOARD_VIEW_KEY="board-view"
 
 internal fun loadTurnMode(context:Context):TurnMode=
  when(context.applicationContext.getSharedPreferences("settings-v1",Context.MODE_PRIVATE).getString(TURN_MODE_KEY,"both")){
@@ -41,14 +40,6 @@ internal fun saveTurnMode(context:Context,mode:TurnMode){
  context.applicationContext.getSharedPreferences("settings-v1",Context.MODE_PRIVATE).edit().putString(TURN_MODE_KEY,when(mode){TurnMode.CLOCKWISE->"cw";TurnMode.COUNTERCLOCKWISE->"ccw";TurnMode.BOTH->"both"}).apply()
 }
 
-internal fun loadBoardView3d(context:Context)=
- context.applicationContext.getSharedPreferences("settings-v1",Context.MODE_PRIVATE).getString(BOARD_VIEW_KEY,"3d")!="2d"
-internal fun saveBoardView3d(context:Context,threeD:Boolean){
- context.applicationContext.getSharedPreferences("settings-v1",Context.MODE_PRIVATE).edit().putString(BOARD_VIEW_KEY,if(threeD)"3d" else "2d").apply()
-}
-
 /** Convenience for the app and instrumented tests: real storage and the monotonic clock. */
 fun GameState(context:Context,rules:Rules,repository:LeaderboardRepository)=
- GameState(rules,repository,SharedPreferencesProgressStore(context),loadTurnMode(context),{saveTurnMode(context,it)},SystemClock::elapsedRealtime).apply{
-  view3d=loadBoardView3d(context);onBoardViewChange={saveBoardView3d(context,it)}
- }
+ GameState(rules,repository,SharedPreferencesProgressStore(context),loadTurnMode(context),{saveTurnMode(context,it)},SystemClock::elapsedRealtime)

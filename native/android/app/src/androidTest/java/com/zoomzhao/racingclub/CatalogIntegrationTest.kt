@@ -74,7 +74,6 @@ class CatalogIntegrationTest {
   Configurator.getInstance().waitForIdleTimeout=100
   context.getSharedPreferences("progress-v1",0).edit().clear().commit()
   context.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
-  useBoardView(context,threeD=true) // the full chapter flow runs on the default perspective board
   ActivityScenario.launch(MainActivity::class.java).use{scenario->
    find(By.text("马术训练场"));expectState("进入挑战 01","未开始");assertFalse("Home must not show help",device.hasObject(By.desc("玩法")));capture("20-catalog-home")
    val brand=find(By.text("♞ RacingClub")).visibleBounds

@@ -25,7 +25,6 @@ class DragInteractionTest {
     @Before fun cleanSession() {
         ins.targetContext.getSharedPreferences("progress-v1",0).edit().clear().commit()
         ins.targetContext.getSharedPreferences("leaderboard-v1",0).edit().clear().commit()
-        useBoardView(ins.targetContext)
     }
     private var down=0L
     private fun node(label:String):UiObject2 {
@@ -84,7 +83,9 @@ class DragInteractionTest {
     private fun tapAt(p:PointF){down=SystemClock.uptimeMillis();event(MotionEvent.ACTION_DOWN,p);SystemClock.sleep(60);event(MotionEvent.ACTION_UP,p);SystemClock.sleep(200)}
     private fun expectActions() {node("拼板操作")}
     private fun center(label:String)=node(label).visibleBounds.let{PointF(it.exactCenterX(),it.exactCenterY())}
-    private fun anchor(x:Float,y:Float)=node("棋盘").visibleBounds.let{val u=it.width()/5.7f;PointF(it.left+(x+.35f)*u,it.top+(y+.35f)*u)}
+    private fun frame(x:Float,y:Float):PointF{node("棋盘");val p=requireNotNull(BoardProbe.frameToRoot)(x,y);return PointF(p.x,p.y)}
+    /** Cell coordinates on the perspective board; (0, 0) is the top-left cell's corner. */
+    private fun anchor(x:Float,y:Float)=frame(x+.35f,y+.35f)
     /** Tile actions live in the fixed dock under the board, never over a tile. */
     private fun assertDockActions() {
         val b=node("棋盘").visibleBounds
@@ -283,8 +284,8 @@ class DragInteractionTest {
                 scenario.onActivity{assertEquals(0,s.moves);assertTrue("Rack jitter is not an invalid drop",s.message.isEmpty());assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
             }
             // Dragging the selected tile is a move, never the tap-again rotation.
-            val from=anchor(1f,2.5f);val u=node("棋盘").visibleBounds.width()/5.7f
-            val to=PointF(from.x+u,from.y);dragTo(from,to);event(MotionEvent.ACTION_UP,to);SystemClock.sleep(180)
+            val from=anchor(1f,2.5f)
+            val to=anchor(2f,2.5f);dragTo(from,to);event(MotionEvent.ACTION_UP,to);SystemClock.sleep(180)
             scenario.onActivity{assertEquals(Placement(5,1,2,0),s.placed.last());assertEquals(1,s.moves)}
             node("撤销").click();SystemClock.sleep(120)
             scenario.onActivity{assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
@@ -301,7 +302,6 @@ class DragInteractionTest {
             lateinit var s:GameState
             scenario.onActivity{a->s=GameState(a,loadRules(a),LocalLeaderboard(a));s.start(s.rules.levels[75]);s.level=s.level.copy(sequence=(1..10).toList());s.placed=fixture;s.moves=0;s.select(1);a.setContent{MaterialTheme(typography=ClubTypography){RacingApp(s)}}}
             node("棋盘");expectActions()
-            val b=node("棋盘").visibleBounds;val u=b.width()/5.7f
             var turned=Placement(1,0,0,1)
             scenario.onActivity{turned=s.rules.turnedInside(fixture.first(),s.turnMode.tapTurn())}
             // The whole tile face is a turn target: nothing on the board covers it.
@@ -315,7 +315,7 @@ class DragInteractionTest {
             scenario.onActivity{assertEquals(turned,s.placed.last());assertEquals(1,s.moves)}
             node("撤销").click();SystemClock.sleep(150)
             // The bare wooden frame between entries dismisses; nothing moves.
-            tapAt(PointF(b.left+.15f*u,b.top+2.35f*u));expectNoActions()
+            tapAt(frame(.15f,2.35f));expectNoActions()
             scenario.onActivity{assertNull(s.selected);assertEquals(fixture.associateBy{it.id},s.placed.associateBy{it.id})}
             // With a free cell, tapping it only dismisses a placed tile.
             scenario.onActivity{s.placed=fixture.filter{it.id!=10};s.select(1)}

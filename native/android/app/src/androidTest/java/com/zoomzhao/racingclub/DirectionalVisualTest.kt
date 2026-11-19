@@ -56,7 +56,7 @@ class DirectionalVisualTest {
                         MaterialTheme(typography=ClubTypography){Surface(color=Paper){
                             Column(Modifier.fillMaxSize().padding(horizontal=28.dp,vertical=12.dp),horizontalAlignment=Alignment.CenterHorizontally) {
                                 Text("门位置验证 · $gate",fontSize=18.sp,lineHeight=24.sp,color=Green,fontWeight=FontWeight.Bold)
-                                NativeBoard(state,0f,Modifier.weight(1f).fillMaxWidth())
+                                NativeBoard3D(state,0f,Modifier.weight(1f).fillMaxWidth(),BoardDrag())
                             }
                         }}
                     }
