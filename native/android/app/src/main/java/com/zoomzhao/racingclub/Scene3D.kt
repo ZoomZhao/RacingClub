@@ -167,7 +167,58 @@ internal fun argb(hex:String)=android.graphics.Color.parseColor(hex)
 internal fun tileTextureCorners(rules:Rules,p:Placement,x:Float,z:Float,y:Float):List<V3> =
     listOf(Point(0f,0f),Point(2f,0f),Point(2f,1f),Point(0f,1f)).map{c->val q=rules.rotate(c,p.r);V3(x+q.x,y,z+q.y)}
 
-/** The striped obstacle rail standing on a tile: two posts and a pole between them. */
+/** Channel-wise blend of two colors; keeps [from]'s alpha. */
+internal fun mix(from:Int,to:Int,t:Float):Int {
+    fun c(shift:Int)=(((from shr shift) and 255)+((((to shr shift) and 255)-((from shr shift) and 255))*t)).roundToInt().coerceIn(0,255)
+    return (from and 0xff000000.toInt()) or (c(16) shl 16) or (c(8) shl 8) or c(0)
+}
+private const val Black=0xff000000.toInt()
+private const val White=0xffffffff.toInt()
+
+/** Rounded footprint of [orientedOutline]: [axis] runs along the long side. */
+internal fun roundedOriented(center:Offset,axis:Offset,halfAlong:Float,halfAcross:Float,radius:Float):List<Offset> {
+    val n=Offset(-axis.y,axis.x)
+    return roundedOutline(-halfAlong,-halfAcross,halfAlong,halfAcross,radius,3).map{center+axis*it.x+n*it.y}
+}
+
+/** A round bar from [a] to [b], shaded like a lit cylinder: a soft highlight on the side
+ * facing the board light, the body color, then a falloff into its shadow side. */
+internal fun ScenePainter.tube(a:V3,b:V3,radius:Float,argb:Int) {
+    val p=camera.project(a);val q=camera.project(b)
+    val length=(q-p).getDistance()
+    val d=if(length<.01f)Offset(1f,0f)else (q-p)/length
+    // The board light comes from the upper left of the screen.
+    var n=Offset(-d.y,d.x);if(n.x*-.38f+n.y*-1f<0f)n=-n
+    val wa=camera.pixelsPerUnit(a)*radius;val wb=camera.pixelsPerUnit(b)*radius
+    val m=(p+q)/2f;val w=(wa+wb)/2
+    val outline=Path().apply{moveTo(p.x+n.x*wa,p.y+n.y*wa);lineTo(q.x+n.x*wb,q.y+n.y*wb);lineTo(q.x-n.x*wb,q.y-n.y*wb);lineTo(p.x-n.x*wa,p.y-n.y*wa);close()}
+    val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.FILL
+        shader=android.graphics.LinearGradient(m.x+n.x*w,m.y+n.y*w,m.x-n.x*w,m.y-n.y*w,
+            intArrayOf(mix(argb,Black,.04f),mix(argb,White,.42f),argb,mix(argb,Black,.22f),mix(argb,Black,.4f)),
+            floatArrayOf(0f,.24f,.5f,.82f,1f),android.graphics.Shader.TileMode.CLAMP)}
+    canvas.drawPath(outline,paint)
+}
+
+/** Flat end of an upright [tube] at [top], seen from above, with a lit rim. */
+internal fun ScenePainter.tubeCap(top:V3,radius:Float,argb:Int) {
+    val c=camera.project(top);val rx=camera.pixelsPerUnit(top)*radius
+    // A horizontal disc foreshortens by the camera's elevation.
+    val ry=abs(camera.project(top+V3(0f,0f,radius)).y-c.y)
+    val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.FILL
+        shader=android.graphics.RadialGradient(c.x-rx*.3f,c.y-ry*.35f,rx*1.3f,intArrayOf(mix(argb,White,.5f),mix(argb,White,.12f),mix(argb,Black,.12f)),floatArrayOf(0f,.55f,1f),android.graphics.Shader.TileMode.CLAMP)}
+    canvas.drawOval(c.x-rx,c.y-ry,c.x+rx,c.y+ry,paint)
+}
+
+/** A small lit sphere, for the finials that top each standard. */
+internal fun ScenePainter.ball(at:V3,radius:Float,argb:Int) {
+    val c=camera.project(at);val r=camera.pixelsPerUnit(at)*radius
+    val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.FILL
+        shader=android.graphics.RadialGradient(c.x-r*.35f,c.y-r*.4f,r*1.45f,intArrayOf(White,argb,mix(argb,Black,.3f)),floatArrayOf(0f,.45f,1f),android.graphics.Shader.TileMode.CLAMP)}
+    canvas.drawCircle(c.x,c.y,r,paint)
+}
+
+/** The striped obstacle rail standing on a tile, built like the tray art: two rounded
+ * colored feet, round standards and a round pole striped in the obstacle color and cream. */
 internal fun ScenePainter.paintRail(rules:Rules,p:Placement,x:Float,z:Float,y:Float) {
     val piece=rules.pieces.getValue(p.id)
     val g=piece.gate;val local=rules.rotate(Point(g[0]/100,g[1]/100),p.r)
@@ -175,20 +226,33 @@ internal fun ScenePainter.paintRail(rules:Rules,p:Placement,x:Float,z:Float,y:Fl
     val angle=(g[2]+p.r*90)*PI.toFloat()/180
     // The 2D rail runs along the local +y axis after rotating by the gate angle.
     val along=Offset(-sin(angle),cos(angle));val across=Offset(along.y,-along.x)
-    val color=argb(piece.color);val white=argb("#fffaf0")
+    val color=argb(piece.color);val cream=argb("#fffaf0")
+    val px=camera.pixelsPerUnit(V3(center.x,y,center.y))
+    val footTop=y+.05f;val poleY=y+.22f;val postTop=y+.36f
+    val postRadius=.04f;val poleRadius=.033f;val half=.3f
+    // Contact shadow of the whole rail, then the two feet, which never overlap anything taller.
+    shadow(roundedOriented(center,along,half+.06f,.11f,.05f),y,Offset(.035f,.06f),.2f,px*.035f)
+    val feet=listOf(-1f,1f).map{center+along*(half*it)}.sortedByDescending{camera.depth(V3(it.x,y,it.y))}
+    for(f in feet){
+        val footprint=roundedOriented(f,across,.095f,.052f,.03f)
+        prism(footprint,y,footTop,color,mix(color,White,.08f),.6f)
+        outline(roundedOriented(f,across,.075f,.034f,.022f).map{V3(it.x,footTop+.001f,it.y)},(cream and 0xffffff) or (70 shl 24),px*.012f)
+    }
     val parts=mutableListOf<Pair<Float,()->Unit>>()
-    for(sign in listOf(-1f,1f)){
-        val c=center+along*(.30f*sign)
-        parts+=camera.depth(V3(c.x,y,c.y)) to {
-            prism(orientedOutline(c,across,.095f,.05f),y,y+.30f,color,color)
+    for(f in feet){
+        parts+=camera.depth(V3(f.x,y,f.y)) to {
+            tube(V3(f.x,footTop-.005f,f.y),V3(f.x,postTop,f.y),postRadius,color)
+            tubeCap(V3(f.x,postTop,f.y),postRadius,color)
+            ball(V3(f.x,postTop+.028f,f.y),.032f,cream)
         }
     }
-    val segments=7;val half=.29f
-    for(i in 0 until segments){
-        val t0=-half+2*half*i/segments;val t1=-half+2*half*(i+1)/segments
-        val c=center+along*((t0+t1)/2)
-        parts+=camera.depth(V3(c.x,y,c.y))+.001f to {
-            prism(orientedOutline(c,along,(t1-t0)/2,.034f),y+.19f,y+.25f,if(i%2==0)color else white,if(i%2==0)color else white,.62f)
+    parts+=camera.depth(V3(center.x,y,center.y))+.001f to {
+        val a=center-along*half;val b=center+along*half
+        tube(V3(a.x,poleY,a.y),V3(b.x,poleY,b.y),poleRadius,color)
+        val segments=7
+        for(i in 1 until segments step 2){
+            val s0=a+(b-a)*(i/segments.toFloat());val s1=a+(b-a)*((i+1)/segments.toFloat())
+            tube(V3(s0.x,poleY,s0.y),V3(s1.x,poleY,s1.y),poleRadius*1.01f,cream)
         }
     }
     parts.sortedByDescending{it.first}.forEach{it.second()}
