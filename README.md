@@ -1,6 +1,6 @@
 # RacingClub
 
-马术路线谜题。Android 使用 Kotlin / Jetpack Compose / Canvas，iOS 使用 Swift / SwiftUI / Canvas，两端都不使用 WebView。浏览器页面只用来核对早期规则，不是移动端的运行容器。
+马术路线谜题。Android 使用 Kotlin / Jetpack Compose / Canvas，iOS 使用 Swift / SwiftUI / Canvas，两端都不使用 WebView。另有独立的 Web 版，参照 Android 实现，适配手机、平板和电脑。
 
 仓库：[ZoomZhao/RacingClub](https://github.com/ZoomZhao/RacingClub)（私有）。80 关数据、参考照片和设计素材纳入版本管理；构建缓存、APK 和模拟器录屏不纳入 Git。
 
@@ -43,13 +43,18 @@ node tools/build-ios.mjs
 
 命令行产物是未签名 `.app`。真机需要在 Xcode 选择开发团队并签名。
 
-## 浏览器核对
+## Web 版
 
 ```sh
 npm start
 ```
 
-打开 `http://localhost:4173`。默认只监听本机。浏览器仍只有挑战 03、04，用来核对早期交互，不代表原生界面。
+打开 `http://localhost:4173`。默认只监听本机。Web 版包含全部 80 关，规则、提示、排行榜和 3D 棋盘与 Android 一致，用 Canvas 2D 绘制，不依赖第三方库。
+
+- `src/rules.js`：不含 DOM 的规则与会话（放置、旋转、撤销、提示、路线判定、计时、本机存档），由 `tests/web-rules.test.mjs` 覆盖。
+- `src/scene.js`：3D 棋盘、障碍、木牌和马的绘制，马使用与 Android 相同的 `horse.bin`。
+- `src/app.js` 与 `src/style.css`：关卡列表、游戏页、结束页和对话框；支持拖拽、点按、键盘（数字选板、R/E/Q 旋转、方向键移动、Delete 移回、Ctrl+Z 撤销、H 提示）。
+- 布局：电脑与平板横屏为棋盘在左、路线和拼板在右；竖屏与手机为上下排列；手机横屏为紧凑双栏。存档保存在 `localStorage` 的 `racingclub.web.v1`。
 
 ## 数据
 

@@ -39,8 +39,8 @@ test('all native road paths preserve reviewed legal turns and exact animation en
 test('browser prototype, export tool and native data share one piece palette',async()=>{
  const palette=read('shared/piece-palette.json');
  assert.equal(palette.schemaVersion,1);
- const {INVENTORY}=await import('../src/game.js');
- assert.deepEqual(INVENTORY,palette.pieces);
+ const {createRules}=await import('../src/rules.js');
+ assert.deepEqual(createRules(data).inventory,palette.pieces);
  assert.deepEqual(data.inventory,palette.pieces);
  for(const p of data.pieces)assert.equal(p.color,palette.pieces.find(i=>i.id===p.id).color);
  assert.doesNotMatch(fs.readFileSync(new URL('../tools/export-game.mjs',import.meta.url),'utf8'),/src\/game\.js/);

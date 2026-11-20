@@ -5,10 +5,10 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('.', import.meta.url)));
-const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.bin': 'application/octet-stream' };
 export function createStaticServer(directory = root) {
  const base = realpathSync(directory);
- const folders = ['src', 'public', 'design'].map(name => resolve(base, name) + sep);
+ const folders = ['src', 'public', 'design', 'shared'].map(name => resolve(base, name) + sep);
  const isPublic = file => file === resolve(base, 'index.html') || folders.some(folder => file.startsWith(folder));
  return http.createServer(async (req, res) => {
   try {

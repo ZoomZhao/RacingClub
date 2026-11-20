@@ -1,365 +1,606 @@
-import { COLS, ROWS, PIECES, GATES, LEVELS, INVENTORY, size, ports, rotatePoint, pathPoint, canPlace, validate, restorePlacements } from './game.js';
+import {
+  createRules, createStore, GameSession, clock, crossingFeedback, numberFace, numberInk, readableInk,
+  pressTile, releaseBoardTap, releaseRackTap, rackPiece, dropCandidate, overFrame, onEntryLetter, fenceLayout,
+  turnActions, AUTO_RUN_DELAY, RUN_MS_PER_STEP,
+} from './rules.js';
+import { Camera, TILE, createTextures, paintTrayTile, renderBoard, renderOverlay, parseHorse, HorseRenderer, signScreenCenter } from './scene.js';
+
+const ICONS = {
+  back: 'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
+  forward: 'M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z',
+  check: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+  clock: 'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z',
+  undo: 'M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z',
+  reset: 'M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
+  hint: 'M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z',
+  cw: 'M15.55 5.55L11 1v3.07C7.06 4.56 4 7.92 4 12s3.05 7.44 7 7.93v-2.02c-2.84-.48-5-2.94-5-5.91s2.16-5.43 5-5.91V10l4.55-4.45zM19.93 11c-.17-1.39-.72-2.73-1.62-3.89l-1.42 1.42c.54.75.88 1.6 1.02 2.47h2.02zM13 17.9v2.02c1.39-.17 2.74-.71 3.9-1.61l-1.44-1.44c-.75.54-1.59.89-2.46 1.03zm3.89-2.42l1.42 1.41c.9-1.16 1.45-2.5 1.62-3.89h-2.02c-.14.87-.48 1.72-1.02 2.48z',
+  ccw: 'M7.11 8.53L5.7 7.11C4.8 8.27 4.24 9.61 4.07 11h2.02c.14-.87.49-1.72 1.02-2.47zM6.09 13H4.07c.17 1.39.72 2.73 1.62 3.89l1.41-1.42c-.52-.75-.87-1.59-1.01-2.47zm1.01 5.32c1.16.9 2.51 1.44 3.9 1.61V17.9c-.87-.15-1.71-.49-2.46-1.03L7.1 18.32zM13 4.07V1L8.45 5.55 13 10V6.09c2.84.48 5 2.94 5 5.91s-2.16 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93s-3.05-7.44-7-7.93z',
+  remove: 'M20.55 5.22l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.15.55L3.46 5.22C3.17 5.57 3 6.01 3 6.5V19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.49-.17-.93-.45-1.28zM12 9.5l5.5 5.5H14v2h-4v-2H6.5L12 9.5zM5.12 5l.82-1h12l.93 1H5.12z',
+  skip: 'M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z',
+  trophy: 'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z',
+  settings: 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
+  help: 'M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z',
+  star: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
+  layers: 'M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z',
+  info: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z',
+  close: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
+};
+const icon = (name, className = 'icon') => `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name]}"/></svg>`;
+const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+const PANEL = 0xfffbf3, WELL = 0xf4ead6, PAPER = 0xf8f5ed;
+const SLOP = 12;
+const HELP = [
+  '看路线顺序：马儿要从起点出发，按顺序跃过每个编号的障碍，最后到达终点。',
+  '点拼板选中，再点一次就旋转 90°；托盘里的拼板也能先转好再放。选中托盘拼板后点空棋格即可放下，也可以直接把拼板拖进棋盘或在棋盘上拖动。',
+  '操作栏固定在棋盘下方：旋转、移回、撤销、提示、重置都在这里，不会遮住棋格。点空棋格或木框取消选择。',
+  '棋盘内允许临时叠放，后放的在上面；点托盘里的编号可把下层拼板置顶。消除所有重叠后才会判定通关。',
+  '岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不算跨障，同一障碍可能再次跨越。',
+  '第 65–80 关还要点入口字母设置起点和终点：绿色箭头指向起点，棋格标记代表终点，两端可以相同。',
+  '电脑上可用键盘：数字键选拼板，R / E 顺时针、Q 逆时针，方向键移动，Delete 移回，Ctrl+Z 撤销，H 提示。',
+];
 
 const app = document.querySelector('#app');
-const STORE = 'racingclub:v1';
-let saved = {};
-try { saved = JSON.parse(localStorage.getItem(STORE)) || {}; } catch { /* A private browser can still play. */ }
-if (typeof saved !== 'object' || Array.isArray(saved)) saved = {};
-const sessions = Object.fromEntries(LEVELS.map(level => {
-  const record = saved[level.id] || {};
-  return [level.id, { placements: restorePlacements(level, record.placements), moves: Number.isInteger(record.moves) && record.moves >= 0 ? record.moves : 0, completed: record.completed === true, elapsed: Number.isFinite(record.elapsed) && record.elapsed >= 0 ? record.elapsed : 0, hints: Number.isInteger(record.hints) && record.hints >= 0 ? record.hints : 0, finished: record.finished === true, history: [] }];
-}));
-let level = LEVELS.find(l => l.id === Number(location.hash.slice(1))) || LEVELS[0];
-let screen = location.hash ? 'game' : 'home';
-let selected = null;
-let rotation = 0;
-let status = '';
-let statusType = 'neutral';
-let busy = false;
-let runToken = 0;
-let drag = null;
-let suppressClickUntil = 0;
-let clockStarted = null;
-let autoCheck = null;
-const scores = Array.isArray(saved.__scores) ? saved.__scores.filter(s => s && typeof s === 'object' && !Array.isArray(s) && LEVELS.some(l => l.id === s.level) && Number.isFinite(s.time) && s.time >= 0 && Number.isInteger(s.moves) && s.moves >= 0 && Number.isInteger(s.hints) && s.hints >= 0).slice(-200) : [];
+const announcer = document.querySelector('#announcement');
+const dialog = document.createElement('dialog');
+dialog.className = 'club-dialog';
+document.body.append(dialog);
 
-const icons = {
-  back: '<path d="m14 6-6 6 6 6"/>',
-  arrow: '<path d="M5 12h14m-5-5 5 5-5 5"/>',
-  rotate: '<path d="M20 10a8 8 0 1 0-1 8M20 4v6h-6"/>',
-  undo: '<path d="m9 4-5 5 5 5M4 9h9a7 7 0 0 1 0 14"/>',
-  hint: '<path d="M9 18h6m-5 3h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/>',
-  help: '<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 4 3c-1 .5-1 1-1 2m0 3h.01"/>',
-  remove: '<path d="M5 7h14M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6m4-6v6"/>',
-  check: '<path d="m5 12 4 4L19 6"/>',
-  reset: '<path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/>',
-  close: '<path d="m6 6 12 12M6 18 18 6"/>',
-  landscape: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M18 11v2"/>',
-  trophy: '<path d="M8 3h8v6a4 4 0 0 1-8 0V3Zm0 2H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v6m-4 2h8m-6-2h4"/>',
-  clock: '<circle cx="12" cy="13" r="8"/><path d="M12 9v5l3 2M9 2h6m-3 0v3"/>',
-  inventory: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
-};
-const icon = (name, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.arrow}</svg>`;
-const horse = (cls = '') => `<svg class="horse-icon ${cls}" viewBox="0 0 80 72" aria-hidden="true"><path d="m23 32 10-12 2-14 9 10 6-8 5 15 15 12-4 10-16-2-4 12-2 13H33l-3-14-8 13H11l9-23-9 2-5-9 6-9 4 8Z" fill="currentColor"/><path d="m32 35 17 4-3 13-17-3Z" fill="#f6d389"/><circle cx="52" cy="27" r="2.2" fill="#fff7e8"/><path d="m20 42-5-10" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>`;
-const brand = () => `<a class="brand" href="#" data-action="home" aria-label="RacingClub 训练场">${horse()}<span>RacingClub<small>THE LITTLE EQUESTRIAN CLUB</small></span></a>`;
-const badge = id => `<span class="number" style="--obstacle:${INVENTORY.find(p=>p.id===id).color}">${id}</span>`;
-const routeStrip = l => `<div class="route-strip" aria-label="从 ${l.start} 出发，依次经过 ${l.sequence.join('、')} 号障碍，到达 ${l.finish}"><span class="gate-number">${l.start}</span>${l.sequence.map(id => `<span class="route-arrow" aria-hidden="true">→</span>${badge(id)}`).join('')}<span class="route-arrow" aria-hidden="true">→</span><span class="gate-number finish-number">${l.finish}</span></div>`;
+function announce(text) { if (announcer) { announcer.textContent = ''; requestAnimationFrame(() => { announcer.textContent = text; }); } }
+function loadImage(src) { return new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = src; }); }
 
-function tileSVG(id, r = 0, active = false) {
-  const piece = PIECES[id];
-  const [w, h] = size(r);
-  const transform = ['','translate(100 0) rotate(90)','translate(200 100) rotate(180)','translate(0 200) rotate(270)'][r];
-  const [gx, gy, gr] = piece.gate;
-  return `<svg viewBox="0 0 ${w * 100} ${h * 100}" class="tile-svg" aria-hidden="true"><g transform="${transform}"><rect x="2" y="2" width="196" height="96" rx="10" fill="#d7b68a" stroke="${active ? '#254c3b' : '#aa8255'}" stroke-width="3"/><path d="M10 14h180M10 86h180" stroke="#edd6ac" opacity=".55"/><path d="${piece.path}" fill="none" stroke="#a18055" stroke-width="44" opacity=".16"/><path d="${piece.path}" fill="none" stroke="#fff2d6" stroke-width="37"/><g transform="translate(${gx} ${gy}) rotate(${gr})"><path d="M0-25V25" stroke="#755039" stroke-width="10" opacity=".15" transform="translate(3 4)"/><path d="M0-25V25" stroke="${piece.color}" stroke-width="9"/><path d="M0-13v9m0 8v9" stroke="#fff9e9" stroke-width="9"/><rect x="-9" y="-30" width="18" height="9" rx="3" fill="${piece.color}"/><rect x="-9" y="21" width="18" height="9" rx="3" fill="${piece.color}"/></g></g></svg>`;
-}
+app.innerHTML = `<div class="loading"><div class="loading-mark">♞</div><p>正在布置训练场…</p></div>`;
 
-function persist() {
-  try {
-    localStorage.setItem(STORE, JSON.stringify({ ...Object.fromEntries(LEVELS.map(l => {
-      const { placements, moves, completed, hints, finished } = sessions[l.id];
-      const elapsed = sessions[l.id].elapsed + (l.id === level.id && clockStarted !== null ? performance.now() - clockStarted : 0);
-      return [l.id, { placements, moves, completed, elapsed, hints, finished }];
-    })), __scores: scores }));
-  } catch { /* Storage is optional. */ }
-}
+const [data, wood, sand, horseBuffer] = await Promise.all([
+  fetch('./shared/game-data.json').then(r => r.json()),
+  loadImage('./public/assets/web/wood.jpg'),
+  loadImage('./public/assets/web/sand.jpg'),
+  fetch('./public/assets/web/horse.bin').then(r => r.arrayBuffer()),
+]);
+let storage = null;
+try { storage = window.localStorage; } catch { }
+const rules = createRules(data);
+const store = createStore(storage);
+const session = new GameSession(rules, store);
+const materials = { wood, sand };
+const textures = createTextures(rules, materials);
+const fence = fenceLayout(rules);
+const horse = new HorseRenderer(parseHorse(horseBuffer));
 
-const session = () => sessions[level.id];
-function announce(message) { document.querySelector('#announcement').textContent = message; }
-function setStatus(message, type = 'neutral') {
-  status = message; statusType = type;
-  const node = document.querySelector('#game-status');
-  if (node) { node.textContent = message; node.className = `game-status ${type}`; }
-  announce(message);
-}
-function remember() {
-  session().history.push({ placements: structuredClone(session().placements), moves: session().moves, hints: session().hints });
-  if (session().history.length > 60) session().history.shift();
-}
+const view = { screen: null, level: null, camera: null, dpr: 1, boardDirty: true, gesture: null, drag: null, autoRun: null, lastFrame: 0, crossed: -1, confetti: null };
 
-function showHome() {
-  stopClock(); clearTimeout(autoCheck); runToken++; busy = false; screen = 'home'; selected = null;
-  history.replaceState(null, '', location.pathname + location.search);
-  render();
+function routeLevel() {
+  const match = location.hash.match(/^#\/level\/(\d+)/);
+  return match ? rules.levels.find(l => l.id === Number(match[1])) ?? null : null;
 }
-function startLevel(id) {
-  stopClock(); clearTimeout(autoCheck); runToken++; busy = false; level = LEVELS.find(l => l.id === id); screen = 'game';
-  if (session().finished) Object.assign(session(), { placements: [], moves: 0, elapsed: 0, hints: 0, finished: false, history: [] });
-  selected = level.sequence.find(id => !session().placements.some(p => p.id === id)) ?? null;
-  rotation = 0; status = ''; statusType = 'neutral';
-  history.replaceState(null, '', `#${id}`);
-  startClock(); render(); persist();
+function openLevel(level) {
+  if (routeLevel()?.id === level.id) session.start(level);
+  else location.hash = `#/level/${level.id}`;
 }
-
-function formatTime(ms, precise = false) {
-  const seconds = Math.floor(ms / 1000);
-  return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}${precise ? '.' + String(Math.floor(ms%1000/10)).padStart(2,'0') : ''}`;
-}
-function elapsedTime() { return session().elapsed + (clockStarted === null ? 0 : performance.now() - clockStarted); }
-function modalOpen() { return document.querySelector('dialog[open]') !== null; }
-function startClock() { if (clockStarted === null && screen === 'game' && !busy && !document.hidden && !modalOpen() && !session().finished) clockStarted = performance.now(); }
-function stopClock() { if (clockStarted !== null) { session().elapsed += performance.now() - clockStarted; clockStarted = null; persist(); } }
-setInterval(() => { const el = document.querySelector('#elapsed-time'); if (el) el.textContent = formatTime(elapsedTime()); }, 200);
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { stopClock(); clearTimeout(autoCheck); }
-  else { startClock(); if (screen === 'game') scheduleCheck(); }
+function goHome() { if (location.hash && location.hash !== '#/') location.hash = '#/'; else session.home(); }
+window.addEventListener('hashchange', () => {
+  const level = routeLevel();
+  if (level) { if (session.screen === 'home' || session.level.id !== level.id) session.start(level); }
+  else if (session.screen !== 'home') session.home();
 });
-window.addEventListener('pagehide', () => { stopClock(); persist(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) session.enterBackground(); else session.enterForeground(); });
 
-function scheduleCheck() {
-  clearTimeout(autoCheck);
-  if (screen === 'game' && !busy && !document.hidden && !modalOpen() && !session().finished && validate(level,session().placements).ok) autoCheck = setTimeout(() => run(), 300);
+function nextLevel() {
+  const unfinished = rules.levels.find(l => session.inProgress(l.id));
+  return unfinished ?? rules.levels.find(l => !session.solved(l.id)) ?? rules.levels[0];
 }
-
-function render() {
-  document.body.dataset.screen = screen;
-  if (screen === 'home') renderHome();
-  else if (screen === 'win') renderWin();
-  else renderGame();
-}
+function difficultyInk(d) { return readableInk(d.color, PANEL, WELL); }
 
 function renderHome() {
-  const completed = LEVELS.filter(l => sessions[l.id].completed).length;
-  const next = LEVELS.find(l => !sessions[l.id].completed) || LEVELS[0];
-  app.innerHTML = `<main class="home-shell"><header class="home-header">${brand()}<button class="text-button" data-action="help">玩法 ${icon('help')}</button></header>
-    <section class="home-layout"><div class="hero"><img src="/public/assets/horse-arena.png" alt="晨光下的栗色马儿与马术训练场" fetchpriority="high"><div class="hero-copy"><p class="eyebrow">A LITTLE THINKING. A LOVELY RIDE.</p><h1>今天，<br>跃过新的挑战<span class="sun-stroke"></span></h1><p>转动拼板，连起一条路。<br>让每一次跳跃，都恰到好处。</p></div><button class="primary hero-cta" data-level="${next.id}">继续挑战 ${String(next.id).padStart(2, '0')} ${icon('arrow')}</button></div>
-    <div class="training"><div class="section-heading"><div><p class="eyebrow">YOUR TRAINING GROUND</p><h2>马术训练场</h2></div><span class="progress-pill">${completed} / 2 已完成</span></div><p class="section-description">不必着急，下一段好路线就在眼前。</p>
-    <div class="challenge-list">${LEVELS.map(l => `<button class="challenge-card" data-level="${l.id}"><div class="challenge-top"><span class="challenge-name">挑战 <b>${String(l.id).padStart(2, '0')}</b></span><span class="level-pill ${sessions[l.id].completed ? 'done' : ''}">${sessions[l.id].completed ? '已通关 ✓' : '入门'}</span></div><h3>${l.title}</h3><div class="challenge-bottom">${routeStrip(l)}<span class="play-circle">${icon('arrow')}</span></div><span class="challenge-description">${l.sequence.length} 块拼板 · ${l.description}</span></button>`).join('')}</div>
-    <div class="club-note"><span class="horseshoe">♧</span><div><strong>每一步，都有新发现</strong><p>先看顺序，再连路线。想一想，也可以试一试。</p></div></div><p class="prototype-note">照片关卡练习版 · 进度保存在此浏览器</p></div></section><footer class="home-footer"><span>RACINGCLUB</span><span>与马同行 · 每一步都是进步</span></footer></main>`;
+  const solved = rules.levels.filter(l => session.solved(l.id)).length;
+  const next = nextLevel();
+  const continuing = session.inProgress(next.id);
+  const active = rules.difficulties.find(d => d.id === session.selectedDifficultyId) ?? rules.difficulties[0];
+  const levels = rules.levels.filter(l => l.difficultyId === active.id);
+  const solvedHere = levels.filter(l => session.solved(l.id)).length;
+  const tabs = rules.difficulties.map((d, i) => {
+    const on = d.id === active.id;
+    return `<button class="tab${on ? ' is-active' : ''}" role="tab" aria-selected="${on}" data-difficulty="${d.id}" style="--tint:${d.color};--ink:${difficultyInk(d)}">
+      <span class="tab-roman">${ROMAN[i]}</span><span class="tab-name">${d.label}</span><span class="tab-range">${String(d.firstLevel).padStart(2, '0')}–${d.lastLevel}</span></button>`;
+  }).join('');
+  const cards = levels.map(l => {
+    const done = session.solved(l.id), progress = !done && session.inProgress(l.id), best = session.best(l.id);
+    const detail = best ? clock(best.millis) : `${l.requiredPieces.length} 块 · ${l.sequence.length} 跨`;
+    const status = done ? `<span class="status done">${icon('check', 'icon tiny')}已完成</span><span class="detail">${best ? detail : ''}</span>`
+      : progress ? `<span class="status progress">${icon('clock', 'icon tiny')}进行中</span><span class="detail">${detail}</span>`
+        : `<span class="detail">${detail}</span>`;
+    return `<button class="level-card${done ? ' is-done' : ''}${progress ? ' is-progress' : ''}" data-level="${l.id}" style="--tint:${active.color}" aria-label="进入挑战 ${l.number}，${done ? '已完成' : progress ? '进行中' : '未开始'}">
+      <span class="level-number">${l.number}</span><span class="level-meta">${status}</span></button>`;
+  }).join('');
+  app.innerHTML = `<main class="home">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">♞</span><span class="brand-text"><b>RacingClub</b><small>马术训练场</small></span></div>
+      <span class="pill" aria-label="已完成 ${solved} / 80">${icon('trophy', 'icon tiny')}${solved} / ${rules.levels.length}<span class="pill-word"> 已完成</span></span>
+      <button class="icon-button" data-action="settings" aria-label="设置">${icon('settings')}</button>
+    </header>
+    <div class="home-body">
+      <section class="hero" aria-label="继续训练">
+        <div class="hero-copy">
+          <p class="eyebrow">今日训练 · ${escapeHtml(session.difficulty(next)?.label ?? '')}</p>
+          <h1>今天，<br>跃过新的挑战</h1>
+          <p class="hero-text">转动拼板连通道路，让马儿按顺序跃过每一道障碍。</p>
+          <button class="button primary hero-button" data-level="${next.id}">${continuing ? '继续挑战' : solved ? '挑战' : '开始'} ${next.number}${icon('forward')}</button>
+        </div>
+      </section>
+      <section class="panel levels-panel" aria-label="关卡">
+        <div class="tabs" role="tablist">${tabs}</div>
+        <div class="progress-row"><span class="progress-title" style="color:${difficultyInk(active)}">${active.label} · ${active.originalLabel}</span><span class="progress-count">${solvedHere} / ${levels.length} 已完成</span></div>
+        <div class="track" aria-hidden="true"><i style="width:${solvedHere / levels.length * 100}%;background:${active.color}"></i></div>
+        <div class="level-grid">${cards}</div>
+      </section>
+    </div>
+  </main>`;
 }
 
-function boardMarkup(l, placements, mini = false) {
-  return `<div class="board-frame ${mini ? 'mini-board' : ''}" aria-label="5 列 4 行棋盘"><div class="fence-rail top"></div><div class="fence-rail bottom"></div><div class="fence-rail left"></div><div class="fence-rail right"></div>
-    ${Object.entries(GATES).map(([letter, [x,y]]) => `<span class="board-gate ${letter === l.start ? 'start-gate' : ''} ${letter === l.finish ? 'end-gate' : ''}" style="--x:${x};--y:${y}" aria-label="${letter === l.start ? '起点' : letter === l.finish ? '终点' : '入口'} ${letter}">${letter}${letter === l.start ? '<small>起点</small>' : letter === l.finish ? '<small>终点</small>' : ''}</span>`).join('')}
-    <div class="board-grid" id="${mini ? 'mini-grid' : 'board-grid'}">${Array.from({length: ROWS * COLS}, (_, i) => `<button class="board-cell" ${mini ? 'tabindex="-1"' : ''} data-cell="${i}" aria-label="第 ${Math.floor(i / COLS) + 1} 行第 ${i % COLS + 1} 列" ${mini ? 'disabled' : ''}></button>`).join('')}
-    ${placements.map(p => { const [w,h] = size(p.r); return `<button class="placed-tile ${!mini && selected === p.id ? 'selected' : ''}" data-piece="${p.id}" style="left:${p.x * 20}%;top:${p.y * 25}%;width:${w * 20}%;height:${h * 25}%;--obstacle:${PIECES[p.id].color}" aria-label="${p.id} 号${PIECES[p.id].name}，第 ${p.y + 1} 行第 ${p.x + 1} 列，${p.r * 90} 度${selected === p.id ? '，已选中' : ''}" aria-pressed="${selected === p.id}" ${mini ? 'disabled tabindex="-1"' : ''}>${tileSVG(p.id,p.r,selected === p.id)}<span class="tile-id">${p.id}</span></button>`; }).join('')}
-    ${mini ? '' : '<div id="placement-ghost" class="placement-ghost" hidden></div>'}<div class="horse-pawn ${mini ? 'small-pawn' : ''}" id="${mini ? 'mini-horse' : 'horse-pawn'}" aria-label="马儿"><img src="/public/assets/horse-pawn.png" alt=""><span class="horse-shadow"></span></div>
-    <div class="finish-arch" style="left:${GATES[l.finish][0] * 20}%;top:${GATES[l.finish][1] * 25}%" aria-hidden="true"><i></i><i></i><b></b></div></div></div>`;
+function buildGame() {
+  app.innerHTML = `<main class="game">
+    <header class="game-head card">
+      <button class="icon-button" data-action="home" aria-label="返回">${icon('back')}</button>
+      <div class="game-title"></div>
+      <div class="head-actions">
+        <button class="icon-button" data-action="rank" aria-label="本关排行榜">${icon('trophy')}</button>
+        <button class="icon-button" data-action="settings" aria-label="设置">${icon('settings')}</button>
+        <button class="icon-button" data-action="help" aria-label="玩法">${icon('help')}</button>
+      </div>
+    </header>
+    <section class="route card" aria-label="路线顺序"></section>
+    <section class="stage" aria-label="棋盘">
+      <canvas class="board-canvas" role="img" aria-label="棋盘"></canvas>
+      <canvas class="overlay-canvas" aria-hidden="true"></canvas>
+      <div class="clock-chip" aria-label="用时">${icon('clock', 'icon tiny')}<span class="clock-text">00:00.00</span></div>
+    </section>
+    <section class="dock card" aria-label="棋盘操作"></section>
+    <section class="tray card" aria-label="本关拼板"></section>
+  </main>`;
+  const stage = app.querySelector('.stage');
+  const board = stage.querySelector('.board-canvas');
+  board.addEventListener('pointerdown', boardPointerDown);
+  new ResizeObserver(() => layoutBoard()).observe(stage);
+  layoutBoard();
+}
+
+function layoutBoard() {
+  const stage = app.querySelector('.stage');
+  if (!stage) return;
+  const rect = stage.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const width = Math.max(1, Math.round(rect.width)), height = Math.max(1, Math.round(rect.height));
+  for (const canvas of stage.querySelectorAll('canvas')) {
+    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+    canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
+  }
+  const chip = stage.querySelector('.clock-chip');
+  view.camera = new Camera(width, height, { topInset: chip ? chip.offsetHeight + 10 : 0 });
+  view.dpr = dpr;
+  view.boardDirty = true;
+  drawOverlay();
+  renderRoute();
+}
+
+function renderGameHead() {
+  const level = session.level, d = session.difficulty();
+  app.querySelector('.game-title').innerHTML = `<small>挑战</small><b>${level.number}</b><span class="badge" style="color:${readableInk(d.color, WELL)}">${d.label}</span>`;
+  for (const button of app.querySelectorAll('.head-actions button, .game-head [data-action=home]')) button.disabled = session.running && button.dataset.action !== 'home' && button.dataset.action !== 'help';
+}
+
+function badge(id, extra = '', label = '') {
+  return `<span class="num ${extra}" style="--face:${numberFace(id)};--ink:${numberInk(id)}"${label ? ` aria-label="${label}"` : ''}>${id}</span>`;
+}
+function renderRoute() {
+  const host = app.querySelector('.route');
+  if (!host) return;
+  const level = session.level, crossed = session.running ? crossingFeedback(rules, session.activeRoute, session.runProgress).crossed : -1;
+  const endpoint = (letter, finish) => {
+    const pick = level.solveEndpoints && !session.running;
+    const content = `<span class="endpoint-letter">${letter || '?'}</span><span class="endpoint-word">${finish ? '终点' : '起点'}</span>`;
+    return pick ? `<button class="endpoint ${finish ? 'finish' : 'start'} pickable" data-action="${finish ? 'finish' : 'start'}" aria-label="选择${finish ? '终点' : '起点'}，当前 ${letter || '未设置'}">${content}</button>`
+      : `<span class="endpoint ${finish ? 'finish' : 'start'}" aria-label="${finish ? '终点' : '起点'} ${letter}">${content}</span>`;
+  };
+  const nodes = [endpoint(session.startGate, false)];
+  level.sequence.forEach((id, i) => {
+    const state = !session.running ? '' : i < crossed ? 'passed' : i === crossed ? 'active' : '';
+    nodes.push(badge(id, state, `目标 ${i + 1}：${id} 号${state === 'passed' ? '，已跨越' : ''}`));
+  });
+  nodes.push(endpoint(session.finishGate, true));
+  host.innerHTML = `<div class="section-label"><i></i><span>路线顺序</span><em>${level.sequence.length} 次跨越${level.solveEndpoints ? ' · 自选起终点' : ''}</em></div>
+    <ol class="course">${nodes.map((node, i) => `<li>${node}${i < nodes.length - 1 ? '<span class="arrow" aria-hidden="true">›</span>' : ''}</li>`).join('')}</ol>`;
+  view.crossed = crossed;
+}
+
+function dockButton(action, iconName, label, description = label, disabled = false) {
+  return `<button class="dock-button${action === 'hint' ? ' hint' : ''}" data-action="${action}" aria-label="${description}"${disabled ? ' disabled' : ''}>${icon(iconName)}<span>${label}</span></button>`;
+}
+function renderDock() {
+  const host = app.querySelector('.dock');
+  if (session.running) {
+    host.innerHTML = `<button class="skip-button" data-action="skip">${icon('skip')}<span>跳过动画</span></button>
+      <div class="run-meter"><div class="meter-line">${icon('trophy', 'icon tiny gold')}<b class="meter-count"></b><span class="meter-cheer"></span></div><div class="meter-track"><i></i></div></div>`;
+    updateMeter();
+    return;
+  }
+  const id = session.selected, placed = id !== null && session.placed.some(p => p.id === id);
+  const left = id === null
+    ? `<div class="dock-empty">${icon('info', 'icon tiny')}<span>点拼板选择 · 再点一次旋转</span></div>`
+    : `<div class="dock-selected" aria-label="已选 ${id} 号">${badge(id, 'large')}</div>` + turnActions(session.turnMode).map(action =>
+      action === -1 ? dockButton('ccw', 'ccw', '逆时针', '逆时针旋转 90 度') : action === 1 ? dockButton('cw', 'cw', '顺时针', '顺时针旋转 90 度') : placed ? dockButton('remove', 'remove', '移回', '移回托盘') : '').join('');
+  host.innerHTML = `<div class="dock-group piece-actions">${left}</div><span class="dock-divider" aria-hidden="true"></span>
+    <div class="dock-group">${dockButton('undo', 'undo', '撤销', '撤销', !session.history.length)}${dockButton('hint', 'hint', '提示')}${dockButton('reset', 'reset', '重置', '重置本关')}</div>`;
+}
+function updateMeter() {
+  const host = app.querySelector('.run-meter');
+  if (!host) return;
+  const total = session.activeRoute.filter(step => step.jump !== null).length;
+  const { crossed } = crossingFeedback(rules, session.activeRoute, session.runProgress);
+  host.querySelector('.meter-count').textContent = `已跨越 ${crossed} / ${total}`;
+  host.querySelector('.meter-cheer').textContent = crossed >= total ? '冲向终点！' : '加油，继续跳！';
+  host.querySelector('.meter-track i').style.width = `${Math.min(session.runProgress, 1) * 100}%`;
+}
+
+function feedbackText() {
+  if (view.drag) {
+    if (view.drag.problem) return { error: true, text: view.drag.problem };
+    const candidate = dropCandidate(view.drag.piece, view.drag.frame, view.drag.grab);
+    const ids = session.placed.filter(p => rules.overlaps(candidate, p)).map(p => p.id).sort((a, b) => a - b);
+    return { error: false, text: ids.length ? `将叠放在 ${ids.join('、')} 号上方` : '' };
+  }
+  if (session.message) return { error: true, text: session.message };
+  const covered = session.coveredCount();
+  return { error: false, text: covered ? `${covered} 块被遮挡 · 点托盘编号置顶` : '' };
+}
+function renderFeedback() {
+  const host = app.querySelector('.feedback');
+  if (!host) return;
+  const { error, text } = feedbackText();
+  host.className = `feedback${error ? ' is-error' : ''}`;
+  host.innerHTML = text ? `${error ? icon('info', 'icon tiny') : icon('layers', 'icon tiny')}<span>${escapeHtml(text)}</span>` : '';
+}
+function renderTray() {
+  const host = app.querySelector('.tray');
+  const needed = session.level.requiredPieces;
+  const placedCount = needed.filter(id => session.placed.some(p => p.id === id)).length;
+  host.innerHTML = `<div class="section-label"><i></i><span>本关拼板</span><em>放置 ${placedCount} / ${needed.length}</em></div>
+    <div class="tray-grid" style="--count:${needed.length}">${needed.map(id => {
+      const placed = session.placed.find(p => p.id === id), covered = placed && rules.coveredBy(placed, session.placed).length > 0;
+      const active = session.selected === id;
+      const r = placed ? placed.r : active ? session.rotation : 0;
+      const state = covered ? '被遮挡' : placed ? '已放置' : '待放置';
+      return `<button class="piece-card${active ? ' is-active' : ''}${placed ? ' is-placed' : ''}${covered ? ' is-covered' : ''}" data-piece="${id}" data-turn="${r}"
+        aria-label="拼板 ${id}，${state}，${r * 90} 度${active ? '，已选中' : ''}" aria-pressed="${active}">
+        <canvas aria-hidden="true"></canvas>${placed ? `<span class="tag" title="${covered ? '被遮挡' : '已放置'}">${covered ? icon('layers', 'icon tiny') : icon('check', 'icon tiny')}<span>${covered ? '被遮挡' : '已放置'}</span></span>` : ''}</button>`;
+    }).join('')}</div>
+    <p class="feedback" role="status" aria-live="polite"></p>`;
+  for (const card of host.querySelectorAll('.piece-card')) {
+    card.addEventListener('pointerdown', trayPointerDown);
+    card.addEventListener('click', event => { if (event.detail === 0) { const id = Number(card.dataset.piece); releaseRackTap(session, id, pressTile(session, id)); } });
+  }
+  requestAnimationFrame(paintTray);
+  renderFeedback();
+}
+function paintTray() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  for (const card of app.querySelectorAll('.piece-card')) {
+    const canvas = card.querySelector('canvas'), rect = canvas.getBoundingClientRect();
+    if (!rect.width) continue;
+    canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr);
+    const id = Number(card.dataset.piece);
+    paintTrayTile(canvas, rules, id, Number(card.dataset.turn), materials, card.classList.contains('is-active'), dpr);
+  }
 }
 
 function renderGame() {
- const placed=session().placements.find(p=>p.id===selected); if(placed)rotation=placed.r;
- app.innerHTML=`<main class="game-shell"><header class="game-header"><button class="icon-button" data-action="home" aria-label="返回训练场">${icon('back')}</button><div class="game-title"><span>挑战 <b>${String(level.id).padStart(2,'0')}</b></span><span class="level-pill">入门</span></div><div class="header-route">${routeStrip(level)}</div><span class="game-timer">${icon('clock')}<span id="elapsed-time">${formatTime(elapsedTime())}</span></span><div class="compact-actions"><button class="icon-button" data-action="ranking" title="本关排行榜" aria-label="本关排行榜">${icon('trophy')}</button><button class="icon-button" data-action="help" aria-label="查看玩法">${icon('help')}</button></div></header><div class="portrait-route">${routeStrip(level)}</div><div class="landscape-note">${icon('landscape')} 横过手机，棋盘和工作台并排更顺手</div><div class="game-layout"><section class="arena"><div class="arena-heading"><h1>连起路线，跃向终点<span class="sun-stroke"></span></h1><span class="placed-count">${session().placements.length} / ${level.sequence.length} 已放置</span></div>${boardMarkup(level,session().placements)}<p class="board-caption">点选拼板后旋转或移动 · 正确连接后自动出发</p></section><aside class="workbench" aria-label="拼板工作台"><div class="workbench-heading"><strong style="font-size:12px">拼板</strong><div class="tool-grid">${[['rotate','rotate','旋转 90°',selected===null],['remove','remove','移回拼板区',!placed],['undo','undo','撤销',!session().history.length],['hint','hint','提示',false],['reset','reset','重新摆放',!session().placements.length]].map(([action,ico,label,disabled])=>`<button class="tool-button" data-action="${action}" title="${label}" aria-label="${label}" ${disabled?'disabled':''}>${icon(ico)}</button>`).join('')}<button class="tool-button" data-action="inventory" title="全部 10 块" aria-label="全部 10 块">${icon('inventory')}</button></div></div><div class="piece-rack">${[...level.sequence].sort((a,b)=>a-b).map(id=>{const onBoard=session().placements.some(p=>p.id===id);const r=selected===id?rotation:0;return `<button class="rack-piece ${selected===id?'selected':''} ${onBoard?'on-board':''}" data-rack="${id}" style="--obstacle:${PIECES[id].color}" aria-label="选择 ${id} 号${PIECES[id].name}${onBoard?'，已放置':''}" aria-pressed="${selected===id}"><span class="rack-label">${badge(id)}<small>${onBoard?'已放置':'待放置'}</small></span><span class="rack-tile">${tileSVG(id,r)}</span></button>`;}).join('')}</div><div class="selection-info"><span class="selection-dot" style="background:${selected?PIECES[selected].color:'#b9b1a1'}"></span><strong>${selected?`已选中 ${selected} 号拼板`:'选择一块拼板'}</strong><span>${selected?`${rotation*90}°`:''}</span></div><p id="game-status" class="game-status ${statusType}" role="status">${status||'选择拼板，再点棋盘左上格放置；也可以拖放。'}</p><p class="auto-note">${icon('check')} 路线正确后，马儿会自动出发</p></aside></div></main>`;
- positionHorseAtStart(); scheduleCheck();
+  if (view.screen !== 'game' || view.level !== session.level.id) buildGame();
+  app.querySelector('.game').classList.toggle('is-running', session.running);
+  renderGameHead(); renderRoute(); renderDock(); renderTray();
+  const board = app.querySelector('.board-canvas');
+  board.setAttribute('aria-label', session.placed.length ? `棋盘：${session.placed.map(p => `${p.id} 号，第 ${p.y + 1} 行第 ${p.x + 1} 列，${p.r * 90} 度`).join('；')}` : '空棋盘');
+  view.boardDirty = true;
 }
 
+function rosette() {
+  const petals = Array.from({ length: 22 }, (_, i) => { const a = i * Math.PI * 2 / 22; return `<circle cx="${100 + Math.cos(a) * 58}" cy="${84 + Math.sin(a) * 58}" r="12" fill="#d29a3c"/>`; }).join('');
+  return `<svg viewBox="0 0 200 200" class="rosette-art" aria-hidden="true">
+    <path d="M78 84h22l-2 104-20-14-20 10z" fill="#2f6b45"/><path d="M100 84h22l18 100-20-10-20 14z" fill="#24583a"/>
+    ${petals}<circle cx="100" cy="84" r="60" fill="#efbc54"/><circle cx="100" cy="84" r="51" fill="none" stroke="#f6d48a" stroke-width="3"/>
+    <circle cx="100" cy="84" r="44" fill="#254c3b"/><circle cx="100" cy="84" r="39" fill="none" stroke="#efbc54" stroke-width="1.5"/></svg>`;
+}
 function renderWin() {
-  const next = LEVELS.find(l => l.id > level.id);
-  app.innerHTML = `<main class="win-shell"><header class="home-header">${brand()}<span class="level-pill done">挑战 ${String(level.id).padStart(2,'0')} ✓</span></header><section class="win-layout"><div class="win-art"><img src="/public/assets/horse-arena.png" alt="完成训练的马儿"><div class="rosette"><span>♞</span></div></div><div class="win-content"><p class="eyebrow">A BEAUTIFUL CLEAR ROUND</p><h1>漂亮，<br>顺利通关！<span class="sun-stroke"></span></h1><p>每一道障碍，都跃得恰到好处。</p><div class="time-result">${formatTime(session().elapsed,true)}<small>完成用时</small></div><div class="result-row"><span>${icon('check')} 路线正确</span><span>${session().moves} 次摆放</span></div><div class="win-board">${boardMarkup(level, session().placements, true)}</div><button class="primary" ${next ? `data-level="${next.id}"` : 'data-action="home"'}>${next ? '挑战下一关' : '返回训练场'} ${icon('arrow')}</button><button class="text-button replay-button" data-action="replay">再看马儿跑一遍</button><button class="text-button" data-action="ranking">${icon('trophy')} 查看本关排行榜</button><button class="text-button" data-action="home">返回训练场</button></div></section></main>`;
-  const pawn = document.querySelector('#mini-horse');
-  if (pawn) { pawn.style.left = `${GATES[level.finish][0] * 20}%`; pawn.style.top = `${GATES[level.finish][1] * 25}%`; }
+  const summary = session.winSummary(), level = session.level, d = session.difficulty();
+  const starIcons = [0, 1, 2].map(k => `<span class="star${k < summary.stars ? ' earned' : ''}" style="--delay:${380 + k * 170}ms">${icon('star')}</span>`).join('');
+  app.innerHTML = `<main class="win">
+    <section class="win-hero">
+      <div class="rosette">${rosette()}<div class="rosette-label"><small>挑战</small><b>${level.number}</b></div></div>
+      <p class="win-sub">${d.label} · 顺利完赛</p>
+    </section>
+    <section class="win-card card">
+      <h1>漂亮，顺利通关！</h1>
+      <div class="stars" aria-label="${summary.stars} 星">${starIcons}</div>
+      <div class="win-time"><span class="time">${clock(session.elapsed)}</span>${summary.tag ? `<span class="tag-pill${summary.place === 1 ? ' gold' : ''}">${summary.tag}</span>` : ''}</div>
+      <dl class="stats">
+        <div><dt>步数</dt><dd>${session.moves}</dd></div>
+        <div><dt>提示</dt><dd>${session.hints ? `${session.hints} 次` : '独立完成'}</dd></div>
+        <div><dt>本关最佳</dt><dd>${clock(summary.records[0]?.millis ?? session.elapsed)}</dd></div>
+      </dl>
+      <div class="win-actions">
+        <button class="button outline" data-action="again">${icon('reset')}再来一次</button>
+        <button class="button primary" data-action="next">${summary.next ? '挑战下一关' : '返回训练场'}${icon('forward')}</button>
+      </div>
+      <div class="win-links"><button class="link-button" data-action="rank">${icon('trophy', 'icon tiny gold')}查看本关排行榜</button><button class="link-button" data-action="home">${icon('back', 'icon tiny')}返回关卡列表</button></div>
+    </section>
+    <canvas class="confetti" aria-hidden="true"></canvas>
+  </main>`;
+  view.confetti = { start: performance.now() };
+  announce(`挑战 ${level.number} 通关，用时 ${clock(session.elapsed)}，${summary.stars} 星`);
 }
-
-function selectPiece(id) {
-  if (busy) return;
-  selected = id;
-  rotation = session().placements.find(p => p.id === id)?.r || 0;
-  status = session().placements.some(p => p.id === id) ? `已选中 ${id} 号。点空格移动，或使用旋转按钮。` : `选中了 ${id} 号。点棋盘左上格放置，或先旋转。`;
-  statusType = 'neutral'; renderGame();
-  announce(status);
-}
-
-function placeAt(x,y,id = selected,r = rotation) {
-  if (busy || id === null) { if (!busy) setStatus('先在工作台选择一块拼板。'); return; }
-  const p = { id,x,y,r };
-  if (!canPlace(p,session().placements)) {
-    setStatus('这里放不下：拼板不能重叠，也不能超出棋盘。', 'error'); return;
+function drawConfetti(now) {
+  const canvas = app.querySelector('.confetti');
+  if (!canvas || !view.confetti) return;
+  const t = (now - view.confetti.start) / 2600;
+  const rect = canvas.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (canvas.width !== Math.round(rect.width * dpr)) { canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr); }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  if (t >= 1 || matchMedia('(prefers-reduced-motion: reduce)').matches) { view.confetti = null; return; }
+  const colors = ['#efbc54', '#2f6b45', '#c04835', '#3c74a8', '#a4c45a', '#b44c86'];
+  let seed = 7;
+  const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (let i = 0; i < 90; i++) {
+    const x = random() * rect.width, delay = random() * .35, speed = .75 + random() * .6, size = 6 + random() * 7;
+    const k = Math.min(Math.max((t - delay) / (1 - delay), 0), 1);
+    if (k <= 0) continue;
+    const y = -20 + k * speed * rect.height * 1.1, sway = Math.sin(k * 9 + i) * 22;
+    ctx.globalAlpha = 1 - Math.min(Math.max((k - .75) / .25, 0), 1);
+    ctx.fillStyle = colors[i % colors.length];
+    const h = size * (.4 + .4 * Math.abs(Math.sin(k * 12 + i)));
+    ctx.fillRect(x + sway - size / 2, y - h / 2, size, h);
   }
-  remember();
-  session().placements = [...session().placements.filter(p => p.id !== id), p];
-  session().moves++; selected = id; rotation = r;
-  status = `${id} 号已放好。点另一块继续，路线正确会自动出发。`; statusType = 'neutral';
-  persist(); renderGame(); announce(status);
+  ctx.globalAlpha = 1;
 }
 
-function rotateSelected() {
-  if (selected === null || busy) return;
-  const next = (rotation + 1) % 4;
-  const existing = session().placements.find(p => p.id === selected);
-  if (existing) {
-    const rotated = { ...existing,r:next };
-    if (!canPlace(rotated,session().placements)) { setStatus('旋转后会重叠或超出棋盘，已保留原位。可先移到空处。','error'); return; }
-    remember(); session().placements = session().placements.map(p => p.id === selected ? rotated : p); session().moves++;
+function renderDialog() {
+  const which = session.dialog;
+  if (!which) { if (dialog.open) dialog.close(); return; }
+  const level = session.level;
+  let title = '', body = '', actions = '';
+  if (which === 'help') {
+    title = '一条路，刚刚好的顺序';
+    body = HELP.map(p => `<p>${p}</p>`).join('');
+    actions = `<button class="button primary" data-action="close">知道了</button>`;
+  } else if (which === 'rank') {
+    const records = store.scores(level.id);
+    title = `挑战 ${level.number} · 本机排行榜`;
+    body = records.length ? `<ol class="rank-list">${records.slice(0, 10).map((r, i) => `<li><span class="rank-place${i < 3 ? ` top${i + 1}` : ''}">${i + 1}</span><b>${clock(r.millis)}</b><span>${r.moves} 步</span><span class="rank-tag${r.hints ? '' : ' clean'}">${r.hints ? '使用提示' : '独立完成'}</span></li>`).join('')}</ol>`
+      : `<p class="empty">还没有成绩，完成一次训练就会记录。</p>`;
+    body += `<p class="note">成绩保存在本机浏览器里。</p>`;
+    actions = `<button class="button primary" data-action="close">完成</button>`;
+  } else if (which === 'settings') {
+    title = '设置';
+    const chip = (mode, label) => `<button class="chip${session.turnMode === mode ? ' is-on' : ''}" data-turn-mode="${mode}" aria-pressed="${session.turnMode === mode}">${label}</button>`;
+    body = `<h3>旋转按钮</h3><p>决定棋盘下方显示哪些旋转按钮；再点一次拼板时也按这个方向转。双向时再点为顺时针。</p>
+      <div class="chips">${chip('BOTH', '双向')}${chip('CLOCKWISE', '仅顺时针')}${chip('COUNTERCLOCKWISE', '仅逆时针')}</div>
+      <h3>进度</h3><button class="button danger-outline" data-action="confirm-clear">清除所有进度</button>`;
+    actions = `<button class="button primary" data-action="close">完成</button>`;
+  } else if (which === 'confirm-clear') {
+    title = '清除所有进度？';
+    body = `<p>会清除全部分关进度、未完成的摆放和完成标记。本机最佳成绩会保留。此操作不能撤销。</p>`;
+    actions = `<button class="button outline" data-action="close">取消</button><button class="button danger" data-action="clear">清除</button>`;
+  } else if (which === 'confirm-reset') {
+    title = '重置本关？';
+    body = `<p>清空本关已摆放的拼板和起终点，重新开始这一关。本机最佳成绩会保留，也可以用撤销恢复。</p>`;
+    actions = `<button class="button outline" data-action="close">取消</button><button class="button danger" data-action="reset-confirmed">确认重置</button>`;
+  } else if (which === 'start' || which === 'finish') {
+    const finish = which === 'finish', current = finish ? session.chosenFinish : session.chosenStart;
+    title = finish ? '选择终点' : '选择起点';
+    body = `<p>按字母选择棋盘边界，可与另一端相同。</p><div class="letters">${[...rules.gates.keys()].map(letter => `<button class="letter${letter === current ? ' is-on' : ''}" data-endpoint="${letter}" data-finish="${finish}">${letter}</button>`).join('')}</div>`;
+    actions = `<button class="button outline" data-action="close">取消</button>`;
+  } else if (which.startsWith('gate:')) {
+    const letter = which.slice(5);
+    title = `入口 ${letter}`;
+    body = `<p>将 ${letter} 设为起点或终点；两端可以使用同一入口。</p>`;
+    actions = `<button class="button outline" data-endpoint="${letter}" data-finish="false">设为起点</button><button class="button primary" data-endpoint="${letter}" data-finish="true">设为终点</button>`;
   }
-  rotation = next; status = `${selected} 号已旋转至 ${next * 90}°。`; statusType = 'neutral';
-  persist(); renderGame(); announce(status);
+  dialog.innerHTML = `<form method="dialog" class="dialog-body"><header><h2>${title}</h2><button class="icon-button" value="cancel" aria-label="关闭">${icon('close')}</button></header><div class="dialog-content">${body}</div><footer>${actions}</footer></form>`;
+  if (!dialog.open) dialog.showModal();
 }
-
-function showHelp() {
-  if (document.querySelector('dialog')) return;
-  stopClock(); clearTimeout(autoCheck);
-  const dialog = document.createElement('dialog');
-  dialog.className = 'help-dialog';
-  dialog.innerHTML = `<div class="dialog-top"><p class="eyebrow">A LITTLE GUIDE</p><button class="icon-button" data-close aria-label="关闭玩法">${icon('close')}</button></div><h2>一条路，刚刚好的顺序</h2><p class="help-intro">让马儿从起点出发，按顺序跃过彩色障碍，最后抵达终点门。</p><ol class="help-steps"><li><b>01</b><div><strong>看看本关顺序</strong><p>上方圆圈是经过障碍的顺序，字母是起终点。</p></div></li><li><b>02</b><div><strong>选择、旋转、放置</strong><p>点工作台拼板，再点棋盘上的左上格放置。支持拖放；每块拼板占两格。</p></div></li><li><b>03</b><div><strong>已放好的，也能再调整</strong><p>点棋盘拼板，高亮后可旋转、点空格移动，或移回工作台。旋转不能重叠或越界。</p></div></li><li><b>04</b><div><strong>自动出发</strong><p>每次调整后自动检查。路线正确即停止计时，马儿会沿路奔跑和跳跃。</p></div></li></ol><p class="help-footnote">推荐横屏操作 · R 旋转 · Delete 移回 · Ctrl / ⌘ Z 撤销<br>当前提供照片中的挑战 03、04，两关均无岔路。</p><button class="primary" data-close>开始训练 ${icon('arrow')}</button>`;
-  document.body.append(dialog); dialog.showModal();
-  dialog.querySelectorAll('[data-close]').forEach(button => button.onclick = () => dialog.close());
-  dialog.addEventListener('click', event => { if (event.target === dialog) { const b = dialog.getBoundingClientRect(); if (event.clientX < b.left || event.clientX > b.right || event.clientY < b.top || event.clientY > b.bottom) dialog.close(); } });
-  dialog.addEventListener('close', () => { dialog.remove(); startClock(); if(screen==='game')scheduleCheck(); });
-}
-
-function popup(title, content) {
-  stopClock(); clearTimeout(autoCheck);
-  const d = document.createElement('dialog'); d.className = 'help-dialog';
-  d.innerHTML = `<div class="dialog-top"><p class="eyebrow">RACINGCLUB</p><button class="icon-button" aria-label="关闭">${icon('close')}</button></div><h2>${title}</h2>${content}`;
-  document.body.append(d); d.showModal(); d.querySelector('.icon-button').onclick = () => d.close();
-  d.addEventListener('close', () => { d.remove(); startClock(); if(screen==='game')scheduleCheck(); });
-  return d;
-}
-function showInventory() {
-  const d = popup('全部 10 块拼板', `<p class="help-intro">按编号排列。当前关卡只使用高亮的拼板，其余留在盒中。</p><div class="inventory-grid">${INVENTORY.map(p=>`<button class="inventory-item ${level.sequence.includes(p.id)?'active':''}" data-inventory="${p.id}" ${level.sequence.includes(p.id)?'':'disabled'}>${badge(p.id)}<small>${level.sequence.includes(p.id)?'本关使用':'本关不用'}</small></button>`).join('')}</div>`);
-  d.querySelectorAll('[data-inventory]:not(:disabled)').forEach(b=>b.onclick=()=>{ d.close(); selectPiece(Number(b.dataset.inventory)); });
-}
-function showRanking(id) {
-  const records = scores.filter(s=>s.level===id).sort((a,b)=>a.hints-b.hints || a.time-b.time || a.moves-b.moves).slice(0,10);
-  const d=popup('本机排行榜', `<div class="ranking-levels">${LEVELS.map(l=>`<button class="${l.id===id?'active':''}" data-ranking="${l.id}">挑战 ${String(l.id).padStart(2,'0')}</button>`).join('')}</div>${records.length?`<table class="ranking-table"><thead><tr><th>名次</th><th>完成时间</th><th>步数</th></tr></thead><tbody>${records.map((r,i)=>`<tr><td>${i+1}</td><td class="rank-time">${formatTime(r.time,true)}<small class="score-kind">${r.hints?'使用提示 · 练习成绩':'独立完成'}</small></td><td>${r.moves}</td></tr>`).join('')}</tbody></table>`:'<p class="ranking-empty">还没有成绩，来完成第一次训练吧。</p>'}<p class="ranking-caption">本机训练记录，保存在当前浏览器。独立完成优先，再按用时、步数排列。当前还没有连接线上榜。</p>`);
-  d.querySelectorAll('[data-ranking]').forEach(b=>b.onclick=()=>{d.close();showRanking(Number(b.dataset.ranking));});
-}
-
-function positionHorseAtStart() {
-  const node = document.querySelector('#horse-pawn');
-  if (!node) return;
-  node.style.left = `${GATES[level.start][0] * 20}%`;
-  node.style.top = `${GATES[level.start][1] * 25}%`;
-  node.classList.add('at-start');
-}
-
-async function run(replay = false) {
-  if (busy || screen !== 'game' || document.hidden || modalOpen()) return;
-  const result = validate(level,session().placements);
-  if (!result.ok) { setStatus(result.message, 'error'); return; }
-  clearTimeout(autoCheck);
-  if (!replay) { stopClock(); session().finished=true; session().completed=true; scores.push({level:level.id,time:Math.round(session().elapsed),moves:session().moves,hints:session().hints,date:Date.now()}); persist(); }
-  const token = ++runToken;
-  busy = true;
-  setStatus('路线正确！马儿准备出发，跟着它看看每一次跳跃。','success');
-  const node = document.querySelector('#horse-pawn');
-  node.classList.remove('at-start'); node.classList.add('running');
-  document.querySelectorAll('.workbench button, .board-grid button').forEach(b => b.disabled = true);
-
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const route = result.route;
-  const paths = route.map(p => ({p}));
-  const duration = reduced ? 700 : route.length * 1350;
-  const start = performance.now();
-  await new Promise(resolve => {
-    function frame(now) {
-      if (token !== runToken) { resolve(); return; }
-      const total = Math.max(0,Math.min((now - start) / duration, 1));
-      const cursor = Math.min(total * paths.length, paths.length - .000001);
-      const segment = paths[Math.floor(cursor)];
-      const local = cursor % 1;
-      const along = segment.p.from === 0 ? local : 1 - local;
-      const [rx,ry] = rotatePoint(pathPoint(segment.p.id,along),segment.p.r);
-      node.style.left = `${(segment.p.x + rx) * 20}%`;
-      node.style.top = `${(segment.p.y + ry) * 25}%`;
-      const gateT = segment.p.id === 5 ? .33 : segment.p.id === 6 ? .45 : .5;
-      const jump = reduced ? 0 : Math.sin(Math.PI * Math.max(0,1 - Math.abs(along - gateT) * 8)) * 15;
-      node.style.setProperty('--jump', `${jump}px`);
-      const pp = ports(segment.p);
-      node.style.setProperty('--flip', pp[1-segment.p.from][0] < pp[segment.p.from][0] ? '-1' : '1');
-      node.dataset.jumping = jump > 2;
-      if (total < 1) setTimeout(() => frame(performance.now()),16); else resolve();
-    }
-    frame(performance.now());
-  });
-  if (token !== runToken) return;
-  busy = false;
-  session().completed = true; persist();
-  screen = 'win'; render(); announce('漂亮，顺利通关！');
-}
-
-
-
-const actions = {
-  home: showHome, help: showHelp, rotate: rotateSelected, inventory: showInventory, ranking: () => showRanking(level.id),
-  remove() {
-    if (selected === null || busy || !session().placements.some(p => p.id === selected)) return;
-    remember(); session().placements = session().placements.filter(p => p.id !== selected); session().moves++;
-    status = `${selected} 号已移回工作台。`; statusType = 'neutral'; persist(); renderGame();
-  },
-  undo() {
-    if (busy || !session().history.length) return;
-    const old = session().history.pop(); const hints = session().hints; Object.assign(session(),old); session().hints = Math.max(hints,old.hints || 0);
-    status = '已撤销上一步。'; statusType = 'neutral'; persist(); renderGame();
-  },
-  reset() {
-    if (busy || !session().placements.length) return;
-    remember(); session().placements = []; session().moves++;
-    selected = level.sequence[0]; rotation = 0; status = '棋盘已清空，一起重新规划。可以撤销这次操作。'; statusType = 'neutral'; persist(); renderGame();
-  },
-  hint() {
-    if (busy) return;
-    const target = level.solution.find(s => !session().placements.some(p => p.id === s.id && p.x === s.x && p.y === s.y && p.r === s.r));
-    if (!target) { setStatus('路线已正确连接，马儿即将出发！','success'); scheduleCheck(); return; }
-    remember();
-    const remaining = session().placements.filter(p => p.id !== target.id && canPlace(target,[p]));
-    const returned = session().placements.length - remaining.length - (session().placements.some(p=>p.id===target.id) ? 1 : 0);
-    session().placements = [...remaining,{...target}]; session().moves++; session().hints++;
-    selected = target.id; rotation = target.r;
-    status = `帮你摆好了 ${target.id} 号。${returned ? '占位的拼板已移回工作台。' : '观察它的路口如何连接。'}`; statusType = 'success'; persist(); renderGame(); announce(status);
-  },
-  replay() { screen = 'game'; selected = null; status = ''; renderGame(); run(true); },
-};
-
-app.addEventListener('click',event => {
-  if (performance.now() < suppressClickUntil) { event.preventDefault(); return; }
-  const levelButton = event.target.closest('[data-level]');
-  if (levelButton) { startLevel(Number(levelButton.dataset.level)); return; }
-  const action = event.target.closest('[data-action]');
-  if (action) { event.preventDefault(); actions[action.dataset.action]?.(); return; }
-  if (busy) return;
-  const piece = event.target.closest('[data-piece], [data-rack]');
-  if (piece) { selectPiece(Number(piece.dataset.piece || piece.dataset.rack)); return; }
-  const cell = event.target.closest('[data-cell]');
-  if (cell) { const i = Number(cell.dataset.cell); placeAt(i % COLS,Math.floor(i/COLS)); }
-});
-
-app.addEventListener('pointerdown',event => {
-  if (busy || event.button !== 0 || screen !== 'game') return;
-  const button = event.target.closest('[data-piece], [data-rack]');
+dialog.addEventListener('close', () => { if (session.dialog) session.closeDialog(); });
+dialog.addEventListener('click', event => {
+  if (event.target === dialog) { dialog.close(); return; }
+  const button = event.target.closest('button');
   if (!button) return;
-  const id = Number(button.dataset.piece || button.dataset.rack);
-  const p = session().placements.find(p => p.id === id);
-  const grid = document.querySelector('#board-grid').getBoundingClientRect();
-  const offset = button.dataset.piece ? [Math.floor((event.clientX - grid.left)/(grid.width/COLS))-p.x,Math.floor((event.clientY - grid.top)/(grid.height/ROWS))-p.y] : [0,0];
-  drag = { id, r: p?.r ?? (id === selected ? rotation : 0), startX:event.clientX,startY:event.clientY,offset,moving:false,pointerId:event.pointerId };
-  button.setPointerCapture(event.pointerId);
+  if (button.value === 'cancel') return;
+  event.preventDefault();
+  if (button.dataset.turnMode) { session.chooseTurnMode(button.dataset.turnMode); return; }
+  if (button.dataset.endpoint) { session.chooseEndpoint(button.dataset.endpoint, button.dataset.finish === 'true'); return; }
+  const action = button.dataset.action;
+  if (action === 'close') session.closeDialog();
+  else if (action === 'confirm-clear') session.showDialog('confirm-clear');
+  else if (action === 'clear') { session.closeDialog(); session.clearAllProgress(); announce('已清除所有进度'); }
+  else if (action === 'reset-confirmed') { session.closeDialog(); session.reset(); }
 });
 
-document.addEventListener('pointermove',event => {
-  if (!drag || drag.pointerId !== event.pointerId) return;
-  if (Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY) < 8 && !drag.moving) return;
-  drag.moving = true;
-  const grid = document.querySelector('#board-grid');
-  if (!grid) return;
-  const rect = grid.getBoundingClientRect();
-  const x = Math.floor((event.clientX-rect.left)/(rect.width/COLS))-drag.offset[0];
-  const y = Math.floor((event.clientY-rect.top)/(rect.height/ROWS))-drag.offset[1];
-  const [w,h] = size(drag.r);
-  const ghost = document.querySelector('#placement-ghost');
-  ghost.hidden = false; ghost.innerHTML = tileSVG(drag.id,drag.r,true);
-  ghost.style.cssText = `left:${x*20}%;top:${y*25}%;width:${w*20}%;height:${h*25}%;`;
-  ghost.classList.toggle('invalid', !canPlace({id:drag.id,x,y,r:drag.r},session().placements));
-  drag.x = x; drag.y = y;
+app.addEventListener('click', event => {
+  const button = event.target.closest('button');
+  if (!button || button.disabled) return;
+  if (button.dataset.difficulty) { session.chooseDifficulty(button.dataset.difficulty); return; }
+  if (button.dataset.level) { openLevel(rules.levels.find(l => l.id === Number(button.dataset.level))); return; }
+  const id = session.selected;
+  switch (button.dataset.action) {
+    case 'home': goHome(); break;
+    case 'settings': case 'help': case 'rank': case 'start': case 'finish': session.showDialog(button.dataset.action); break;
+    case 'ccw': if (id !== null) session.rotatePiece(id, -1); break;
+    case 'cw': if (id !== null) session.rotatePiece(id, 1); break;
+    case 'remove': if (id !== null) session.removePiece(id); break;
+    case 'undo': session.undo(); break;
+    case 'hint': session.hint(); break;
+    case 'reset': session.showDialog('confirm-reset'); break;
+    case 'skip': session.finishRun(); break;
+    case 'again': session.start(session.level); break;
+    case 'next': { const next = session.winSummary().next; if (next) openLevel(next); else goHome(); break; }
+  }
 });
 
-document.addEventListener('pointerup',event => {
-  if (!drag || drag.pointerId !== event.pointerId) return;
-  const current = drag; drag = null;
-  const ghost = document.querySelector('#placement-ghost'); if (ghost) ghost.hidden = true;
-  if (!current.moving) return;
-  suppressClickUntil = performance.now() + 350;
-  placeAt(current.x,current.y,current.id,current.r);
-});
-document.addEventListener('pointercancel',() => { drag = null; const ghost = document.querySelector('#placement-ghost'); if (ghost) ghost.hidden = true; });
-document.addEventListener('keydown',event => {
-  if (screen !== 'game' || busy || document.querySelector('dialog') || event.target.matches('input,textarea,select')) return;
-  if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) { event.preventDefault(); rotateSelected(); }
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); actions.undo(); }
-  if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); actions.remove(); }
-});
-window.addEventListener('hashchange', () => {
-  const id = Number(location.hash.slice(1));
-  if (LEVELS.some(l=>l.id === id)) startLevel(id); else showHome();
+function localPoint(event) {
+  const rect = app.querySelector('.board-canvas').getBoundingClientRect();
+  return [event.clientX - rect.left, event.clientY - rect.top];
+}
+function signAt(point) {
+  if (!view.camera) return null;
+  const radius = Math.max(22, view.camera.pixelsPerUnit([2.85, 0, 2.35]) * .3);
+  for (const [name, pt] of rules.gates) {
+    const [x, y] = signScreenCenter(view.camera, pt);
+    if (Math.abs(point[0] - x) <= radius && Math.abs(point[1] - y) <= radius) return name;
+  }
+  return null;
+}
+function boardPointerDown(event) {
+  if (session.running || view.gesture || !view.camera || event.button > 0) return;
+  event.preventDefault();
+  const point = localPoint(event), frame = view.camera.toFrame(point, TILE);
+  const x = Math.floor(frame[0] - .35), y = Math.floor(frame[1] - .35);
+  const hit = overFrame(frame) ? rules.hit(session.placed, x, y) : null;
+  const sign = session.level.solveEndpoints ? signAt(point) : null;
+  view.gesture = { kind: 'board', pointerId: event.pointerId, start: [event.clientX, event.clientY], moved: false, hit, x, y, frame, sign, wasSelected: false };
+  if (hit && !sign) view.gesture.wasSelected = pressTile(session, hit.id);
+}
+function trayPointerDown(event) {
+  if (session.running || view.gesture || event.button > 0) return;
+  event.preventDefault();
+  const id = Number(event.currentTarget.dataset.piece);
+  const wasSelected = pressTile(session, id);
+  view.gesture = { kind: 'tray', pointerId: event.pointerId, start: [event.clientX, event.clientY], moved: false, id, wasSelected };
+}
+function beginDrag(gesture, event) {
+  if (gesture.kind === 'board') {
+    if (!gesture.hit) return;
+    const piece = session.placed.find(p => p.id === gesture.hit.id) ?? gesture.hit;
+    view.drag = { piece, grab: [gesture.frame[0] - .35 - piece.x, gesture.frame[1] - .35 - piece.y], ghost: piece.id };
+  } else {
+    const piece = rackPiece(session, gesture.id), [w, h] = rules.dimensions(piece.r);
+    view.drag = { piece, grab: [w / 2, h / 2], ghost: session.placed.some(p => p.id === piece.id) ? piece.id : null };
+  }
+  app.querySelector('.game')?.classList.add('is-dragging');
+  updateDrag(event);
+  view.boardDirty = true;
+}
+function updateDrag(event) {
+  const drag = view.drag;
+  drag.frame = view.camera.toFrame(localPoint(event), TILE);
+  drag.over = overFrame(drag.frame);
+  drag.problem = !drag.over ? '拖入棋盘内放置' : rules.fits(dropCandidate(drag.piece, drag.frame, drag.grab)) ? '' : '超出棋盘边界';
+  renderFeedback();
+  drawOverlay();
+}
+function endGesture(event, cancelled = false) {
+  const gesture = view.gesture;
+  view.gesture = null;
+  const drag = view.drag;
+  if (drag) {
+    view.drag = null;
+    app.querySelector('.game')?.classList.remove('is-dragging');
+    if (!cancelled) {
+      const candidate = dropCandidate(drag.piece, drag.frame, drag.grab);
+      if (drag.problem) { session.message = drag.over ? `${drag.problem}，已保留原位` : '未放入棋盘，已保留原位'; session.changed(); }
+      else {
+        const current = session.placed.find(p => p.id === candidate.id);
+        if (!current || current.x !== candidate.x || current.y !== candidate.y || current.r !== candidate.r) session.placePiece(candidate);
+        else session.changed();
+      }
+    } else session.changed();
+    drawOverlay();
+    return;
+  }
+  if (cancelled || gesture.moved) return;
+  if (gesture.kind === 'tray') releaseRackTap(session, gesture.id, gesture.wasSelected);
+  else if (gesture.sign && !session.running) session.showDialog(`gate:${gesture.sign}`);
+  else releaseBoardTap(session, gesture.hit, gesture.wasSelected, gesture.x, gesture.y, onEntryLetter(rules, gesture.frame[0], gesture.frame[1]));
+}
+window.addEventListener('pointermove', event => {
+  const gesture = view.gesture;
+  if (!gesture || event.pointerId !== gesture.pointerId) return;
+  if (!gesture.moved && Math.hypot(event.clientX - gesture.start[0], event.clientY - gesture.start[1]) > SLOP) {
+    gesture.moved = true;
+    if (!session.running) beginDrag(gesture, event);
+  }
+  if (view.drag) { event.preventDefault(); updateDrag(event); }
+}, { passive: false });
+window.addEventListener('pointerup', event => { if (view.gesture && event.pointerId === view.gesture.pointerId) endGesture(event); });
+window.addEventListener('pointercancel', event => { if (view.gesture && event.pointerId === view.gesture.pointerId) endGesture(event, true); });
+
+document.addEventListener('keydown', event => {
+  if (session.screen !== 'game' || session.dialog || session.running || event.altKey) return;
+  if (event.target.closest?.('input, textarea')) return;
+  const id = session.selected, key = event.key;
+  const command = event.metaKey || event.ctrlKey;
+  if (command && key.toLowerCase() === 'z') { session.undo(); event.preventDefault(); return; }
+  if (command) return;
+  const pieces = session.level.requiredPieces;
+  const digit = key === '0' ? 10 : Number(key);
+  if (Number.isInteger(digit) && digit >= 1 && pieces.includes(digit)) { session.select(digit); event.preventDefault(); return; }
+  if (id === null) return;
+  const placed = session.placed.some(p => p.id === id);
+  const moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  if (moves[key] && placed) { session.movePiece(id, ...moves[key]); event.preventDefault(); }
+  else if (key === 'r' || key === 'e' || key === 'R' || key === 'E') session.rotatePiece(id, 1);
+  else if (key === 'q' || key === 'Q') session.rotatePiece(id, -1);
+  else if ((key === 'Delete' || key === 'Backspace') && placed) { session.removePiece(id); event.preventDefault(); }
+  else if (key === 'h' || key === 'H') session.hint();
+  else if (key === 'Enter' && !placed) {
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 5; x++) if (!rules.hit(session.placed, x, y) && rules.fits(rules.initialPlacement({ id, x, y, r: session.rotation }))) { session.place(x, y); return; }
+  }
 });
 
-if (screen === 'game') startLevel(level.id); else render();
+function drawOverlay() {
+  const canvas = app.querySelector('.overlay-canvas');
+  if (!canvas || !view.camera) return;
+  renderOverlay(canvas, view.camera, view.dpr, session, textures, horse, view.drag && view.drag.over ? view.drag : null);
+}
+
+function scheduleAutoRun() {
+  clearTimeout(view.autoRun);
+  if (!session.canAutoRun() || view.drag || !session.trace()) return;
+  view.autoRun = setTimeout(() => {
+    if (!view.drag && session.beginRunIfSolved()) { view.lastFrame = performance.now(); announce('路线正确！马儿出发了'); }
+  }, AUTO_RUN_DELAY);
+}
+
+function render() {
+  if (session.screen === 'home') { renderHome(); }
+  else if (session.screen === 'game') renderGame();
+  else if (view.screen !== 'win' || view.level !== session.level.id) renderWin();
+  view.screen = session.screen; view.level = session.level.id;
+  document.title = session.screen === 'home' ? 'RacingClub · 马术训练场' : `挑战 ${session.level.number} · RacingClub`;
+  renderDialog();
+  scheduleAutoRun();
+}
+session.subscribe(render);
+
+function frame(now) {
+  if (session.screen === 'game') {
+    if (view.boardDirty && view.camera) {
+      view.boardDirty = false;
+      renderBoard(app.querySelector('.board-canvas'), view.camera, view.dpr, session, textures, fence, view.drag?.ghost ?? null);
+    }
+    const text = app.querySelector('.clock-text');
+    if (text) text.textContent = clock(session.running ? session.elapsed : session.time());
+    if (session.running) {
+      if (session.foreground) session.runProgress = Math.min(1, session.runProgress + Math.min(now - view.lastFrame, 100) / (session.activeRoute.length * RUN_MS_PER_STEP));
+      drawOverlay();
+      updateMeter();
+      const { crossed } = crossingFeedback(rules, session.activeRoute, session.runProgress);
+      if (crossed !== view.crossed) renderRoute();
+      if (session.runProgress >= 1) session.finishRun();
+    }
+  } else if (session.screen === 'win' && view.confetti) drawConfetti(now);
+  view.lastFrame = now;
+  requestAnimationFrame(frame);
+}
+
+const initial = routeLevel();
+if (initial) session.start(initial); else render();
+requestAnimationFrame(frame);
+window.racingClub = { session, rules, view };
