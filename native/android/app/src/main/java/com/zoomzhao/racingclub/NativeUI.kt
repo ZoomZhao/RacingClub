@@ -333,7 +333,7 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
 /** Reads the run progress here, so only the board redraws each animation frame, not the whole screen. */
 @Composable private fun RunBoard(s:GameState,modifier:Modifier,drag:BoardDrag) {
     Box(modifier) {
-        NativeBoard3D(s,s.runProgress,Modifier.fillMaxSize(),drag)
+        NativeBoard3D(s,s.runProgress,Modifier.fillMaxSize(),drag,topInset=38.dp)
         ClockChip(s,Modifier.align(Alignment.TopStart).padding(start=4.dp,top=2.dp))
     }
 }

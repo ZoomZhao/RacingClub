@@ -27,12 +27,13 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.*
 
 /** Where the horse is on its route at [progress], or null when no run is playing. */
-/** [gait] runs 0→1→0 once per stride, so the body can bob and kick up dust in rhythm. */
-internal data class HorsePose(val at:Point,val direction:Point,val jump:Float,val heading:HorseHeading,val gait:Float=0f)
+/** [stride] is the gallop phase in [0, 1); about three strides cover one road. */
+internal data class HorsePose(val at:Point,val direction:Point,val jump:Float,val heading:HorseHeading,val stride:Float=0f)
 internal fun horsePose(s:GameState,progress:Float):HorsePose? {
     val route=s.activeRoute
     if(!s.running||route.isEmpty())return null
@@ -44,7 +45,7 @@ internal fun horsePose(s:GameState,progress:Float):HorsePose? {
     val direction=Point((after.x-before.x)/length,(after.y-before.y)/length)
     val road=s.rules.road(step);val along=if(step.from==road.from)cursor%1 else 1-cursor%1
     val jump=if(step.jump!=null)sin(PI.toFloat()*max(0f,1-abs(along-(road.jumpAt?:.5f))*8))else 0f
-    return HorsePose(raw,direction,jump,horseHeading(direction.x,direction.y),abs(sin(cursor*PI.toFloat()*2.6f)))
+    return HorsePose(raw,direction,jump,horseHeading(direction.x,direction.y),(cursor*3f)%1f)
 }
 
 private fun bake(width:Int,height:Int,block:DrawScope.()->Unit):Bitmap {
@@ -115,13 +116,14 @@ internal object BoardProbe {@Volatile var frameToRoot:((Float,Float)->Offset)?=n
 
 /** Perspective board. Static scene and moving overlay are separate layers, so a finger
  * move redraws only the lifted tile and its landing preview. */
-@Composable internal fun NativeBoard3D(s:GameState,progress:Float,modifier:Modifier,drag:BoardDrag) {
+@Composable internal fun NativeBoard3D(s:GameState,progress:Float,modifier:Modifier,drag:BoardDrag,topInset:Dp=0.dp) {
     val art=gameArt()
     val textures=remember(s.rules,art){sceneTextures(s.rules,art.materials)}
     val fence=remember(s.rules){fenceLayout(s.rules)}
     val density=LocalDensity.current
     BoxWithConstraints(modifier) {
-        val camera=remember(constraints.maxWidth,constraints.maxHeight){BoardCamera(constraints.maxWidth.toFloat(),constraints.maxHeight.toFloat())}
+        val inset=with(density){topInset.toPx()}
+        val camera=remember(constraints.maxWidth,constraints.maxHeight,inset){BoardCamera(constraints.maxWidth.toFloat(),constraints.maxHeight.toFloat(),topInset=inset)}
         var root by remember{mutableStateOf(Offset.Zero)}
         val ghost=drag.piece?.id?.takeIf{id->s.placed.any{it.id==id}}
         Canvas(Modifier.fillMaxSize().onGloballyPositioned{
@@ -139,7 +141,6 @@ internal object BoardProbe {@Volatile var frameToRoot:((Float,Float)->Offset)?=n
             RenderStats.boardDraws++
             ScenePainter(camera,drawContext.canvas.nativeCanvas).paintBoard3D(s,textures,fence,ghost)
         }
-        val sprites=gameSprites()
         Canvas(Modifier.fillMaxSize().graphicsLayer()) {
             val painter=ScenePainter(camera,drawContext.canvas.nativeCanvas)
             drag.piece?.let{p->
@@ -150,7 +151,7 @@ internal object BoardProbe {@Volatile var frameToRoot:((Float,Float)->Offset)?=n
             }
             if(s.running){
                 painter.paintRunEffects(s.rules,s.activeRoute,progress)
-                horsePose(s,progress)?.let{pose->painter.paintHorse3D(pose,sprites){sprite,box->paintSprite(sprite,box)}}
+                horsePose(s,progress)?.let{pose->painter.paintHorse3D(pose)}
             }
         }
         horsePose(s,progress)?.let{pose->
