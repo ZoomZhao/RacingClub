@@ -74,7 +74,7 @@ internal class BoardCamera(val width:Float,val height:Float,pitchDegrees:Float=5
 }
 
 private val Light=V3(-.38f,1f,.62f).normalized()
-private fun shade(argb:Int,normal:V3,ambient:Float=.56f):Int {
+internal fun shade(argb:Int,normal:V3,ambient:Float=.56f):Int {
     val k=(ambient+(1-ambient)*max(0f,normal dot Light)).coerceIn(0f,1.08f)
     fun c(shift:Int)=(((argb shr shift) and 255)*k).roundToInt().coerceIn(0,255)
     return (argb and 0xff000000.toInt()) or (c(16) shl 16) or (c(8) shl 8) or c(0)
@@ -317,95 +317,6 @@ internal fun ScenePainter.paintDragPreview(s:GameState,p:Placement,frame:Offset,
         val ring=roundedOutline(x,z,x+w,z+h,.08f,3).map{V3(it.x,landing+DragLift+TileThickness+.003f,it.y)}
         outline(ring,color,px*.04f)
     }
-}
-
-/** One leg of the gallop in the horse's side plane: hip, knee and hoof as (along, height). */
-internal data class LegPose(val front:Boolean,val left:Boolean,val hip:Offset,val knee:Offset,val hoof:Offset,val sole:Offset)
-
-private const val UpperLeg=.115f
-private const val LowerLeg=.12f
-private const val HoofHeight=.03f
-internal const val HipHeight=UpperLeg+LowerLeg+HoofHeight
-
-/** Transverse gallop: hind pair, then front pair, each leg swinging forward with its knee
- * folded and planting straight. Over a rail ([jump] → 1) the forelegs tuck and the hind legs
- * stretch back. [stride] is the gait phase in [0, 1). */
-internal fun horseLegs(stride:Float,jump:Float):List<LegPose> {
-    val legs=listOf(Triple(false,true,0f),Triple(false,false,.12f),Triple(true,true,.45f),Triple(true,false,.57f))
-    return legs.map{(front,left,offset)->
-        val t=2*PI.toFloat()*(stride+offset)
-        val swing=sin(t);val bend=max(0f,cos(t))
-        var upper=if(front).45f*swing+.05f+bend*.5f else .4f*swing-.05f+bend*.6f
-        var lower=if(front).45f*swing+.05f-bend*.9f else .4f*swing-.05f-bend*.6f
-        val tuckUpper=if(front)1.15f else -.55f;val tuckLower=if(front)-.95f else -1f
-        upper+=(tuckUpper-upper)*jump;lower+=(tuckLower-lower)*jump
-        val hip=Offset(if(front).135f else -.14f,HipHeight)
-        val knee=hip+Offset(sin(upper),-cos(upper))*UpperLeg
-        val hoof=knee+Offset(sin(lower),-cos(lower))*LowerLeg
-        LegPose(front,left,hip,knee,hoof,hoof+Offset(sin(lower),-cos(lower))*HoofHeight)
-    }
-}
-
-private fun cross(a:V3,b:V3)=V3(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x)
-
-/** Low-poly chestnut horse built from tapered prisms. It shares the board's light and
- * perspective, so it reads as a piece standing on the board rather than a pasted picture. */
-internal fun ScenePainter.paintHorse3D(pose:HorsePose) {
-    val ground=TileThickness;val k=1.38f
-    val foot=V3(pose.at.x+.35f,ground,pose.at.y+.35f)
-    val px=camera.pixelsPerUnit(foot)
-    val axis=Offset(pose.direction.x,pose.direction.y)
-    shadow(orientedOutline(Offset(foot.x,foot.z),axis,.3f*k,.1f*k),ground,Offset(.03f,.04f),if(pose.jump>0f).13f else .26f,px*.05f)
-    val forward=V3(axis.x,0f,axis.y);val side=V3(-axis.y,0f,axis.x);val up=V3(0f,1f,0f)
-    val bob=if(pose.jump>0f)0f else .022f*(1-cos(2*PI.toFloat()*pose.stride))/2
-    val base=foot+up*(pose.jump*.42f+bob)
-    fun world(along:Float,height:Float,across:Float)=base+forward*(along*k)+up*(height*k)+side*(across*k)
-    class Face(val points:List<V3>,val normal:V3,val color:Int,val depth:Float)
-    val faces=ArrayList<Face>(160)
-    /** Prism from end [a] to end [b] in the side plane, [across] off the centerline. Each end
-     * is (half-width, half-height); the height runs square to the segment. */
-    fun prism(a:Offset,b:Offset,across:Float,wa:Float,ha:Float,wb:Float,hb:Float,color:Int) {
-        val d=(b-a).let{val l=it.getDistance().coerceAtLeast(1e-5f);it/l};val n=Offset(-d.y,d.x)
-        fun corner(end:Offset,w:Float,h:Float,sn:Float,sw:Float)=world(end.x+n.x*h*sn,end.y+n.y*h*sn,across+w*sw)
-        val v=listOf(corner(a,wa,ha,1f,1f),corner(a,wa,ha,1f,-1f),corner(a,wa,ha,-1f,-1f),corner(a,wa,ha,-1f,1f),
-            corner(b,wb,hb,1f,1f),corner(b,wb,hb,1f,-1f),corner(b,wb,hb,-1f,-1f),corner(b,wb,hb,-1f,1f))
-        val center=v.reduce{p,q->p+q}*(1f/8)
-        for(q in listOf(listOf(0,1,2,3),listOf(4,5,6,7),listOf(0,1,5,4),listOf(1,2,6,5),listOf(2,3,7,6),listOf(3,0,4,7))){
-            val pts=q.map{v[it]}
-            val mid=pts.reduce{p,r->p+r}*.25f
-            var normal=cross(pts[1]-pts[0],pts[3]-pts[0]).normalized()
-            if((normal dot (mid-center))<0f)normal=normal*-1f
-            if(camera.facing(normal,mid))faces+=Face(pts,normal,color,camera.depth(mid))
-        }
-    }
-    val coat=0xffb4642e.toInt();val shank=0xff94502a.toInt();val sock=0xfff3e6cf.toInt();val hoofColor=0xff2b1d15.toInt()
-    val hair=0xff47261a.toInt();val pad=0xff2f6b45.toInt();val leather=0xff6b3e1f.toInt();val muzzle=0xff70402a.toInt()
-    for(leg in horseLegs(pose.stride,pose.jump)){
-        val c=if(leg.left).042f else -.042f
-        prism(leg.hip+Offset(0f,.02f),leg.knee,c,.024f,.03f,.017f,.018f,coat)
-        prism(leg.knee,leg.hoof,c,.016f,.016f,.014f,.014f,if(!leg.front&&leg.left)sock else shank)
-        prism(leg.hoof,leg.sole,c,.019f,.019f,.021f,.021f,hoofColor)
-    }
-    prism(Offset(-.2f,.318f),Offset(.2f,.322f),0f,.068f,.075f,.064f,.082f,coat)
-    prism(Offset(-.235f,.31f),Offset(-.12f,.325f),0f,.06f,.06f,.074f,.08f,coat)
-    prism(Offset(.1f,.32f),Offset(.21f,.33f),0f,.074f,.084f,.056f,.07f,coat)
-    prism(Offset(.14f,.35f),Offset(.255f,.475f),0f,.042f,.058f,.032f,.04f,coat)
-    prism(Offset(.115f,.372f),Offset(.235f,.51f),0f,.014f,.02f,.012f,.016f,hair)
-    prism(Offset(.245f,.505f),Offset(.345f,.435f),0f,.034f,.042f,.026f,.03f,coat)
-    prism(Offset(.335f,.44f),Offset(.372f,.418f),0f,.027f,.031f,.024f,.026f,muzzle)
-    for(c in listOf(.019f,-.019f)){
-        prism(Offset(.255f,.535f),Offset(.24f,.585f),c,.009f,.009f,.004f,.005f,coat)
-        prism(Offset(.288f,.487f),Offset(.3f,.481f),c*1.55f,.006f,.007f,.006f,.007f,hair)
-    }
-    val swish=.035f*sin(2*PI.toFloat()*pose.stride)
-    val tailEnd=Offset(-.31f,.2f+pose.jump*.13f)
-    prism(Offset(-.19f,.355f),Offset(-.26f,.29f),0f,.021f,.024f,.018f,.022f,hair)
-    prism(Offset(-.26f,.29f),tailEnd,swish,.018f,.022f,.01f,.016f,hair)
-    prism(Offset(-.07f,.37f),Offset(.09f,.37f),0f,.075f,.036f,.075f,.036f,pad)
-    prism(Offset(-.045f,.405f),Offset(.06f,.407f),0f,.05f,.012f,.044f,.012f,leather)
-    faces.sortByDescending{it.depth}
-    val seam=max(.7f,px*.004f)
-    for(f in faces){val color=shade(f.color,f.normal,.5f);polygon(f.points,color);outline(f.points,color,seam)}
 }
 
 /** Run feedback under the horse: the travelled route glows gold, the road ahead is a dashed

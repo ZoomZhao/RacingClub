@@ -13,7 +13,7 @@
 - 旋转绕拼板的一个角转 90°，只有转出棋盘时才换角或向内收；棋盘中部连续转 4 次回到原格。
 - 以上新界面和 3D 棋盘目前只在 Android 上；iOS 仍是原来的平面界面。
 - 首页或对局里的「设置」可以选择只显示顺时针、只显示逆时针，或两个方向都显示。同一页可以清除全部分关进度和完成标记，清除前会再确认一次；本机最佳成绩保留。
-- 第 65–80 关的起点和终点由玩家点入口字母设置，两端可以相同。路线和端点都正确时自动停止计时并沿路跑动：走过的路线亮起金色轨迹，前方是虚线引导，马儿是与棋盘同一光照和透视的低多边形立体模型，四条腿按袭步交替摆动、跳栏时收腿，马蹄扬尘，每跳过一道栏杆迸出同色光环。可跳过动画。
+- 第 65–80 关的起点和终点由玩家点入口字母设置，两端可以相同。路线和端点都正确时自动停止计时并沿路跑动：走过的路线亮起金色轨迹，前方是虚线引导，马儿是 Quaternius 的开源低多边形马（CC0，带骨骼动画），用与棋盘同一光照和透视实时绘制，平地播放袭步动画，跳栏时切换到起跳、腾空、落地动画，马蹄扬尘，每跳过一道栏杆迸出同色光环。可跳过动画。
 - 通关页有关卡奖章、按提示用量给出的 1–3 星、用时（首次通关 / 新纪录 / 名次）、步数和本关最佳，可以「再来一次」或「挑战下一关」。
 - 最短边达到 600dp 的平板会加大棋盘和右侧托盘，十块拼板保持可点。
 
@@ -58,3 +58,7 @@ npm start
 `node tools/generate-hints.mjs` 重新计算没有解答照片的 77–80 关提示。`docs/游戏规则.txt`、`docs/关卡索引.txt` 和 `docs/关卡核对报告.txt` 是逐关核对记录。`references/` 保留原始照片和裁切图。
 
 `shared/service-contract.json` 预留了服务端开局、结算和排行榜接口。目前成绩只存在本机，不是经过服务端验证的线上成绩。
+
+## 第三方素材
+
+- 3D 马：Quaternius《Ultimate Animated Animal Pack》中的 Horse，[CC0](https://quaternius.com/packs/ultimateanimatedanimals.html)。`native/android/tools/bake_horse.py` 把它的 `Gallop` 和 `Gallop_Jump` 动画逐帧烘焙成 `res/raw/horse_quaternius.bin`：`python3 -I native/android/tools/bake_horse.py Horse.gltf native/android/app/src/main/res/raw/horse_quaternius.bin`。

@@ -23,6 +23,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
@@ -32,8 +33,9 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.*
 
 /** Where the horse is on its route at [progress], or null when no run is playing. */
-/** [stride] is the gallop phase in [0, 1); about three strides cover one road. */
-internal data class HorsePose(val at:Point,val direction:Point,val jump:Float,val heading:HorseHeading,val stride:Float=0f)
+/** [stride] is the gallop phase in [0, 1); about three strides cover one road. [jumpPhase]
+ * runs 0 → 1 through the take-off, flight and landing over a rail, and is null elsewhere. */
+internal data class HorsePose(val at:Point,val direction:Point,val jump:Float,val heading:HorseHeading,val stride:Float=0f,val jumpPhase:Float?=null)
 internal fun horsePose(s:GameState,progress:Float):HorsePose? {
     val route=s.activeRoute
     if(!s.running||route.isEmpty())return null
@@ -45,8 +47,12 @@ internal fun horsePose(s:GameState,progress:Float):HorsePose? {
     val direction=Point((after.x-before.x)/length,(after.y-before.y)/length)
     val road=s.rules.road(step);val along=if(step.from==road.from)cursor%1 else 1-cursor%1
     val jump=if(step.jump!=null)sin(PI.toFloat()*max(0f,1-abs(along-(road.jumpAt?:.5f))*8))else 0f
-    return HorsePose(raw,direction,jump,horseHeading(direction.x,direction.y),(cursor*3f)%1f)
+    val fromRail=along-(road.jumpAt?:.5f)
+    val jumpPhase=if(step.jump!=null&&abs(fromRail)<JumpWindow)(fromRail+JumpWindow)/(2*JumpWindow)else null
+    return HorsePose(raw,direction,jump,horseHeading(direction.x,direction.y),(cursor*3f)%1f,jumpPhase)
 }
+/** Half the stretch of road, around the rail, that the jump clip plays over. */
+internal const val JumpWindow=.2f
 
 private fun bake(width:Int,height:Int,block:DrawScope.()->Unit):Bitmap {
     val image=ImageBitmap(width.coerceAtLeast(1),height.coerceAtLeast(1))
@@ -118,6 +124,7 @@ internal object BoardProbe {@Volatile var frameToRoot:((Float,Float)->Offset)?=n
  * move redraws only the lifted tile and its landing preview. */
 @Composable internal fun NativeBoard3D(s:GameState,progress:Float,modifier:Modifier,drag:BoardDrag,topInset:Dp=0.dp) {
     val art=gameArt()
+    val horse=LocalResources.current.let{resources->remember(resources){HorseRenderer(HorseModel.get(resources))}}
     val textures=remember(s.rules,art){sceneTextures(s.rules,art.materials)}
     val fence=remember(s.rules){fenceLayout(s.rules)}
     val density=LocalDensity.current
@@ -151,7 +158,7 @@ internal object BoardProbe {@Volatile var frameToRoot:((Float,Float)->Offset)?=n
             }
             if(s.running){
                 painter.paintRunEffects(s.rules,s.activeRoute,progress)
-                horsePose(s,progress)?.let{pose->painter.paintHorse3D(pose)}
+                horsePose(s,progress)?.let{pose->horse.paint(painter,pose)}
             }
         }
         horsePose(s,progress)?.let{pose->
