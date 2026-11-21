@@ -112,6 +112,61 @@ function centeredText(ctx, text, x, y, size, color, weight = 700) {
   ctx.fillText(text, x, y + (ascent - descent) / 2);
 }
 const ROAD_NUMBER_FACE = '#fff0d2', ROAD_NUMBER_INK = '#214334';
+const RAIL_CREAM = 0xfffaf0, RAIL_CREAM_SHADE = 0xc9a674;
+function cylinderGradient(ctx, from, to, color, shadeColor = BLACK) {
+  const gradient = ctx.createLinearGradient(from[0], from[1], to[0], to[1]);
+  [[0, mix(color, shadeColor, .06)], [.2, mix(color, WHITE, .5)], [.42, color], [.78, mix(color, shadeColor, .28)], [1, mix(color, shadeColor, .48)]].forEach(([at, c]) => gradient.addColorStop(at, css(c)));
+  return gradient;
+}
+function sphereGradient(ctx, cx, cy, radius, light, color, shadeColor = BLACK) {
+  const hx = cx + light[0] * radius * .42, hy = cy + light[1] * radius * .42;
+  const gradient = ctx.createRadialGradient(hx, hy, 0, hx, hy, radius * 1.55);
+  gradient.addColorStop(0, css(mix(color, WHITE, .75))); gradient.addColorStop(.35, css(mix(color, WHITE, .12)));
+  gradient.addColorStop(.75, css(mix(color, shadeColor, .22))); gradient.addColorStop(1, css(mix(color, shadeColor, .45)));
+  return gradient;
+}
+function paintTopRail(ctx, hex, u) {
+  const color = rgb(hex), matrix = ctx.getTransform(), scale = Math.hypot(matrix.a, matrix.b) || 1, inverse = matrix.inverse();
+  const rawLight = [-inverse.a - inverse.c, -inverse.b - inverse.d], lightLength = Math.hypot(...rawLight) || 1;
+  const light = [rawLight[0] / lightLength, rawLight[1] / lightLength], side = light[0] >= 0 ? 1 : -1;
+  const half = .3 * u, pole = .036 * u, post = .05 * u, finial = .03 * u;
+  const cast = (height, alpha) => {
+    ctx.shadowColor = `rgba(84,52,28,${alpha})`; ctx.shadowBlur = (.02 + height * .12) * u * scale;
+    ctx.shadowOffsetX = height * .5 * u * scale; ctx.shadowOffsetY = height * .75 * u * scale;
+  };
+  const calm = () => { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; };
+  ctx.save();
+  for (const sign of [-1, 1]) {
+    const fx = -.1 * u, fy = sign * half - .048 * u, fw = .2 * u, fh = .096 * u, radius = .03 * u;
+    cast(.035, .34);
+    const body = ctx.createLinearGradient(light[0] * fw / 2, sign * half + light[1] * fh / 2, -light[0] * fw / 2, sign * half - light[1] * fh / 2);
+    body.addColorStop(0, css(mix(color, WHITE, .3))); body.addColorStop(.45, css(color)); body.addColorStop(1, css(mix(color, BLACK, .3)));
+    fillRound(ctx, fx, fy, fw, fh, radius, body);
+    calm();
+    strokeRound(ctx, fx + .012 * u, fy + .012 * u, fw - .024 * u, fh - .024 * u, radius * .7, css(RAIL_CREAM, .3), .01 * u);
+    strokeRound(ctx, fx, fy, fw, fh, radius, css(mix(color, BLACK, .35), .55), .007 * u);
+  }
+  cast(.07, .32);
+  fillRound(ctx, -pole, -half, pole * 2, half * 2, pole, cylinderGradient(ctx, [side * pole, 0], [-side * pole, 0], color));
+  calm();
+  ctx.save(); roundRectPath(ctx, -pole, -half, pole * 2, half * 2, pole); ctx.clip();
+  const stripe = cylinderGradient(ctx, [side * pole, 0], [-side * pole, 0], RAIL_CREAM, RAIL_CREAM_SHADE);
+  for (let i = 1; i < 7; i += 2) { const y0 = -half + half * 2 * i / 7; ctx.fillStyle = stripe; ctx.fillRect(-pole, y0, pole * 2, half * 2 / 7); }
+  for (let i = 1; i < 7; i++) { const y0 = -half + half * 2 * i / 7; line(ctx, -pole, y0, pole, y0, css(mix(color, BLACK, .4), .22), .006 * u); }
+  ctx.restore();
+  line(ctx, side * pole * .45, -half + post, side * pole * .45, half - post, 'rgba(255,255,255,.45)', .008 * u, 'round');
+  for (const sign of [-1, 1]) {
+    const cy = sign * half;
+    cast(.09, .3);
+    ctx.beginPath(); ctx.arc(0, cy, post, 0, Math.PI * 2); ctx.fillStyle = sphereGradient(ctx, 0, cy, post, light, color); ctx.fill();
+    calm();
+    ctx.beginPath(); ctx.arc(0, cy, post, 0, Math.PI * 2); ctx.strokeStyle = css(mix(color, BLACK, .4), .5); ctx.lineWidth = .006 * u; ctx.stroke();
+    cast(.025, .25);
+    ctx.beginPath(); ctx.arc(0, cy, finial, 0, Math.PI * 2); ctx.fillStyle = sphereGradient(ctx, 0, cy, finial, light, RAIL_CREAM, RAIL_CREAM_SHADE); ctx.fill();
+    calm();
+  }
+  ctx.restore();
+}
 export function paintRoadNumber(ctx, id, color, label, u, cx, cy) {
   const w = label.width * u, h = label.height * u, x = cx - w / 2, y = cy - h / 2, r = h * .2;
   fillRound(ctx, x, y, w, h, r, ROAD_NUMBER_FACE);
@@ -143,16 +198,7 @@ export function paintTile(ctx, rules, p, u, ox, oy, materials, options = {}) {
   if (rail) {
     const [gx, gy] = rules.rotate([piece.gate[0] / 100, piece.gate[1] / 100], p.r);
     ctx.save(); ctx.translate(tx + gx * u, ty + gy * u); ctx.rotate((piece.gate[2] + p.r * 90) * Math.PI / 180);
-    fillRound(ctx, -u * .035, -u * .31, u * .13, u * .69, u * .02, 'rgba(118,81,53,.24)');
-    line(ctx, 0, -u * .29, 0, u * .29, piece.color, u * .075);
-    for (let i = 1; i < 7; i += 2) { const y = -.29 + .58 * i / 7; line(ctx, 0, y * u, 0, (y + .58 / 7) * u, '#fffaf0', u * .076); }
-    line(ctx, -u * .018, -u * .27, -u * .018, u * .27, 'rgba(255,255,255,.38)', u * .013);
-    for (const sign of [-1, 1]) {
-      const footX = -u * .095, footY = sign * u * .3 - u * .045;
-      fillRound(ctx, footX + u * .025, footY + u * .035, u * .19, u * .1, u * .025, 'rgba(91,58,39,.18)');
-      fillRound(ctx, footX, footY, u * .19, u * .1, u * .025, piece.color);
-      fillRound(ctx, footX + u * .018, footY + u * .009, u * .15, u * .022, u * .01, 'rgba(255,255,255,.25)');
-    }
+    paintTopRail(ctx, piece.color, u);
     ctx.restore();
   }
   if (selected) {
