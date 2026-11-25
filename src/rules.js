@@ -490,8 +490,18 @@ export class GameSession {
     this.dialog = ''; this.resume(); this.save(); this.changed();
   }
   trace() {
-    if (this.level.solveEndpoints && (!this.startGate || !this.finishGate)) return null;
-    return this.rules.trace(this.level, this.placed, this.startGate, this.finishGate);
+    if (!this.level.solveEndpoints) return this.rules.trace(this.level, this.placed, this.startGate, this.finishGate);
+    const routes = this.endpointRoutes();
+    return routes.length === 1 ? routes[0] : null;
+  }
+  endpointRoutes() {
+    if (!this.level.solveEndpoints || this.placed.length !== this.level.requiredPieces.length) return [];
+    const gates = [...this.rules.gates.keys()], routes = [];
+    for (const start of this.chosenStart ? [this.chosenStart] : gates) for (const finish of this.chosenFinish ? [this.chosenFinish] : gates) {
+      const route = this.rules.trace(this.level, this.placed, start, finish);
+      if (route && this.rules.endpoint(route, false) === start && this.rules.endpoint(route, true) === finish) routes.push(route);
+    }
+    return routes;
   }
   canAutoRun() { return this.screen === 'game' && !this.running && !this.dialog && this.foreground; }
   beginRun(route) {
@@ -499,6 +509,7 @@ export class GameSession {
     this.pause();
     this.elapsed = Math.round(this.elapsed);
     this.running = true; this.runProgress = 0; this.activeRoute = route; this.message = ''; this.selected = null;
+    if (this.level.solveEndpoints) { this.chosenStart = this.rules.endpoint(route, false) ?? this.chosenStart; this.chosenFinish = this.rules.endpoint(route, true) ?? this.chosenFinish; }
     this.store.saveScore({ level: this.level.id, millis: this.elapsed, moves: this.moves, hints: this.hints, timestamp: this.wallClock() });
     this.store.markCompleted(this.level.id);
     this.save(); this.changed(); return true;

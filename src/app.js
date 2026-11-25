@@ -249,6 +249,7 @@ function feedbackText() {
     return { error: false, text: ids.length ? `将叠放在 ${ids.join('、')} 号上方` : '' };
   }
   if (session.message) return { error: true, text: session.message };
+  if (!session.running && session.endpointRoutes().length > 1) return { error: false, text: '这条路线有多种起终点，点字母木牌选择起点和终点' };
   const covered = session.coveredCount();
   return { error: false, text: covered ? `${covered} 块被遮挡 · 点托盘编号置顶` : '' };
 }

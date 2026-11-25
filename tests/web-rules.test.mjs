@@ -48,6 +48,34 @@ test('hints alone solve every level and start the run once', () => {
   }
 });
 
+test('open-endpoint levels run as soon as the board allows only one start and finish', () => {
+  const open = rules.levels.filter(level => level.solveEndpoints);
+  assert.equal(open.length, 16);
+  for (const level of open) {
+    const { session } = newSession();
+    session.start(level);
+    for (const piece of level.solution.slice(0, -1)) session.placePiece({ ...piece });
+    assert.equal(session.beginRunIfSolved(), false, `level ${level.id} waits for the last piece`);
+    session.placePiece({ ...level.solution.at(-1) });
+    assert.equal(session.hints, 0);
+    assert.ok(session.beginRunIfSolved(), `level ${level.id} runs without picking endpoints`);
+    assert.equal(session.chosenStart, level.solutionStart);
+    assert.equal(session.chosenFinish, level.solutionFinish);
+  }
+});
+
+test('a manually chosen endpoint that contradicts the board blocks the run', () => {
+  const level = rules.levels.find(l => l.solveEndpoints);
+  const { session } = newSession();
+  session.start(level);
+  const wrong = [...rules.gates.keys()].find(gate => gate !== level.solutionStart);
+  session.chooseEndpoint(wrong, false);
+  for (const piece of level.solution) session.placePiece({ ...piece });
+  assert.equal(session.beginRunIfSolved(), false);
+  session.chooseEndpoint(level.solutionStart, false);
+  assert.ok(session.beginRunIfSolved());
+});
+
 test('progress survives a reload and garbage storage is ignored', () => {
   const { session, backing, advance } = newSession();
   session.start(rules.levels[2]);
