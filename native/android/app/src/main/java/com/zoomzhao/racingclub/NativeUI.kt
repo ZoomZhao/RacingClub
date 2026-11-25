@@ -428,7 +428,14 @@ private fun clock(ms:Long)="%02d:%02d.%02d".format(ms/60000,ms/1000%60,ms%1000/1
     val message by remember(s,drag){derivedStateOf{
         val error=if(drag.piece!=null)drag.problem(s)else s.message
         val coveredCount=s.placed.count{s.rules.coveredBy(it,s.placed).isNotEmpty()}
-        error to if(drag.piece!=null)drag.feedback(s)else error.ifEmpty{if(coveredCount>0)"$coveredCount 块被遮挡 · 点右侧编号置顶"else""}
+        val feedback=when {
+            drag.piece!=null -> drag.feedback(s)
+            error.isNotEmpty() -> error
+            coveredCount>0 -> "$coveredCount 块被遮挡 · 点右侧编号置顶"
+            !s.running&&s.endpointRoutes().size>1 -> "有多组可行的起终点，请点入口字母选择"
+            else -> ""
+        }
+        error to feedback
     }}
     val(error,feedback)=message
     // Persistent amber feedback survives the gesture until every overlap is resolved.
@@ -568,7 +575,7 @@ private fun DrawScope.paintConfetti(t:Float) {
                     val letter=s.dialog.substringAfter(":")
                     Text("将 $letter 设为起点或终点；两端可以使用同一入口。",fontSize=12.sp,color=Brown)
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){Button(onClick={s.chooseEndpoint(letter,false)}){Text("设为起点")};OutlinedButton(onClick={s.chooseEndpoint(letter,true)}){Text("设为终点")}}
-                }else Text("看右上方障碍顺序。点右侧拼板选择，右侧卡片按放下时的方向显示；再点棋盘格放置。\n\n点一下选中，再点一次就旋转 90°，拼板在托盘里也能先转好再放。棋盘下方固定显示选中拼板的旋转和移回，以及撤销、提示、重置，不会遮住棋格。点空棋格或木框取消选择。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。棋盘内允许临时叠放，后放的在上面；点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关还需点入口字母设置起点和终点。绿色箭头指向起点，棋格标记代表终点；两端可以相同。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
+                }else Text("看右上方障碍顺序。点右侧拼板选择，右侧卡片按放下时的方向显示；再点棋盘格放置。\n\n点一下选中，再点一次就旋转 90°，拼板在托盘里也能先转好再放。棋盘下方固定显示选中拼板的旋转和移回，以及撤销、提示、重置，不会遮住棋格。点空棋格或木框取消选择。\n\n可从右侧拖入棋盘，也可拖动棋盘上的拼板。棋盘内允许临时叠放，后放的在上面；点右侧编号可将下层置顶。边缘旋转会自动移入棋盘；消除重叠后才会判定通关。\n\n岔路须顺着道路平顺转向，不能在两个分支之间锐角转弯。7 号的两条路互不相通。经过无障碍支路不计一次跨障，同一障碍可能再次跨越。\n\n第 65–80 关会根据摆好的路线自动确定起点和终点。若有多组可行的起终点，可点入口字母选择；两端可以相同。\n\n正确后自动停止计时，马儿沿完整路线跑到终点。",fontSize=13.sp,lineHeight=21.sp)
             }
         }},confirmButton={
             if(s.dialog=="confirm-clear") TextButton(onClick={s.clearAllProgress();s.closeDialog()}){Text("清除",color=Danger)}

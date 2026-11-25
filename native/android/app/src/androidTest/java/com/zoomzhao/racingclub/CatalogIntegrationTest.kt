@@ -106,12 +106,12 @@ class CatalogIntegrationTest {
    choose("选择终点","B");capture("24-level80-endpoints")
    tap("返回");tap("进入挑战 80");find(By.text("起点 A"));find(By.text("终点 B"))
    tap("重置");find(By.text("重置本关？"));tap("确认重置");find(By.text("起点 ?"));find(By.text("终点 ?"))
-   repeat(9){tap("提示")}
-   find(By.text("起点 ?"));capture("25-level80-placed")
+   repeat(level.requiredPieces.size-1){tap("提示")}
+   find(By.text("起点 ?"));find(By.text("终点 ?"));capture("25-level80-before-final-tile")
    val movie=File(dir,"challenge-80.mp4")
    val recording=Thread({device.executeShellCommand("screenrecord --time-limit 45 --size 1280x720 --bit-rate 4000000 ${movie.absolutePath}")},"level80-recording").apply{isDaemon=true;start()}
-   SystemClock.sleep(250)
-   choose("选择起点","A");choose("选择终点","B");SystemClock.sleep(500);assertFalse(nodeState("马儿").contains("跑动中"));choose("选择终点","A")
+   tap("提示")
+   find(By.text("起点 ${level.solutionStart}"));find(By.text("终点 ${level.solutionFinish}"))
    awaitRunning();assertFalse(device.hasObject(By.text("路线正确，马儿出发！")));capture("26-level80-running")
    SystemClock.sleep(2000);capture("26-level80-turning")
    find(By.text("漂亮，顺利通关！"),45000);device.executeShellCommand("pkill -2 screenrecord");recording.join(2000);assertTrue(movie.length()>1000);capture("27-level80-win")

@@ -79,12 +79,32 @@ class GameState(val rules:Rules,val repository:LeaderboardRepository,private val
   }
  fun hint(){if(running)return;val p=level.solution.firstOrNull{it !in placed};if(p==null){if(level.solveEndpoints&&(chosenStart!=level.solutionStart||chosenFinish!=level.solutionFinish)){remember();chosenStart=level.solutionStart;chosenFinish=level.solutionFinish;moves++;hints++;message="";save()};return};remember();placed=placed.filter{it.id!=p.id&&!rules.overlaps(p,it)}+p;selected=p.id;rotation=p.r;moves++;hints++;message="";save()}
  fun chooseEndpoint(letter:String,finish:Boolean=dialog=="finish"){if(running||!level.solveEndpoints||letter !in rules.gates)return;remember();if(finish)chosenFinish=letter else chosenStart=letter;moves++;message="";closeDialog();save()}
- fun trace():List<RouteStep>? {if(level.solveEndpoints&&(startGate.isEmpty()||finishGate.isEmpty()))return null;return rules.trace(level,placed,startGate,finishGate)}
+ fun trace():List<RouteStep>? =
+  if(level.solveEndpoints) endpointRoutes().singleOrNull()
+  else rules.trace(level,placed,startGate,finishGate)
+
+ fun endpointRoutes():List<List<RouteStep>> {
+  if(!level.solveEndpoints||placed.size!=level.requiredPieces.size)return emptyList()
+  val starts=if(chosenStart.isEmpty())rules.gates.keys else listOf(chosenStart)
+  val finishes=if(chosenFinish.isEmpty())rules.gates.keys else listOf(chosenFinish)
+  return buildList {
+   for(start in starts) for(finish in finishes) {
+    rules.trace(level,placed,start,finish)?.let { add(it) }
+   }
+  }
+ }
  fun canAutoRun()=screen=="game"&&!running&&dialog.isEmpty()&&foreground
  /** Freezes the clock and records exactly one score. Refused in the background or behind a dialog. */
  fun beginRun(route:List<RouteStep>):Boolean{
   if(!canAutoRun()||route.isEmpty())return false
-  pause();running=true;runProgress=0f;activeRoute=route;message="";repository.save(Score(level.id,elapsed,moves,hints));progress.markCompleted(level.id);progressVersion++;save();return true
+  pause()
+  if(level.solveEndpoints) {
+   chosenStart=rules.endpoint(route,finish=false)?:chosenStart
+   chosenFinish=rules.endpoint(route,finish=true)?:chosenFinish
+  }
+  running=true;runProgress=0f;activeRoute=route;message=""
+  repository.save(Score(level.id,elapsed,moves,hints));progress.markCompleted(level.id);progressVersion++;save()
+  return true
  }
  /** Re-checks every guard at the moment of starting, not when the delay was scheduled. */
  fun beginRunIfSolved():Boolean=canAutoRun()&&trace()?.let{beginRun(it)}==true

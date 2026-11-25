@@ -99,4 +99,60 @@ class GameSessionTest {
         s.hint();s.hint();assertEquals(1,s.hints);assertEquals(1,s.moves)
         s.undo();assertEquals("",s.chosenStart);assertEquals(0,s.moves);assertEquals("Practice mark stays",1,s.hints)
     }
+
+    @Test fun openEndpointLevelsCompleteFromThePlacedTilesAlone() {
+        val harness=Harness()
+        val session=harness.s
+        val levels=harness.rules.levels.filter{it.solveEndpoints}
+        assertEquals((65..80).toList(),levels.map{it.id})
+        for(level in levels) {
+            session.start(level)
+            level.solution.dropLast(1).forEach { session.placePiece(it) }
+            assertFalse("Level ${level.id} waits for the final tile",session.beginRunIfSolved())
+            session.placePiece(level.solution.last())
+
+            assertTrue("Level ${level.id} starts with both endpoints unset",session.beginRunIfSolved())
+            assertEquals(level.solutionStart,session.startGate)
+            assertEquals(level.solutionFinish,session.finishGate)
+            assertEquals(level.sequence,session.activeRoute.mapNotNull{it.jump})
+            assertFalse(session.beginRunIfSolved())
+            session.finishRun()
+            assertEquals("win",session.screen)
+            assertTrue(harness.progress.completed(level.id))
+            val score=harness.board.list(level.id).single()
+            assertEquals(level.solution.size,score.moves)
+            assertEquals(0,score.hints)
+        }
+    }
+
+    @Test fun openEndpointRunHonorsThePlayersChoiceAndFillsTheOtherEnd() {
+        val harness=Harness()
+        val session=harness.s
+        val level=harness.level(70)
+        session.start(level)
+        session.chooseEndpoint(level.solutionFinish,finish=false)
+        level.solution.forEach { session.placePiece(it) }
+        assertFalse(session.beginRunIfSolved())
+        assertTrue(harness.board.list(level.id).isEmpty())
+
+        session.chooseEndpoint(level.solutionStart,finish=false)
+        assertEquals("",session.finishGate)
+        assertTrue(session.beginRunIfSolved())
+        assertEquals(level.solutionFinish,session.finishGate)
+    }
+
+    @Test fun ambiguousEndpointPairsWaitForAChoice() {
+        val harness=Harness()
+        val session=harness.s
+        val level=harness.level(1).copy(start="",finish="")
+        session.start(level)
+        session.placePiece(level.solution.single())
+
+        assertEquals(2,session.endpointRoutes().size)
+        assertFalse(session.beginRunIfSolved())
+        session.chooseEndpoint(level.solutionFinish,finish=false)
+        assertTrue(session.beginRunIfSolved())
+        assertEquals(level.solutionFinish,session.startGate)
+        assertEquals(level.solutionStart,session.finishGate)
+    }
 }
